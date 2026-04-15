@@ -171,21 +171,6 @@ window.saveStudent = async function() {
 // Виклик оновлення статистики при завантаженні
 updateStats();
 
-    // Функція для створення HTML-картки предмета (як на скріншоті)
-function createSubjectCard(id, data) {
-    return `
-        <div class="data-card" id="subject-${id}">
-            <div class="data-info">
-                <div class="data-icon">📘</div>
-                <div>
-                    <div class="data-title">${data.name}</div>
-                    <div class="data-sub">${data.system}-бальна</div>
-                </div>
-            </div>
-            <button class="data-delete" onclick="deleteDocument('subjects', '${id}')">&times;</button>
-        </div>
-    `;
-}
 
   </script>
 
