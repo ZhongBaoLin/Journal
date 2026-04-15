@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Електронний журнал - ВСП ТЕФК БНАУ</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <header class="main-header">
+        <div class="logo-area">
+            <i class="fas fa-graduation-cap header-logo-icon"></i>
+            <h1>Електронний журнал</h1>
+        </div>
+        <p class="subtitle">ВСП "Технолого-економічний фаховий коледж БНАУ"</p>
+    </header>
+
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon-dark"><i class="fas fa-user-friends"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Студентів</span>
+                <span class="stat-value" id="stat-students">0</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-blue"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Груп</span>
+                <span class="stat-value" id="stat-groups">0</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-purple"><i class="fas fa-book-open"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Предметів</span>
+                <span class="stat-value" id="stat-subjects">0</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav-tabs">
+        <button class="tab-btn active" data-target="tab-journal">📖 Журнал</button>
+        <button class="tab-btn" data-target="tab-lessons">Заняття</button>
+        <button class="tab-btn" data-target="tab-groups">Групи</button>
+        <button class="tab-btn" data-target="tab-students">Студенти</button>
+        <button class="tab-btn" data-target="tab-subjects">Предмети</button>
+    </nav>
+
+    <main class="content-container">
+        
+        <section id="tab-journal" class="tab-content active">
+            <div class="content-header-row">
+                <h2>Журнал оцінок</h2>
+                <div class="filters">
+                    <select id="filter-group"></select>
+                    <select id="filter-subject"></select>
+                </div>
+            </div>
+
+            <div class="journal-instructions">
+                <p><strong><i class="fas fa-info-circle"></i> Як користуватися:</strong></p>
+                <ul>
+                    <li>Виберіть групу та предмет. Оцінки зберігаються автоматично.</li>
+                    <li><strong>н</strong> — пропуск, <strong>св</strong> — відсутність світла.</li>
+                </ul>
+            </div>
+
+            <div id="journal-wrapper"></div>
+        </section>
+
+        <section id="tab-lessons" class="tab-content">
+            <div class="content-header-row">
+                <h2>Заняття</h2>
+                <button class="btn-action" onclick="toggleForm('add-lesson-form')">+ Додати заняття</button>
+            </div>
+            <div class="add-form-panel hidden" id="add-lesson-form">
+                <div class="form-row">
+                    <label>Предмет <select id="lesson-subject-select"></select></label>
+                    <label>Вид <select id="lesson-type-select">
+                        <option value="Лекція">Лекція</option>
+                        <option value="Практичне">Практичне</option>
+                        <option value="Семінарське">Семінарське</option>
+                        <option value="Лабораторна">Лабораторна</option>
+                        <option value="Залік з модуля">Залік з модуля</option>
+                        <option value="Тематичне оцінюванння">Тематичне оцінювання</option>
+                    </select></label>
+                    <label>Дата <input type="date" id="lesson-date-input"></label>
+                </div>
+                <div class="form-row full-width">
+                    <label>Тема заняття <input type="text" id="lesson-topic-input" placeholder="Введіть тему..."></label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-cancel" onclick="toggleForm('add-lesson-form')">Скасувати</button>
+                    <button class="btn-save" onclick="handleAddLesson()">Зберегти</button>
+                </div>
+            </div>
+            <div class="list-container" id="lessons-list"></div>
+        </section>
+
+        <section id="tab-groups" class="tab-content">
+            <div class="content-header-row">
+                <h2>Групи</h2>
+                <button class="btn-action btn-black" onclick="toggleForm('add-group-form')">+ Додати групу</button>
+            </div>
+            <div class="add-form-panel hidden" id="add-group-form">
+                <div class="form-row">
+                    <label>Назва групи <input type="text" id="group-name-input" placeholder="Напр: ІДП-31"></label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-cancel" onclick="toggleForm('add-group-form')">Скасувати</button>
+                    <button class="btn-save" onclick="handleSaveGroup()">Зберегти</button>
+                </div>
+            </div>
+            <div class="list-container" id="groups-list"></div>
+        </section>
+
+        <section id="tab-students" class="tab-content">
+            <div class="content-header-row">
+                <h2>Студенти</h2>
+                <div class="filters">
+                    <select id="filter-students-by-group" onchange="renderStudentsList()"></select>
+                    <button class="btn-action" onclick="toggleForm('add-student-form')">+ Додати</button>
+                </div>
+            </div>
+            <div class="add-form-panel hidden" id="add-student-form">
+                <div class="form-row">
+                    <label>ПІБ <input type="text" id="student-name-input"></label>
+                    <label>Група <select id="student-group-select"></select></label>
+                    <label>Телефон <input type="text" id="student-phone-input" placeholder="+380..."></label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-cancel" onclick="toggleForm('add-student-form')">Скасувати</button>
+                    <button class="btn-save" onclick="handleSaveStudent()">Зберегти</button>
+                </div>
+            </div>
+            <div class="list-container" id="students-list"></div>
+        </section>
+
+        <section id="tab-subjects" class="tab-content">
+            <div class="content-header-row">
+                <h2>Предмети</h2>
+                <button class="btn-action btn-black" onclick="toggleForm('add-subject-form')">+ Додати предмет</button>
+            </div>
+            <div class="add-form-panel hidden" id="add-subject-form">
+                <div class="form-grid">
+                    <div class="form-group span-2">
+                        <label>Назва дисципліни</label>
+                        <input type="text" id="sub-name" placeholder="Напр: Вища математика">
+                    </div>
+                    <div class="form-group">
+                        <label>Система оцінювання</label>
+                        <select id="sub-type">
+                            <option value="subject">Предмет (12б)</option>
+                            <option value="discipline">Дисципліна (5б)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Вид дисципліни</label>
+                        <select id="sub-kind">
+                            <option value="Обов'язкова">Обов'язкова</option>
+                            <option value="Вибіркова">Вибіркова</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Кредити ЄКТС</label>
+                        <input type="number" id="sub-credits" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Загальна к-ть годин</label>
+                        <input type="number" id="sub-hours-total">
+                    </div>
+                    <div class="form-group">
+                        <label>К-ть модулів</label>
+                        <input type="number" id="sub-modules">
+                    </div>
+                    <div class="form-group">
+                        <label>Лекції (год)*</label>
+                        <input type="number" id="sub-hours-lectures">
+                    </div>
+                    <div class="form-group">
+                        <label>Практичні (год)</label>
+                        <input type="number" id="sub-hours-pract">
+                    </div>
+                    <div class="form-group">
+                        <label>Лабораторні (год)</label>
+                        <input type="number" id="sub-hours-lab">
+                    </div>
+                    <div class="form-group">
+                        <label>Семінарські (год)</label>
+                        <input type="number" id="sub-hours-sem">
+                    </div>
+                    <div class="form-group">
+                        <label>Сам. робота (год)*</label>
+                        <input type="number" id="sub-hours-self">
+                    </div>
+                    <div class="form-group">
+                        <label>Вид контролю</label>
+                        <select id="sub-control">
+                            <option value="Екзамен">Екзамен</option>
+                            <option value="Залік">Залік</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-cancel" onclick="toggleForm('add-subject-form')">Скасувати</button>
+                    <button class="btn-save" onclick="handleAddSubject()">Зберегти предмет</button>
+                </div>
+            </div>
+            <div class="list-container" id="subjects-list"></div>
+        </section>
+    </main>
+</div>
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDqpy1fAm3BZidnftl8tOB1whwRh7AUG8c",
+    authDomain: "journal-6354f.firebaseapp.com",
+    projectId: "journal-6354f",
+    storageBucket: "journal-6354f.firebasestorage.app",
+    messagingSenderId: "1056052681722",
+    appId: "1:1056052681722:web:b672e5a62e874663a56243"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
+<div id="custom-tooltip" class="custom-tooltip hidden"></div>
+<script type="module" src="script.js"></script>
+</body>
+</html>
