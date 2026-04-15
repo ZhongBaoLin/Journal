@@ -57,6 +57,8 @@ onAuthStateChanged(auth, (user) => {
 window.handleLogin = () => signInWithPopup(auth, provider).catch(console.error);
 window.handleLogout = () => signOut(auth).catch(console.error);
 
+window.handleLogin = handleLogin;
+
 async function saveToDB() {
     if (!currentUser) return;
     updateGlobalStats();
