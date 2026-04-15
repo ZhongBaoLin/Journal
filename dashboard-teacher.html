@@ -171,6 +171,78 @@ window.saveStudent = async function() {
 // Виклик оновлення статистики при завантаженні
 updateStats();
 
+    // Функція для створення HTML-картки предмета (як на скріншоті)
+function createSubjectCard(id, data) {
+    return `
+        <div class="data-card" id="subject-${id}">
+            <div class="data-info">
+                <div class="data-icon">📘</div>
+                <div>
+                    <div class="data-title">${data.name}</div>
+                    <div class="data-sub">${data.system}-бальна</div>
+                </div>
+            </div>
+            <button class="data-delete" onclick="deleteDocument('subjects', '${id}')">&times;</button>
+        </div>
+    `;
+}
+
+// Функція для завантаження та відображення списку предметів
+async function loadSubjects() {
+    const container = document.querySelector('#tab-subjects .panel');
+    const listContainer = document.createElement('div');
+    listContainer.className = 'data-list';
+    
+    const querySnapshot = await getDocs(collection(db, "subjects"));
+    
+    // Видаляємо старий список або empty-state перед оновленням
+    const existingList = container.querySelector('.data-list');
+    const emptyState = container.querySelector('.empty-state');
+    if (existingList) existingList.remove();
+    if (emptyState) emptyState.style.display = querySnapshot.empty ? 'block' : 'none';
+
+    querySnapshot.forEach((doc) => {
+        listContainer.innerHTML += createSubjectCard(doc.id, doc.data());
+    });
+
+    container.appendChild(listContainer);
+}
+
+// Оновлена функція збереження
+window.saveSubject = async function() {
+    const container = document.getElementById('form-add-subject');
+    const inputs = container.querySelectorAll('.form-input');
+    
+    const subjectData = {
+        name: inputs[0].value,
+        system: inputs[1].value,
+        createdAt: new Date()
+    };
+
+    if (!subjectData.name) return alert("Введіть назву предмета");
+
+    try {
+        await addDoc(collection(db, "subjects"), subjectData);
+        toggleForm('form-add-subject'); // Закрити форму
+        inputs[0].value = ''; // Очистити поле
+        await loadSubjects(); // Перезавантажити список без перезавантаження сторінки
+    } catch (e) {
+        console.error("Помилка додавання: ", e);
+    }
+};
+
+// Функція видалення (для хрестика на картці)
+window.deleteDocument = async function(coll, id) {
+    if(confirm("Видалити цей запис?")) {
+        // Тут має бути логіка deleteDoc з firebase-firestore
+        // Наприклад: await deleteDoc(doc(db, coll, id));
+        location.reload();
+    }
+}
+
+// Викликаємо завантаження при старті
+loadSubjects();
+
   </script>
 
   <style>
