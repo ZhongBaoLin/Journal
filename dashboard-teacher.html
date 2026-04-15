@@ -94,6 +94,33 @@
       return { average: average.toFixed(2), quality: quality.toFixed(2) };
     };
 
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const db = getFirestore();
+
+// Обробник для збереження групи
+document.getElementById('btnSaveGroup')?.addEventListener('click', async () => {
+    const groupNameInput = document.querySelector('input[placeholder="ІДП-31"]'); // уточніть селектор
+    const groupName = groupNameInput.value.trim();
+
+    if (!groupName) {
+        alert("Будь ласка, введіть назву групи");
+        return;
+    }
+
+    try {
+        await addDoc(collection(db, "groups"), {
+            name: groupName,
+            createdAt: serverTimestamp()
+        });
+        alert("Групу успішно додано!");
+        groupNameInput.value = ""; // Очистити поле
+        // Тут можна додати код для оновлення списку груп на сторінці
+    } catch (e) {
+        console.error("Помилка додавання групи: ", e);
+    }
+});
+
   </script>
 
   <style>
@@ -380,7 +407,7 @@
       <div class="panel">
         <div class="panel-header">
           <h2 class="panel-title">Аналітика та групи</h2>
-          <button class="btn-primary" onclick="toggleForm('form-add-group')">+ Додати групу</button>
+          <button id="btnSaveGroup" class="btn-black">Зберегти</button>
         </div>
 
         <div id="form-add-group" class="form-section">
