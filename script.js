@@ -1,21 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-async function loadDataFromCloud() {
-    const docRef = doc(window.db, "journal", "main_data"); // Шлях до документа
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-        journalData = docSnap.data();
-    } else {
-        console.log("Даних у хмарі немає, використовуємо порожній шаблон");
-    }
-    renderCurrentTab();
-    updateGlobalStats();
-    populateSelects();
-}
-
-document.querySelector('.btn-save').addEventListener('click', handleAddLesson);
+// 1. Ініціалізація змінної (ВИПРАВЛЯЄ journalData is not defined)
+let journalData = JSON.parse(localStorage.getItem('tefk_final_v8')) || {
+    groups: [],
+    subjects: [],
+    students: [],
+    lessons: [],
+    grades: {}
+};
 
 const firebaseConfig = {
   apiKey: "AIzaSyDqpy1fAm3BZidnftl8tOB1whwRh7AUG8c",
@@ -29,44 +22,78 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Функції для роботи з базою
 async function saveToDB() {
-    // 1. Все ще зберігаємо в localStorage для швидкості (офлайн копія)
     localStorage.setItem('tefk_final_v8', JSON.stringify(journalData));
     updateGlobalStats();
-
-    // 2. Відправляємо в Firebase
     try {
-        await setDoc(doc(window.db, "journal", "main_data"), journalData);
-        console.log("Дані синхронізовано з хмарою");
+        await setDoc(doc(db, "journal", "main_data"), journalData);
+        console.log("Дані синхронізовано");
     } catch (e) {
-        console.error("Помилка синхронізації: ", e);
+        console.error("Помилка Firebase:", e);
     }
 }
 
-function listenToCloudUpdates() {
-    onSnapshot(doc(window.db, "journal", "main_data"), (doc) => {
-        if (doc.exists()) {
-            journalData = doc.data();
-            renderCurrentTab(); // Перемальовуємо інтерфейс при змінах в базі
+async function loadDataFromCloud() {
+    const docRef = doc(db, "journal", "main_data");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        journalData = docSnap.data();
+        renderCurrentTab();
+        updateGlobalStats();
+        populateSelects();
+    }
+}
+
+// 2. ГЛОБАЛЬНИЙ ДОСТУП (ВИПРАВЛЯЄ toggleForm is not defined)
+// Прив'язуємо функції до window, щоб onclick в HTML їх бачив
+window.toggleForm = (id) => document.getElementById(id).classList.toggle('hidden');
+window.handleAddLesson = handleAddLesson;
+window.handleSaveGroup = handleSaveGroup;
+window.handleSaveStudent = handleSaveStudent;
+window.handleAddSubject = handleAddSubject;
+window.deleteItem = deleteItem;
+window.saveGrade = saveGrade;
+window.editStudent = editStudent;
+window.editSubject = editSubject;
+window.editLesson = editLesson;
+window.updateStudent = updateStudent;
+window.updateSubject = updateSubject;
+window.updateLesson = updateLesson;
+window.cancelEditStudent = cancelEditStudent;
+window.cancelEditSubject = cancelEditSubject;
+window.cancelEditLesson = cancelEditLesson;
+window.showSubjectDetails = showSubjectDetails;
+window.showGroupAnalytics = showGroupAnalytics;
+window.renderStudentsList = renderStudentsList;
+window.renderJournal = renderJournal;
+
+// Ініціалізація при завантаженні
+document.addEventListener('DOMContentLoaded', () => {
+    initTabs();
+    loadDataFromCloud(); // Завантажуємо дані з хмари
+    
+    // Слухаємо зміни в реальному часі
+    onSnapshot(doc(db, "journal", "main_data"), (snapshot) => {
+        if (snapshot.exists()) {
+            journalData = snapshot.data();
+            renderCurrentTab();
+            updateGlobalStats();
         }
     });
-}
+
+    document.getElementById('filter-group').addEventListener('change', renderJournal);
+    document.getElementById('filter-subject').addEventListener('change', renderJournal);
+});
+
+// Решта ваших функцій (formatDate, renderJournal і т.д.) залишається без змін...
+// Додайте їх сюди нижче
 
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
     return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    initTabs();
-    updateGlobalStats();
-    populateSelects();
-    renderCurrentTab();
-
-    document.getElementById('filter-group').addEventListener('change', renderJournal);
-    document.getElementById('filter-subject').addEventListener('change', renderJournal);
-});
 
 function initTabs() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
