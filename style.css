@@ -30,6 +30,20 @@ body {
     padding: 30px;
 }
 
+#app-content {
+    display: none;
+}
+
+/* Екран авторизації по центру */
+#auth-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: #f8f9fa;
+}
+
 .main-wrapper { max-width: 1400px; margin: 0 auto; }
 .main-header { margin-bottom: 30px; }
 .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
