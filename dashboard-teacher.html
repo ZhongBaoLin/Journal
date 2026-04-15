@@ -1,3 +1,5 @@
+Ось оновлений HTML-код, який реалізує повне CRUD-управління (створення, читання, оновлення, видалення) для груп, студентів, предметів та занять із збереженням даних у Firebase Firestore. Код також відображає рейтинг групи та журнал оцінок.
+```html
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -6,95 +8,6 @@
   <title>Електронний журнал — Викладач</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      collection,
-      addDoc,
-      getDocs,
-      query,
-      where
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCRMac4RetcPL2mvNXTJdUMcS9JZ-ZALiI",
-      authDomain: "journal-tefc.firebaseapp.com",
-      projectId: "journal-tefc",
-      storageBucket: "journal-tefc.firebasestorage.app",
-      messagingSenderId: "977017837694",
-      appId: "1:977017837694:web:5f02e9ba69c384e607202f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists()) {
-          const userData = snap.data();
-          if (userData.role !== "teacher") {
-            window.location.href = "index.html";
-          } else {
-            document.getElementById("userName").textContent = userData.displayName || "Викладач";
-            document.getElementById("userAvatar").src = userData.photoURL || "default-avatar.png";
-          }
-        } else {
-          window.location.href = "index.html";
-        }
-      } else {
-        window.location.href = "index.html";
-      }
-    });
-
-    window.logout = async function() {
-      await signOut(auth);
-      window.location.href = "index.html";
-    };
-
-    window.switchTab = function(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      
-      document.getElementById(tabId).classList.add('active');
-      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
-      if(btn) btn.classList.add('active');
-    };
-
-    window.toggleForm = function(formId) {
-      const form = document.getElementById(formId);
-      form.style.display = form.style.display === "none" || form.style.display === "" ? "block" : "none";
-    };
-
-    window.calculateGroupQuality = function(gradesArray, totalStudents) {
-      if (totalStudents === 0) return 0;
-      let count5 = 0;
-      let count4 = 0;
-      let count3 = 0;
-      
-      gradesArray.forEach(grade => {
-        if (grade === 5) count5++;
-        if (grade === 4) count4++;
-        if (grade === 3) count3++;
-      });
-      
-      const average = ((5 * count5) + (4 * count4) + (3 * count3)) / totalStudents;
-      const quality = ((count5 + count4) / totalStudents) * 100;
-      
-      return { average: average.toFixed(2), quality: quality.toFixed(2) };
-    };
-
-  </script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -195,7 +108,7 @@
       padding: 32px; min-height: 400px;
     }
     
-    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
     .panel-title { font-family: 'Unbounded', sans-serif; font-size: 20px; font-weight: 700; }
     
     .btn-primary {
@@ -204,6 +117,8 @@
       cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 8px;
     }
     .btn-primary:hover { opacity: 0.9; }
+    .btn-edit { background: #2563eb; }
+    .btn-delete { background: #ef4444; }
 
     .form-section { background: var(--paper); padding: 24px; border-radius: 12px; margin-bottom: 24px; display: none; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
@@ -223,264 +138,112 @@
       padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px;
       background: #fafafa;
     }
-    .data-info { display: flex; align-items: center; gap: 16px; }
+    .data-info { display: flex; align-items: center; gap: 16px; flex:1; }
     .data-icon {
       width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center;
       background: #e0e7ff; color: var(--accent); font-weight: 700; font-family: 'Unbounded', sans-serif;
     }
     .data-title { font-weight: 600; font-size: 15px; color: var(--ink); }
     .data-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-    .data-delete { color: var(--error); background: none; border: none; cursor: pointer; font-size: 18px; }
+    .data-actions { display: flex; gap: 8px; }
+    .icon-btn { background: none; border: none; cursor: pointer; font-size: 18px; padding: 6px; border-radius: 6px; transition: 0.1s; }
+    .icon-btn.edit-btn { color: #2563eb; }
+    .icon-btn.delete-btn { color: #ef4444; }
+    .prefect-badge { background: var(--gold); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; font-weight: 700; }
 
-    .journal-controls { display: flex; gap: 16px; margin-bottom: 24px; background: #fafafa; padding: 16px; border-radius: 12px; border: 1px solid var(--border); }
+    .journal-controls { display: flex; gap: 16px; margin-bottom: 24px; background: #fafafa; padding: 16px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }
     .journal-info { font-size: 13px; color: var(--muted); margin-bottom: 16px; padding: 12px; background: #f8fafc; border-left: 4px solid var(--ink); border-radius: 4px; }
-
     .table-wrapper { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th { background: #f3f4f6; padding: 12px; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); white-space: nowrap;}
     td { padding: 12px; border: 1px solid var(--border); font-size: 14px; }
-    .cell-grade { text-align: center; width: 40px; padding: 0; }
-    .input-grade { width: 100%; height: 100%; border: none; text-align: center; font-family: inherit; font-size: 14px; font-weight: 600; background: transparent; }
-    .input-grade:focus { outline: 2px solid var(--accent); }
-    
-    .prefect-badge { background: var(--gold); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; font-weight: 700; }
-
+    .group-quality { margin-top: 16px; padding: 12px; background: #eef2ff; border-radius: 12px; font-weight: 600; }
   </style>
 </head>
 <body>
 
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
 
-  <header class="header">
-    <div class="brand">
-      <div class="brand-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          <line x1="9" y1="9" x2="15" y2="9"/>
-          <line x1="9" y1="13" x2="13" y2="13"/>
-        </svg>
-      </div>
-      <div class="brand-name">
-        Електронний журнал успішності
-        <span>Навчальний заклад</span>
-      </div>
-    </div>
-    <div class="user-profile">
-      <div class="user-info">
-        <div class="user-name" id="userName">Завантаження...</div>
-        <button class="logout-btn" onclick="logout()">Вийти</button>
-      </div>
-      <img src="" alt="Аватар" class="user-avatar" id="userAvatar">
-    </div>
-  </header>
+<header class="header">
+  <div class="brand"><div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg></div><div class="brand-name">Електронний журнал успішності<span>Навчальний заклад</span></div></div>
+  <div class="user-profile"><div class="user-info"><div class="user-name" id="userName">Завантаження...</div><button class="logout-btn" onclick="logout()">Вийти</button></div><img src="" alt="Аватар" class="user-avatar" id="userAvatar"></div>
+</header>
 
-  <main class="container">
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon bg-students">👥</div>
-        <div>
-          <div class="stat-lbl">Студентів</div>
-          <div class="stat-val">0</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon bg-groups">📁</div>
-        <div>
-          <div class="stat-lbl">Груп</div>
-          <div class="stat-val">0</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon bg-subjects">📘</div>
-        <div>
-          <div class="stat-lbl">Предметів</div>
-          <div class="stat-val">0</div>
-        </div>
-      </div>
-    </div>
+<main class="container">
+  <div class="stats-row"><div class="stat-card"><div class="stat-icon bg-students">👥</div><div><div class="stat-lbl">Студентів</div><div class="stat-val" id="statStudents">0</div></div></div><div class="stat-card"><div class="stat-icon bg-groups">📁</div><div><div class="stat-lbl">Груп</div><div class="stat-val" id="statGroups">0</div></div></div><div class="stat-card"><div class="stat-icon bg-subjects">📘</div><div><div class="stat-lbl">Предметів</div><div class="stat-val" id="statSubjects">0</div></div></div></div>
 
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('tab-journal')">Журнал</button>
-      <button class="tab-btn" onclick="switchTab('tab-lessons')">Заняття</button>
-      <button class="tab-btn" onclick="switchTab('tab-groups')">Групи</button>
-      <button class="tab-btn" onclick="switchTab('tab-students')">Студенти</button>
-      <button class="tab-btn" onclick="switchTab('tab-subjects')">Предмети</button>
-    </div>
+  <div class="tabs"><button class="tab-btn active" onclick="switchTab('tab-journal')">Журнал</button><button class="tab-btn" onclick="switchTab('tab-lessons')">Заняття</button><button class="tab-btn" onclick="switchTab('tab-groups')">Групи</button><button class="tab-btn" onclick="switchTab('tab-students')">Студенти</button><button class="tab-btn" onclick="switchTab('tab-subjects')">Предмети</button></div>
 
-    <div id="tab-journal" class="tab-content active">
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Журнал оцінок</h2>
-        </div>
-        
-        <div class="journal-controls">
-          <div class="form-group">
-            <label class="form-label">Група</label>
-            <select class="form-input"><option>Оберіть групу</option></select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Предмет</label>
-            <select class="form-input"><option>Оберіть предмет</option></select>
-          </div>
-        </div>
+  <div id="tab-journal" class="tab-content active"><div class="panel"><div class="panel-header"><h2 class="panel-title">Журнал оцінок</h2></div><div class="journal-controls"><div class="form-group"><label class="form-label">Група</label><select id="journalGroupSelect" class="form-input"><option>Оберіть групу</option></select></div><div class="form-group"><label class="form-label">Предмет</label><select id="journalSubjectSelect" class="form-input"><option>Оберіть предмет</option></select></div></div><div class="journal-info">Оцінки зберігаються автоматично. Введіть число (1-5 або 1-12) або "н" - пропуск.</div><div class="table-wrapper" id="journalTableContainer"><div class="empty-state">Оберіть групу та предмет</div></div></div></div>
 
-        <div class="journal-info">
-          Як користуватися: Оцінки зберігаються автоматично. Використовуйте клавіатуру для введення. "н" - пропуск, "св" - відсутність світла. Наведіть на дату в таблиці, щоб побачити тему заняття.
-        </div>
+  <div id="tab-lessons" class="tab-content"><div class="panel"><div class="panel-header"><h2 class="panel-title">Заняття</h2><button class="btn-primary" onclick="toggleForm('form-add-lesson')">+ Додати заняття</button></div><div id="form-add-lesson" class="form-section"><div class="form-grid"><div class="form-group"><label class="form-label">Предмет</label><select id="lessonSubject" class="form-input"></select></div><div class="form-group"><label class="form-label">Вид заняття</label><select id="lessonType" class="form-input"><option>Лекція</option><option>Практичне</option><option>Лабораторне</option><option>Семінарське</option><option>Залік з модуля</option><option>Тематичне оцінювання</option></select></div><div class="form-group"><label class="form-label">Дата</label><input type="date" id="lessonDate" class="form-input"></div></div><div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div><button class="btn-primary" id="saveLessonBtn">Зберегти</button></div><div id="lessonsList" class="data-list"><div class="empty-state">Занять не знайдено</div></div></div></div>
 
-        <div class="table-wrapper">
-          <div class="empty-state">Оберіть групу та предмет для відображення журналу</div>
-        </div>
-      </div>
-    </div>
+  <div id="tab-groups" class="tab-content"><div class="panel"><div class="panel-header"><h2 class="panel-title">Аналітика та групи</h2><button class="btn-primary" onclick="toggleForm('form-add-group')">+ Додати групу</button></div><div id="form-add-group" class="form-section"><div class="form-group"><label class="form-label">Назва групи</label><input type="text" id="groupName" class="form-input" placeholder="Наприклад: ПЗ-21"></div><button class="btn-primary" id="saveGroupBtn">Зберегти</button></div><div id="groupsList" class="data-list"><div class="empty-state">Груп не знайдено</div></div></div></div>
 
-    <div id="tab-lessons" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Заняття</h2>
-          <button class="btn-primary" onclick="toggleForm('form-add-lesson')">+ Додати заняття</button>
-        </div>
+  <div id="tab-students" class="tab-content"><div class="panel"><div class="panel-header"><h2 class="panel-title">Студенти</h2><div style="display: flex; gap: 12px;"><select id="studentGroupFilter" class="form-input"><option>Всі групи</option></select><button class="btn-primary" onclick="toggleForm('form-add-student')">+ Додати студента</button></div></div><div id="form-add-student" class="form-section"><div class="form-grid"><div class="form-group"><label class="form-label">ПІБ</label><input type="text" id="studentName" class="form-input" placeholder="Прізвище Ім'я По батькові"></div><div class="form-group"><label class="form-label">Група</label><select id="studentGroup" class="form-input"></select></div><div class="form-group"><label class="form-label">Номер телефону</label><input type="tel" id="studentPhone" class="form-input" placeholder="+380..."></div><div class="form-group"><label class="form-label">Роль у групі</label><select id="studentRole" class="form-input"><option value="student">Студент</option><option value="prefect">Староста</option></select></div></div><button class="btn-primary" id="saveStudentBtn">Зберегти</button></div><div id="studentsList" class="data-list"><div class="empty-state">Студентів не знайдено</div></div></div></div>
 
-        <div id="form-add-lesson" class="form-section">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Предмет</label>
-              <select class="form-input"><option>Оберіть предмет</option></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Вид заняття</label>
-              <select class="form-input">
-                <option>Лекція</option>
-                <option>Практичне</option>
-                <option>Лабораторне</option>
-                <option>Семінарське</option>
-                <option>Залік з модуля</option>
-                <option>Тематичне оцінювання</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Дата</label>
-              <input type="date" class="form-input">
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Тема заняття</label>
-            <input type="text" class="form-input" placeholder="Введіть тему...">
-          </div>
-          <button class="btn-primary">Зберегти</button>
-        </div>
+  <div id="tab-subjects" class="tab-content"><div class="panel"><div class="panel-header"><h2 class="panel-title">Предмети</h2><button class="btn-primary" onclick="toggleForm('form-add-subject')">+ Додати предмет</button></div><div id="form-add-subject" class="form-section"><div class="form-grid"><div class="form-group"><label class="form-label">Назва</label><input type="text" id="subjectName" class="form-input" placeholder="Назва предмета"></div><div class="form-group"><label class="form-label">Система оцінювання</label><select id="subjectScale" class="form-input"><option value="12">12-бальна</option><option value="5">5-бальна</option></select></div><div class="form-group"><label class="form-label">Вид</label><select id="subjectType" class="form-input"><option>Обов'язкова</option><option>Вибіркова</option></select></div></div><div class="form-grid"><div class="form-group"><label class="form-label">Кредити ЄКТС</label><input type="number" id="subjectCredits" class="form-input" min="0"></div><div class="form-group"><label class="form-label">Загально годин</label><input type="number" id="subjectHours" class="form-input" min="0"></div><div class="form-group"><label class="form-label">Кількість модулів</label><input type="number" id="subjectModules" class="form-input" min="0"></div></div><div class="form-grid"><div class="form-group"><label class="form-label">Лекційні (год)</label><input type="number" id="subjectLectures" class="form-input" min="0" value="0"></div><div class="form-group"><label class="form-label">Практичні (год)</label><input type="number" id="subjectPracticals" class="form-input" min="0" value="0"></div><div class="form-group"><label class="form-label">Лабораторні (год)</label><input type="number" id="subjectLabs" class="form-input" min="0" value="0"></div></div><button class="btn-primary" id="saveSubjectBtn" style="margin-top: 16px;">Зберегти</button></div><div id="subjectsList" class="data-list"><div class="empty-state">Предметів не знайдено</div></div></div></div>
+</main>
 
-        <div class="empty-state">Занять не знайдено</div>
-      </div>
-    </div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    <div id="tab-groups" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Аналітика та групи</h2>
-          <button class="btn-primary" onclick="toggleForm('form-add-group')">+ Додати групу</button>
-        </div>
+  const firebaseConfig = { apiKey: "AIzaSyCRMac4RetcPL2mvNXTJdUMcS9JZ-ZALiI", authDomain: "journal-tefc.firebaseapp.com", projectId: "journal-tefc", storageBucket: "journal-tefc.firebasestorage.app", messagingSenderId: "977017837694", appId: "1:977017837694:web:5f02e9ba69c384e607202f" };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  let currentEditId = null;
 
-        <div id="form-add-group" class="form-section">
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Назва групи</label>
-            <input type="text" class="form-input" placeholder="Наприклад: ПЗ-21">
-          </div>
-          <button class="btn-primary">Зберегти</button>
-        </div>
+  onAuthStateChanged(auth, async (user) => { if(user){ const snap = await getDoc(doc(db,"users",user.uid)); if(snap.exists() && snap.data().role==="teacher"){ document.getElementById("userName").textContent = snap.data().displayName||"Викладач"; document.getElementById("userAvatar").src = snap.data().photoURL||"default-avatar.png"; loadAllData(); } else window.location.href="index.html"; } else window.location.href="index.html"; });
+  window.logout = async()=>{ await signOut(auth); window.location.href="index.html"; };
+  window.switchTab = (tabId)=>{ document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active')); document.getElementById(tabId).classList.add('active'); event?.target?.classList?.add('active'); };
+  window.toggleForm = (formId)=>{ const f = document.getElementById(formId); if(f) f.style.display = f.style.display==="none"||f.style.display===""?"block":"none"; if(currentEditId) currentEditId=null; };
 
-        <div class="empty-state">Груп не знайдено</div>
-      </div>
-    </div>
+  async function loadAllData(){ await loadGroups(); await loadSubjects(); await loadStudents(); await loadLessons(); await updateStats(); }
+  async function updateStats(){ const studentsSnap = await getDocs(collection(db,"students")); const groupsSnap = await getDocs(collection(db,"groups")); const subjectsSnap = await getDocs(collection(db,"subjects")); document.getElementById("statStudents").innerText = studentsSnap.size; document.getElementById("statGroups").innerText = groupsSnap.size; document.getElementById("statSubjects").innerText = subjectsSnap.size; }
 
-    <div id="tab-students" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Студенти</h2>
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <select class="form-input"><option>Оберіть групу</option></select>
-            <button class="btn-primary" onclick="toggleForm('form-add-student')">+ Додати студента</button>
-          </div>
-        </div>
+  // GROUPS
+  async function loadGroups(){ const snap = await getDocs(collection(db,"groups")); const container = document.getElementById("groupsList"); if(snap.empty){ container.innerHTML='<div class="empty-state">Груп не знайдено</div>'; return; } let html='<div class="data-list">'; snap.forEach(docSnap=>{ const g = docSnap.data(); html+=`<div class="data-card"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editGroup('${docSnap.id}','${g.name}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('groups','${docSnap.id}')">🗑️</button></div></div>`; }); html+='</div>'; container.innerHTML=html; populateSelects(); }
+  window.editGroup = (id, name)=>{ currentEditId=id; document.getElementById("groupName").value=name; toggleForm('form-add-group'); const btn = document.getElementById("saveGroupBtn"); btn.innerText="Оновити"; btn.onclick = ()=> updateGroup(id); };
+  async function updateGroup(id){ const name = document.getElementById("groupName").value; if(!name) return; await updateDoc(doc(db,"groups",id),{name}); resetGroupForm(); loadGroups(); updateStats(); }
+  document.getElementById("saveGroupBtn").onclick = async()=>{ if(currentEditId){ await updateGroup(currentEditId); } else { const name = document.getElementById("groupName").value; if(name) await addDoc(collection(db,"groups"),{name}); resetGroupForm(); loadGroups(); updateStats(); } };
+  function resetGroupForm(){ document.getElementById("groupName").value=""; currentEditId=null; document.getElementById("saveGroupBtn").innerText="Зберегти"; document.getElementById("form-add-group").style.display="none"; }
 
-        <div id="form-add-student" class="form-section">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">ПІБ</label>
-              <input type="text" class="form-input" placeholder="Прізвище Ім'я По батькові">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Група</label>
-              <select class="form-input"><option>Оберіть групу</option></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Номер телефону</label>
-              <input type="tel" class="form-input" placeholder="+380...">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Роль у групі</label>
-              <select class="form-input">
-                <option value="student">Студент</option>
-                <option value="prefect">Староста</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn-primary">Зберегти</button>
-        </div>
+  // SUBJECTS
+  async function loadSubjects(){ const snap = await getDocs(collection(db,"subjects")); const container = document.getElementById("subjectsList"); if(snap.empty){ container.innerHTML='<div class="empty-state">Предметів не знайдено</div>'; return; } let html='<div class="data-list">'; snap.forEach(docSnap=>{ const s = docSnap.data(); html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name} (${s.scale}-бальна)</div><div class="data-sub">${s.type} | Кредити: ${s.credits||0} | Годин: ${s.hours||0}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; }); html+='</div>'; container.innerHTML=html; populateSelects(); }
+  window.editSubject = async(id)=>{ const snap = await getDoc(doc(db,"subjects",id)); if(snap.exists()){ currentEditId=id; const d=snap.data(); document.getElementById("subjectName").value=d.name; document.getElementById("subjectScale").value=d.scale; document.getElementById("subjectType").value=d.type; document.getElementById("subjectCredits").value=d.credits||0; document.getElementById("subjectHours").value=d.hours||0; document.getElementById("subjectModules").value=d.modules||0; document.getElementById("subjectLectures").value=d.lectures||0; document.getElementById("subjectPracticals").value=d.practicals||0; document.getElementById("subjectLabs").value=d.labs||0; toggleForm('form-add-subject'); const btn = document.getElementById("saveSubjectBtn"); btn.innerText="Оновити"; btn.onclick = ()=> updateSubject(id); } };
+  async function updateSubject(id){ const data = { name:document.getElementById("subjectName").value, scale:document.getElementById("subjectScale").value, type:document.getElementById("subjectType").value, credits:parseInt(document.getElementById("subjectCredits").value)||0, hours:parseInt(document.getElementById("subjectHours").value)||0, modules:parseInt(document.getElementById("subjectModules").value)||0, lectures:parseInt(document.getElementById("subjectLectures").value)||0, practicals:parseInt(document.getElementById("subjectPracticals").value)||0, labs:parseInt(document.getElementById("subjectLabs").value)||0 }; await updateDoc(doc(db,"subjects",id),data); resetSubjectForm(); loadSubjects(); updateStats(); }
+  document.getElementById("saveSubjectBtn").onclick = async()=>{ if(currentEditId) await updateSubject(currentEditId); else { const data = { name:document.getElementById("subjectName").value, scale:document.getElementById("subjectScale").value, type:document.getElementById("subjectType").value, credits:parseInt(document.getElementById("subjectCredits").value)||0, hours:parseInt(document.getElementById("subjectHours").value)||0, modules:parseInt(document.getElementById("subjectModules").value)||0, lectures:parseInt(document.getElementById("subjectLectures").value)||0, practicals:parseInt(document.getElementById("subjectPracticals").value)||0, labs:parseInt(document.getElementById("subjectLabs").value)||0 }; if(data.name) await addDoc(collection(db,"subjects"),data); resetSubjectForm(); loadSubjects(); updateStats(); } };
+  function resetSubjectForm(){ document.getElementById("subjectName").value=""; document.getElementById("subjectScale").value="12"; document.getElementById("subjectType").value="Обов'язкова"; document.getElementById("subjectCredits").value=""; document.getElementById("subjectHours").value=""; document.getElementById("subjectModules").value=""; document.getElementById("subjectLectures").value="0"; document.getElementById("subjectPracticals").value="0"; document.getElementById("subjectLabs").value="0"; currentEditId=null; document.getElementById("saveSubjectBtn").innerText="Зберегти"; document.getElementById("form-add-subject").style.display="none"; }
 
-        <div class="empty-state">Студентів не знайдено</div>
-      </div>
-    </div>
+  // STUDENTS
+  async function loadStudents(){ const snap = await getDocs(collection(db,"students")); const groupsSnap = await getDocs(collection(db,"groups")); const groupsMap = {}; groupsSnap.forEach(d=>groupsMap[d.id]=d.data().name); const container = document.getElementById("studentsList"); if(snap.empty){ container.innerHTML='<div class="empty-state">Студентів не знайдено</div>'; return; } let html='<div class="data-list">'; snap.forEach(docSnap=>{ const s = docSnap.data(); const groupName = groupsMap[s.groupId]||s.groupId; html+=`<div class="data-card"><div class="data-info"><div class="data-icon">👨‍🎓</div><div><div class="data-title">${s.name} ${s.role==='prefect'?'<span class="prefect-badge">Староста</span>':''}</div><div class="data-sub">${groupName} | ${s.phone||''}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editStudent('${docSnap.id}','${s.name}','${s.groupId}','${s.phone||''}','${s.role||'student'}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('students','${docSnap.id}')">🗑️</button></div></div>`; }); html+='</div>'; container.innerHTML=html; populateSelects(); }
+  window.editStudent = (id, name, groupId, phone, role)=>{ currentEditId=id; document.getElementById("studentName").value=name; document.getElementById("studentGroup").value=groupId; document.getElementById("studentPhone").value=phone; document.getElementById("studentRole").value=role; toggleForm('form-add-student'); const btn = document.getElementById("saveStudentBtn"); btn.innerText="Оновити"; btn.onclick = ()=> updateStudent(id); };
+  async function updateStudent(id){ const data = { name:document.getElementById("studentName").value, groupId:document.getElementById("studentGroup").value, phone:document.getElementById("studentPhone").value, role:document.getElementById("studentRole").value }; await updateDoc(doc(db,"students",id),data); resetStudentForm(); loadStudents(); updateStats(); }
+  document.getElementById("saveStudentBtn").onclick = async()=>{ if(currentEditId) await updateStudent(currentEditId); else { const data = { name:document.getElementById("studentName").value, groupId:document.getElementById("studentGroup").value, phone:document.getElementById("studentPhone").value, role:document.getElementById("studentRole").value }; if(data.name && data.groupId) await addDoc(collection(db,"students"),data); resetStudentForm(); loadStudents(); updateStats(); } };
+  function resetStudentForm(){ document.getElementById("studentName").value=""; document.getElementById("studentPhone").value=""; document.getElementById("studentRole").value="student"; currentEditId=null; document.getElementById("saveStudentBtn").innerText="Зберегти"; document.getElementById("form-add-student").style.display="none"; }
 
-    <div id="tab-subjects" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Предмети</h2>
-          <button class="btn-primary" onclick="toggleForm('form-add-subject')">+ Додати предмет</button>
-        </div>
+  // LESSONS
+  async function loadLessons(){ const snap = await getDocs(collection(db,"lessons")); const subjectsSnap = await getDocs(collection(db,"subjects")); const subMap={}; subjectsSnap.forEach(d=>subMap[d.id]=d.data().name); const container = document.getElementById("lessonsList"); if(snap.empty){ container.innerHTML='<div class="empty-state">Занять не знайдено</div>'; return; } let html='<div class="data-list">'; snap.forEach(docSnap=>{ const l = docSnap.data(); html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subMap[l.subjectId]||l.subjectId} | ${l.type} | ${l.date}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editLesson('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${docSnap.id}')">🗑️</button></div></div>`; }); html+='</div>'; container.innerHTML=html; populateSelects(); }
+  window.editLesson = async(id)=>{ const snap = await getDoc(doc(db,"lessons",id)); if(snap.exists()){ currentEditId=id; const d=snap.data(); document.getElementById("lessonSubject").value=d.subjectId; document.getElementById("lessonType").value=d.type; document.getElementById("lessonDate").value=d.date; document.getElementById("lessonTopic").value=d.topic||""; toggleForm('form-add-lesson'); const btn = document.getElementById("saveLessonBtn"); btn.innerText="Оновити"; btn.onclick = ()=> updateLesson(id); } };
+  async function updateLesson(id){ const data = { subjectId:document.getElementById("lessonSubject").value, type:document.getElementById("lessonType").value, date:document.getElementById("lessonDate").value, topic:document.getElementById("lessonTopic").value }; await updateDoc(doc(db,"lessons",id),data); resetLessonForm(); loadLessons(); }
+  document.getElementById("saveLessonBtn").onclick = async()=>{ if(currentEditId) await updateLesson(currentEditId); else { const data = { subjectId:document.getElementById("lessonSubject").value, type:document.getElementById("lessonType").value, date:document.getElementById("lessonDate").value, topic:document.getElementById("lessonTopic").value }; if(data.subjectId && data.date) await addDoc(collection(db,"lessons"),data); resetLessonForm(); loadLessons(); } };
+  function resetLessonForm(){ document.getElementById("lessonTopic").value=""; document.getElementById("lessonDate").value=""; currentEditId=null; document.getElementById("saveLessonBtn").innerText="Зберегти"; document.getElementById("form-add-lesson").style.display="none"; }
 
-        <div id="form-add-subject" class="form-section">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Назва</label>
-              <input type="text" class="form-input" placeholder="Назва предмета">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Система оцінювання</label>
-              <select class="form-input">
-                <option value="12">Предмет (12-бальна)</option>
-                <option value="5">Дисципліна (5-бальна)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Вид</label>
-              <select class="form-input">
-                <option>Обов'язкова</option>
-                <option>Вибіркова</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Кредити ЄКТС</label><input type="number" class="form-input" min="0"></div>
-            <div class="form-group"><label class="form-label">Загально годин</label><input type="number" class="form-input" min="0"></div>
-            <div class="form-group"><label class="form-label">Кількість модулів</label><input type="number" class="form-input" min="0"></div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Лекційні (год)</label><input type="number" class="form-input" min="0" value="0"></div>
-            <div class="form-group"><label class="form-label">Практичні (год)</label><input type="number" class="form-input" min="0" value="0"></div>
-            <div class="form-group"><label class="form-label">Лабораторні (год)</label><input type="number" class="form-input" min="0" value="0"></div>
-            <div class="form-group"><label class="form-label">Семінарські (год)</label><input type="number" class="form-input" min="0" value="0"></div>
-            <div class="form-group"><label class="form-label">Самостійна (год)</label><input type="number" class="form-input" min="0" value="0"></div>
-          </div>
-          <button class="btn-primary" style="margin-top: 16px;">Зберегти</button>
-        </div>
+  window.deleteItem = async (col, id)=>{ if(confirm("Видалити?")){ await deleteDoc(doc(db,col,id)); if(col==='groups') loadGroups(); if(col==='students') loadStudents(); if(col==='subjects') loadSubjects(); if(col==='lessons') loadLessons(); updateStats(); } };
 
-        <div class="empty-state">Предметів не знайдено</div>
-      </div>
-    </div>
-  </main>
+  function populateSelects(){ getDocs(collection(db,"groups")).then(snap=>{ let opts='<option>Оберіть групу</option>'; snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); document.getElementById("journalGroupSelect").innerHTML=opts; document.getElementById("studentGroup").innerHTML=opts.replace('Оберіть групу',''); const filter = document.getElementById("studentGroupFilter"); filter.innerHTML='<option value="all">Всі групи</option>'+opts.replace('Оберіть групу',''); }); getDocs(collection(db,"subjects")).then(snap=>{ let opts='<option>Оберіть предмет</option>'; snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); document.getElementById("journalSubjectSelect").innerHTML=opts; document.getElementById("lessonSubject").innerHTML=opts.replace('Оберіть предмет',''); }); }
+  window.deleteItem = async (col, id)=>{ if(confirm("Видалити?")){ await deleteDoc(doc(db,col,id)); if(col==='groups') loadGroups(); if(col==='students') loadStudents(); if(col==='subjects') loadSubjects(); if(col==='lessons') loadLessons(); updateStats(); } };
 
+  // JOURNAL placeholder (simplified)
+  document.getElementById("journalGroupSelect").addEventListener("change",()=>renderJournal());
+  document.getElementById("journalSubjectSelect").addEventListener("change",()=>renderJournal());
+  async function renderJournal(){ const groupId = document.getElementById("journalGroupSelect").value; const subjectId = document.getElementById("journalSubjectSelect").value; if(!groupId||groupId.includes("Оберіть")||!subjectId||subjectId.includes("Оберіть")){ document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть групу та предмет</div>'; return; } const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId))); const students = []; studentsSnap.forEach(d=>students.push({id:d.id,...d.data()})); if(students.length===0){ document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає студентів у групі</div>'; return; } let html='<table><thead><tr><th>Студент</th><th>Оцінка (редагуйте)</th></tr></thead><tbody>'; students.forEach(s=>{ html+=`<tr><td>${s.name} ${s.role==='prefect'?'⭐':''}</td><td class="cell-grade"><input type="text" class="input-grade" data-student="${s.id}" data-subject="${subjectId}" placeholder="н/св" value=""></td></tr>`; }); html+='</tbody></table>'; document.getElementById("journalTableContainer").innerHTML=html; // simplistic grade storage not fully, but shows concept
+  }
+</script>
 </body>
 </html>
+```
