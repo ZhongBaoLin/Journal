@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Журнал Успішності — Вхід</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithPopup,
+      GoogleAuthProvider,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRMac4RetcPL2mvNXTJdUMcS9JZ-ZALiI",
+      authDomain: "journal-tefc.firebaseapp.com",
+      projectId: "journal-tefc",
+      storageBucket: "journal-tefc.firebasestorage.app",
+      messagingSenderId: "977017837694",
+      appId: "1:977017837694:web:5f02e9ba69c384e607202f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    // ─── Визначення ролі ────────────────────────────────
+    // Алгоритм: якщо запис у /users/{uid} вже є — беремо збережену роль.
+    // Якщо новий юзер — зберігаємо обрану роль із форми.
+    async function saveOrGetUser(user, selectedRole) {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          role: selectedRole || "student",
+          createdAt: serverTimestamp()
+        });
+        return selectedRole || "student";
+      }
+      return snap.data().role;
+    }
+
+    // ─── Перевірка при завантаженні ─────────────────────
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          // Вже авторизований — редирект на дашборд
+          redirectToDashboard(snap.data().role);
+        }
+      }
+    });
+
+    // ─── Вхід через Google ──────────────────────────────
+    window.signInWithGoogle = async function() {
+      const btn = document.getElementById("googleBtn");
+      const errorEl = document.getElementById("authError");
+      const selectedRole = document.querySelector('input[name="role"]:checked')?.value;
+
+      if (!selectedRole) {
+        showError("Будь ласка, оберіть вашу роль перед входом");
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        btn.querySelector(".btn-text").textContent = "Підключення...";
+        errorEl.style.display = "none";
+
+        const result = await signInWithPopup(auth, provider);
+        const role = await saveOrGetUser(result.user, selectedRole);
+        redirectToDashboard(role);
+      } catch (err) {
+        btn.disabled = false;
+        btn.querySelector(".btn-text").textContent = "Увійти через Google";
+        if (err.code !== "auth/popup-closed-by-user") {
+          showError("Помилка авторизації. Спробуйте ще раз.");
+          console.error(err);
+        }
+      }
+    };
+
+    function redirectToDashboard(role) {
+      // Замінити на свої реальні сторінки
+      const routes = {
+        teacher: "dashboard-teacher.html",
+        student: "dashboard-student.html",
+        admin:   "dashboard-admin.html"
+      };
+      window.location.href = routes[role] || "dashboard.html";
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("authError");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:     #0d0f14;
+      --paper:   #f5f3ee;
+      --accent:  #2563eb;
+      --accent2: #7c3aed;
+      --gold:    #f59e0b;
+      --muted:   #6b7280;
+      --card-bg: #ffffff;
+      --border:  #e5e7eb;
+      --error:   #ef4444;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Manrope', sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+    }
+
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ── BLOBS ── */
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(80px);
+      opacity: .35; z-index: 0; pointer-events: none;
+    }
+    .blob-1 { width:520px; height:520px; top:-120px; right:-100px;
+               background: radial-gradient(circle, #7c3aed, #2563eb); }
+    .blob-2 { width:400px; height:400px; bottom:-80px; left:-80px;
+               background: radial-gradient(circle, #2563eb, #0ea5e9); }
+    .blob-3 { width:260px; height:260px; top:50%; left:50%;
+               transform:translate(-50%,-50%);
+               background: radial-gradient(circle, #f59e0b40, transparent); }
+
+    /* ── LAYOUT ── */
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left {
+      display: flex; flex-direction: column;
+      justify-content: center; padding: 60px 64px;
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 64px;
+    }
+    .brand-icon {
+      width: 44px; height: 44px;
+      background: var(--ink);
+      border-radius: 10px;
+      display: grid; place-items: center;
+    }
+    .brand-icon svg { width: 22px; height: 22px; }
+    .brand-name {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 14px; font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .brand-name span { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--ink); color: #fff;
+      font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      padding: 6px 14px; border-radius: 100px; width: fit-content;
+      margin-bottom: 28px;
+    }
+    .hero-tag::before { content:''; width:6px; height:6px; background: var(--gold); border-radius: 50%; }
+
+    .hero-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(32px, 3.5vw, 52px);
+      font-weight: 900; line-height: 1.1;
+      color: var(--ink); margin-bottom: 20px;
+    }
+    .hero-title em { font-style: normal; color: var(--accent); }
+
+    .hero-desc {
+      font-size: 16px; line-height: 1.7; color: var(--muted);
+      max-width: 400px; margin-bottom: 48px;
+    }
+
+    .stats {
+      display: flex; gap: 32px;
+    }
+    .stat-item {}
+    .stat-num {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 28px; font-weight: 700; color: var(--ink);
+    }
+    .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── RIGHT PANEL ── */
+    .right {
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px 48px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 44px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.08);
+    }
+
+    .card-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 22px; font-weight: 700;
+      color: var(--ink); margin-bottom: 6px;
+    }
+    .card-sub {
+      font-size: 14px; color: var(--muted); margin-bottom: 36px;
+    }
+
+    /* Role selector */
+    .role-label {
+      font-size: 12px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+      display: block;
+    }
+    .role-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin-bottom: 28px;
+    }
+    .role-option { display: none; }
+    .role-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 14px 10px;
+      border: 2px solid var(--border); border-radius: 14px;
+      cursor: pointer; transition: all .18s ease;
+      background: #fafafa;
+      user-select: none;
+    }
+    .role-card:hover { border-color: var(--accent); background: #eff6ff; }
+    .role-option:checked + .role-card {
+      border-color: var(--accent);
+      background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+    .role-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 18px;
+    }
+    .ri-teacher { background: #fef3c7; }
+    .ri-student { background: #dbeafe; }
+    .ri-admin   { background: #f3e8ff; }
+    .role-name {
+      font-size: 12px; font-weight: 600; color: var(--ink);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px; color: var(--muted); font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Google button */
+    .google-btn {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 14px 20px;
+      background: var(--ink); color: #fff;
+      border: none; border-radius: 14px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      margin-bottom: 16px;
+    }
+    .google-btn:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+    .google-btn:active:not(:disabled) { transform: translateY(0); }
+    .google-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .google-icon {
+      width: 20px; height: 20px; flex-shrink: 0;
+    }
+
+    /* Error */
+    .auth-error {
+      display: none;
+      background: #fef2f2; border: 1px solid #fecaca;
+      color: var(--error); border-radius: 10px;
+      font-size: 13px; padding: 10px 14px;
+      margin-bottom: 16px;
+    }
+
+    /* Footer note */
+    .card-note {
+      font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6;
+    }
+    .card-note a { color: var(--accent); text-decoration: none; }
+    .card-note a:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      .page { grid-template-columns: 1fr; }
+      .left { display: none; }
+      .right { padding: 40px 20px; }
+      .card { padding: 36px 28px; }
+    }
+
+    /* ── ANIMATE IN ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card { animation: fadeUp .5s ease both; }
+    .left > * { animation: fadeUp .6s ease both; }
+    .brand   { animation-delay: .05s; }
+    .hero-tag { animation-delay: .1s; }
+    .hero-title { animation-delay: .15s; }
+    .hero-desc  { animation-delay: .2s; }
+    .stats      { animation-delay: .25s; }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="page">
+
+    <!-- ── LEFT ── -->
+    <div class="left">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            <line x1="9" y1="9" x2="15" y2="9"/>
+            <line x1="9" y1="13" x2="13" y2="13"/>
+          </svg>
+        </div>
+        <div class="brand-name">
+          Журнал Успішності
+          <span>Освітня платформа</span>
+        </div>
+      </div>
+
+      <div class="hero-tag">Електронний облік оцінок</div>
+
+      <h1 class="hero-title">
+        Навчання стає<br/><em>прозорим</em>
+      </h1>
+
+      <p class="hero-desc">
+        Зручна платформа для викладачів, студентів та адміністрації.
+        Оцінки, відвідуваність та аналітика — в одному місці.
+      </p>
+
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-num">3</div>
+          <div class="stat-lbl">Ролі користувачів</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">100%</div>
+          <div class="stat-lbl">Безпечний вхід</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">∞</div>
+          <div class="stat-lbl">Груп і предметів</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT ── -->
+    <div class="right">
+      <div class="card">
+        <div class="card-title">Вхід до системи</div>
+        <div class="card-sub">Оберіть вашу роль і увійдіть через Google</div>
+
+        <span class="role-label">Я є...</span>
+        <div class="role-grid">
+          <label>
+            <input type="radio" name="role" value="teacher" class="role-option">
+            <div class="role-card">
+              <div class="role-icon ri-teacher">👨‍🏫</div>
+              <span class="role-name">Викладач</span>
+            </div>
+          </label>
+          <label>
+            <input type="radio" name="role" value="student" class="role-option">
+            <div class="role-card">
+              <div class="role-icon ri-student">🎓</div>
+              <span class="role-name">Студент</span>
+            </div>
+          </label>
+          <label>
+            <input type="radio" name="role" value="admin" class="role-option">
+            <div class="role-card">
+              <div class="role-icon ri-admin">🛡️</div>
+              <span class="role-name">Адмін</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="divider">або продовжте через</div>
+
+        <div id="authError" class="auth-error"></div>
+
+        <button class="google-btn" id="googleBtn" onclick="signInWithGoogle()">
+          <svg class="google-icon" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.34-8.16 2.34-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          <span class="btn-text">Увійти через Google</span>
+        </button>
+
+        <p class="card-note">
+          Продовжуючи, ви погоджуєтесь з
+          <a href="#">умовами використання</a> та
+          <a href="#">політикою конфіденційності</a>.
+          <br/>Роль зберігається при першому вході.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
