@@ -32,6 +32,16 @@
       container.appendChild(list);
     };
 
+    window.switchTab = function(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  
+  document.getElementById(tabId).classList.add('active');
+  const btn = Array.from(document.querySelectorAll('.tab-btn'))
+    .find(b => b.getAttribute('onclick').includes(tabId));
+  if (btn) btn.classList.add('active');
+};
+
     // ====== ДОДАННЯ ГРУПИ ======
     window.saveGroup = async function() {
       const name = document.querySelector('#form-add-group input').value;
