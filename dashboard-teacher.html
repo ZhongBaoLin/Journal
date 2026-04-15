@@ -94,6 +94,83 @@
       return { average: average.toFixed(2), quality: quality.toFixed(2) };
     };
 
+    // Функція для оновлення лічильників (статистики) на головній
+async function updateStats() {
+    const studentsSnap = await getDocs(collection(db, "students"));
+    const groupsSnap = await getDocs(collection(db, "groups"));
+    const subjectsSnap = await getDocs(collection(db, "subjects"));
+
+    document.querySelectorAll('.stat-val')[0].textContent = studentsSnap.size;
+    document.querySelectorAll('.stat-val')[1].textContent = groupsSnap.size;
+    document.querySelectorAll('.stat-val')[2].textContent = subjectsSnap.size;
+}
+
+// 1. Збереження ГРУПИ
+window.saveGroup = async function() {
+    const name = document.querySelector('#form-add-group .form-input').value;
+    if (!name) return alert("Введіть назву групи");
+
+    try {
+        await addDoc(collection(db, "groups"), { name, createdAt: new Date() });
+        alert("Групу додано!");
+        location.reload(); // Оновлюємо, щоб побачити зміни
+    } catch (e) { console.error(e); }
+};
+
+// 2. Збереження ПРЕДМЕТА
+window.saveSubject = async function() {
+    const container = document.getElementById('form-add-subject');
+    const inputs = container.querySelectorAll('.form-input');
+    
+    const subjectData = {
+        name: inputs[0].value,
+        system: inputs[1].value,
+        type: inputs[2].value,
+        credits: inputs[3].value,
+        totalHours: inputs[4].value,
+        modules: inputs[5].value,
+        hours: {
+            lectures: inputs[6].value,
+            practical: inputs[7].value,
+            lab: inputs[8].value,
+            seminar: inputs[9].value,
+            self: inputs[10].value
+        }
+    };
+
+    if (!subjectData.name) return alert("Введіть назву предмета");
+
+    try {
+        await addDoc(collection(db, "subjects"), subjectData);
+        alert("Предмет додано!");
+        location.reload();
+    } catch (e) { console.error(e); }
+};
+
+// 3. Збереження СТУДЕНТА
+window.saveStudent = async function() {
+    const container = document.getElementById('form-add-student');
+    const inputs = container.querySelectorAll('.form-input');
+
+    const studentData = {
+        fullName: inputs[0].value,
+        groupId: inputs[1].value,
+        phone: inputs[2].value,
+        role: inputs[3].value
+    };
+
+    if (!studentData.fullName) return alert("Введіть ПІБ");
+
+    try {
+        await addDoc(collection(db, "students"), studentData);
+        alert("Студента додано!");
+        location.reload();
+    } catch (e) { console.error(e); }
+};
+
+// Виклик оновлення статистики при завантаженні
+updateStats();
+
   </script>
 
   <style>
@@ -380,7 +457,7 @@
       <div class="panel">
         <div class="panel-header">
           <h2 class="panel-title">Аналітика та групи</h2>
-          <button class="btn-primary" onclick="toggleForm('form-add-group')">+ Додати групу</button>
+          <button class="btn-primary" onclick="saveGroup()">Зберегти</button>
         </div>
 
         <div id="form-add-group" class="form-section">
@@ -427,7 +504,7 @@
               </select>
             </div>
           </div>
-          <button class="btn-primary">Зберегти</button>
+          <button class="btn-primary" onclick="saveStudent()">Зберегти</button>
         </div>
 
         <div class="empty-state">Студентів не знайдено</div>
@@ -438,7 +515,7 @@
       <div class="panel">
         <div class="panel-header">
           <h2 class="panel-title">Предмети</h2>
-          <button class="btn-primary" onclick="toggleForm('form-add-subject')">+ Додати предмет</button>
+          <button class="btn-primary" onclick="saveSubject()" style="margin-top: 16px;">Зберегти</button>
         </div>
 
         <div id="form-add-subject" class="form-section">
