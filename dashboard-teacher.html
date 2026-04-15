@@ -8,92 +8,89 @@
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      collection,
-      addDoc,
-      getDocs,
-      query,
-      where
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCRMac4RetcPL2mvNXTJdUMcS9JZ-ZALiI",
-      authDomain: "journal-tefc.firebaseapp.com",
-      projectId: "journal-tefc",
-      storageBucket: "journal-tefc.firebasestorage.app",
-      messagingSenderId: "977017837694",
-      appId: "1:977017837694:web:5f02e9ba69c384e607202f"
-    };
+      const list = document.createElement('div');
+      list.className = 'data-list';
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+      const snap = await getDocs(collection(db, "subjects"));
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists()) {
-          const userData = snap.data();
-          if (userData.role !== "teacher") {
-            window.location.href = "index.html";
-          } else {
-            document.getElementById("userName").textContent = userData.displayName || "Викладач";
-            document.getElementById("userAvatar").src = userData.photoURL || "default-avatar.png";
-          }
-        } else {
-          window.location.href = "index.html";
-        }
-      } else {
-        window.location.href = "index.html";
-      }
-    });
-
-    window.logout = async function() {
-      await signOut(auth);
-      window.location.href = "index.html";
-    };
-
-    window.switchTab = function(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      
-      document.getElementById(tabId).classList.add('active');
-      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
-      if(btn) btn.classList.add('active');
-    };
-
-    window.toggleForm = function(formId) {
-      const form = document.getElementById(formId);
-      form.style.display = form.style.display === "none" || form.style.display === "" ? "block" : "none";
-    };
-
-    window.calculateGroupQuality = function(gradesArray, totalStudents) {
-      if (totalStudents === 0) return 0;
-      let count5 = 0;
-      let count4 = 0;
-      let count3 = 0;
-      
-      gradesArray.forEach(grade => {
-        if (grade === 5) count5++;
-        if (grade === 4) count4++;
-        if (grade === 3) count3++;
+      snap.forEach(doc => {
+        const data = doc.data();
+        const item = document.createElement('div');
+        item.className = 'data-card';
+        item.innerHTML = `
+          <div class="data-info">
+            <div class="data-icon">📘</div>
+            <div>
+              <div class="data-title">${data.name}</div>
+              <div class="data-sub">${data.system}-бальна</div>
+            </div>
+          </div>`;
+        list.appendChild(item);
       });
-      
-      const average = ((5 * count5) + (4 * count4) + (3 * count3)) / totalStudents;
-      const quality = ((count5 + count4) / totalStudents) * 100;
-      
-      return { average: average.toFixed(2), quality: quality.toFixed(2) };
+
+      container.appendChild(list);
+    }
+
+    // ====== ДОДАННЯ ГРУПИ ======
+    window.saveGroup = async function() {
+      const name = document.querySelector('#form-add-group input').value;
+      if (!name) return alert("Введіть назву групи");
+
+      await addDoc(collection(db, "groups"), { name });
+      loadGroups();
     };
 
+    async function loadGroups() {
+      const container = document.querySelector('#tab-groups .panel');
+      const list = document.createElement('div');
+      list.className = 'data-list';
+
+      const snap = await getDocs(collection(db, "groups"));
+
+      snap.forEach(doc => {
+        const data = doc.data();
+        const item = document.createElement('div');
+        item.className = 'data-card';
+        item.innerHTML = `<div class="data-title">${data.name}</div>`;
+        list.appendChild(item);
+      });
+
+      container.appendChild(list);
+    }
+
+    // ====== ДОДАННЯ СТУДЕНТА ======
+    window.saveStudent = async function() {
+      const name = document.querySelector('#form-add-student input[type="text"]').value;
+      if (!name) return alert("Введіть ПІБ");
+
+      await addDoc(collection(db, "students"), { name });
+      loadStudents();
+    };
+
+    async function loadStudents() {
+      const container = document.querySelector('#tab-students .panel');
+      const list = document.createElement('div');
+      list.className = 'data-list';
+
+      const snap = await getDocs(collection(db, "students"));
+
+      snap.forEach(doc => {
+        const data = doc.data();
+        const item = document.createElement('div');
+        item.className = 'data-card';
+        item.innerHTML = `<div class="data-title">${data.name}</div>`;
+        list.appendChild(item);
+      });
+
+      container.appendChild(list);
+    }
+
+    window.onload = function() {
+      loadSubjects();
+      loadGroups();
+      loadStudents();
+    };
   </script>
 
   <style>
@@ -388,7 +385,7 @@
             <label class="form-label">Назва групи</label>
             <input type="text" class="form-input" placeholder="Наприклад: ПЗ-21">
           </div>
-          <button class="btn-primary">Зберегти</button>
+          <button class="btn-primary" onclick="saveGroup()">Зберегти</button>
         </div>
 
         <div class="empty-state">Груп не знайдено</div>
@@ -427,7 +424,7 @@
               </select>
             </div>
           </div>
-          <button class="btn-primary">Зберегти</button>
+          <button class="btn-primary" onclick="saveStudent()">Зберегти</button>
         </div>
 
         <div class="empty-state">Студентів не знайдено</div>
@@ -474,7 +471,7 @@
             <div class="form-group"><label class="form-label">Семінарські (год)</label><input type="number" class="form-input" min="0" value="0"></div>
             <div class="form-group"><label class="form-label">Самостійна (год)</label><input type="number" class="form-input" min="0" value="0"></div>
           </div>
-          <button class="btn-primary" style="margin-top: 16px;">Зберегти</button>
+          <button class="btn-primary" onclick="saveSubject()">Зберегти</button>
         </div>
 
         <div class="empty-state">Предметів не знайдено</div>
