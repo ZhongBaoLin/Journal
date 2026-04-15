@@ -102,8 +102,7 @@
       // Замінити на свої реальні сторінки
       const routes = {
         teacher: "dashboard-teacher.html",
-        student: "dashboard-student.html",
-        admin:   "dashboard-admin.html"
+        student: "dashboard-student.html"
       };
       window.location.href = routes[role] || "dashboard.html";
     }
@@ -166,12 +165,22 @@
       min-height: 100vh;
       display: grid;
       grid-template-columns: 1fr 1fr;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Outer wrapper to center the page block */
+    .page-outer {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
     }
 
     /* ── LEFT PANEL ── */
     .left {
       display: flex; flex-direction: column;
-      justify-content: center; padding: 60px 64px;
+      justify-content: center; padding: 60px 48px 60px 64px;
     }
 
     .brand {
@@ -256,7 +265,7 @@
       display: block;
     }
     .role-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
       margin-bottom: 28px;
     }
     .role-option { display: none; }
@@ -360,6 +369,7 @@
   <div class="blob blob-2"></div>
   <div class="blob blob-3"></div>
 
+  <div class="page-outer">
   <div class="page">
 
     <!-- ── LEFT ── -->
@@ -386,13 +396,13 @@
       </h1>
 
       <p class="hero-desc">
-        Зручна платформа для викладачів, студентів та адміністрації.
+        Зручна платформа для викладачів і студентів.
         Оцінки, відвідуваність та аналітика — в одному місці.
       </p>
 
       <div class="stats">
         <div class="stat-item">
-          <div class="stat-num">3</div>
+          <div class="stat-num">2</div>
           <div class="stat-lbl">Ролі користувачів</div>
         </div>
         <div class="stat-item">
@@ -428,13 +438,6 @@
               <span class="role-name">Студент</span>
             </div>
           </label>
-          <label>
-            <input type="radio" name="role" value="admin" class="role-option">
-            <div class="role-card">
-              <div class="role-icon ri-admin">🛡️</div>
-              <span class="role-name">Адмін</span>
-            </div>
-          </label>
         </div>
 
         <div class="divider">або продовжте через</div>
@@ -461,5 +464,7 @@
     </div>
 
   </div>
+  </div>
 </body>
 </html>
+
