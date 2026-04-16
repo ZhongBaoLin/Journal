@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Журнал Успішності — Вхід</title>
+  <title>Журнал Успішності — Вхід для викладача</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 
@@ -13,8 +13,7 @@
       getAuth,
       signInWithPopup,
       GoogleAuthProvider,
-      onAuthStateChanged,
-      signOut
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore,
@@ -38,10 +37,8 @@
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    // ─── Визначення ролі ────────────────────────────────
-    // Алгоритм: якщо запис у /users/{uid} вже є — беремо збережену роль.
-    // Якщо новий юзер — зберігаємо обрану роль із форми.
-    async function saveOrGetUser(user, selectedRole) {
+    // Фіксована роль — тільки викладач
+    async function saveTeacherUser(user) {
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
       if (!snap.exists()) {
@@ -50,35 +47,32 @@
           displayName: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
-          role: selectedRole || "student",
+          role: "teacher",
           createdAt: serverTimestamp()
         });
-        return selectedRole || "student";
+      } else if (snap.data().role !== "teacher") {
+        // Якщо користувач існує з іншою роллю, оновлюємо на викладача
+        await setDoc(ref, { role: "teacher" }, { merge: true });
       }
-      return snap.data().role;
+      return "teacher";
     }
 
-    // ─── Перевірка при завантаженні ─────────────────────
+    // Перевірка при завантаженні
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists()) {
-          // Вже авторизований — редирект на дашборд
-          redirectToDashboard(snap.data().role);
+        if (snap.exists() && snap.data().role === "teacher") {
+          window.location.href = "dashboard-teacher.html";
+        } else if (snap.exists() && snap.data().role !== "teacher") {
+          // Якщо роль не викладач, показуємо помилку
+          showError("Ця сторінка тільки для викладачів. Ви зареєстровані як " + snap.data().role);
         }
       }
     });
 
-    // ─── Вхід через Google ──────────────────────────────
     window.signInWithGoogle = async function() {
       const btn = document.getElementById("googleBtn");
       const errorEl = document.getElementById("authError");
-      const selectedRole = document.querySelector('input[name="role"]:checked')?.value;
-
-      if (!selectedRole) {
-        showError("Будь ласка, оберіть вашу роль перед входом");
-        return;
-      }
 
       try {
         btn.disabled = true;
@@ -86,8 +80,8 @@
         errorEl.style.display = "none";
 
         const result = await signInWithPopup(auth, provider);
-        const role = await saveOrGetUser(result.user, selectedRole);
-        redirectToDashboard(role);
+        await saveTeacherUser(result.user);
+        window.location.href = "dashboard-teacher.html";
       } catch (err) {
         btn.disabled = false;
         btn.querySelector(".btn-text").textContent = "Увійти через Google";
@@ -97,15 +91,6 @@
         }
       }
     };
-
-    function redirectToDashboard(role) {
-      // Замінити на свої реальні сторінки
-      const routes = {
-        teacher: "dashboard-teacher.html",
-        student: "dashboard-student.html"
-      };
-      window.location.href = routes[role] || "dashboard.html";
-    }
 
     function showError(msg) {
       const el = document.getElementById("authError");
@@ -136,7 +121,6 @@
       color: var(--ink);
     }
 
-    /* ── GRID BACKGROUND ── */
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: 0;
@@ -146,7 +130,6 @@
       background-size: 48px 48px;
     }
 
-    /* ── BLOBS ── */
     .blob {
       position: fixed; border-radius: 50%; filter: blur(80px);
       opacity: .35; z-index: 0; pointer-events: none;
@@ -159,7 +142,6 @@
                transform:translate(-50%,-50%);
                background: radial-gradient(circle, #f59e0b40, transparent); }
 
-    /* ── LAYOUT ── */
     .page {
       position: relative; z-index: 1;
       min-height: 100vh;
@@ -169,7 +151,6 @@
       margin: 0 auto;
     }
 
-    /* Outer wrapper to center the page block */
     .page-outer {
       position: relative; z-index: 1;
       min-height: 100vh;
@@ -177,7 +158,6 @@
       align-items: stretch;
     }
 
-    /* ── LEFT PANEL ── */
     .left {
       display: flex; flex-direction: column;
       justify-content: center; padding: 60px 48px 60px 64px;
@@ -227,14 +207,12 @@
     .stats {
       display: flex; gap: 32px;
     }
-    .stat-item {}
     .stat-num {
       font-family: 'Unbounded', sans-serif;
       font-size: 28px; font-weight: 700; color: var(--ink);
     }
     .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-    /* ── RIGHT PANEL ── */
     .right {
       display: flex; align-items: center; justify-content: center;
       padding: 60px 48px;
@@ -258,44 +236,23 @@
       font-size: 14px; color: var(--muted); margin-bottom: 36px;
     }
 
-    /* Role selector */
-    .role-label {
-      font-size: 12px; font-weight: 600; letter-spacing: .06em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
-      display: block;
-    }
-    .role-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-      margin-bottom: 28px;
-    }
-    .role-option { display: none; }
-    .role-card {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 8px; padding: 14px 10px;
-      border: 2px solid var(--border); border-radius: 14px;
-      cursor: pointer; transition: all .18s ease;
-      background: #fafafa;
-      user-select: none;
-    }
-    .role-card:hover { border-color: var(--accent); background: #eff6ff; }
-    .role-option:checked + .role-card {
-      border-color: var(--accent);
+    .teacher-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       background: #eff6ff;
-      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 28px;
+      border: 1px solid #bfdbfe;
     }
-    .role-icon {
-      width: 36px; height: 36px; border-radius: 10px;
-      display: grid; place-items: center;
-      font-size: 18px;
-    }
-    .ri-teacher { background: #fef3c7; }
-    .ri-student { background: #dbeafe; }
-    .ri-admin   { background: #f3e8ff; }
-    .role-name {
-      font-size: 12px; font-weight: 600; color: var(--ink);
+    .teacher-badge span:first-child { font-size: 20px; }
+    .teacher-badge span:last-child {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
     }
 
-    /* Divider */
     .divider {
       display: flex; align-items: center; gap: 12px;
       margin-bottom: 24px; color: var(--muted); font-size: 12px;
@@ -304,7 +261,6 @@
       content: ''; flex: 1; height: 1px; background: var(--border);
     }
 
-    /* Google button */
     .google-btn {
       width: 100%;
       display: flex; align-items: center; justify-content: center; gap: 12px;
@@ -325,7 +281,6 @@
       width: 20px; height: 20px; flex-shrink: 0;
     }
 
-    /* Error */
     .auth-error {
       display: none;
       background: #fef2f2; border: 1px solid #fecaca;
@@ -334,14 +289,12 @@
       margin-bottom: 16px;
     }
 
-    /* Footer note */
     .card-note {
       font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6;
     }
     .card-note a { color: var(--accent); text-decoration: none; }
     .card-note a:hover { text-decoration: underline; }
 
-    /* ── RESPONSIVE ── */
     @media (max-width: 860px) {
       .page { grid-template-columns: 1fr; }
       .left { display: none; }
@@ -349,7 +302,6 @@
       .card { padding: 36px 28px; }
     }
 
-    /* ── ANIMATE IN ── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -372,7 +324,6 @@
   <div class="page-outer">
   <div class="page">
 
-    <!-- ── LEFT ── -->
     <div class="left">
       <div class="brand">
         <div class="brand-icon">
@@ -392,55 +343,41 @@
       <div class="hero-tag">Електронний облік оцінок</div>
 
       <h1 class="hero-title">
-        Навчання стає<br/><em>прозорим</em>
+        Система для<br/><em>викладачів</em>
       </h1>
 
       <p class="hero-desc">
-        Зручна платформа для викладачів і студентів.
+        Зручна платформа для ведення журналу оцінок.
         Оцінки, відвідуваність та аналітика — в одному місці.
       </p>
 
       <div class="stats">
         <div class="stat-item">
-          <div class="stat-num">2</div>
-          <div class="stat-lbl">Ролі користувачів</div>
+          <div class="stat-num">∞</div>
+          <div class="stat-lbl">Груп і предметів</div>
         </div>
         <div class="stat-item">
           <div class="stat-num">100%</div>
           <div class="stat-lbl">Безпечний вхід</div>
         </div>
         <div class="stat-item">
-          <div class="stat-num">∞</div>
-          <div class="stat-lbl">Груп і предметів</div>
+          <div class="stat-num">12</div>
+          <div class="stat-lbl">Бальна система</div>
         </div>
       </div>
     </div>
 
-    <!-- ── RIGHT ── -->
     <div class="right">
       <div class="card">
-        <div class="card-title">Вхід до системи</div>
-        <div class="card-sub">Оберіть вашу роль і увійдіть через Google</div>
+        <div class="card-title">Вхід для викладача</div>
+        <div class="card-sub">Увійдіть через Google, щоб продовжити</div>
 
-        <span class="role-label">Я є...</span>
-        <div class="role-grid">
-          <label>
-            <input type="radio" name="role" value="teacher" class="role-option">
-            <div class="role-card">
-              <div class="role-icon ri-teacher">👨‍🏫</div>
-              <span class="role-name">Викладач</span>
-            </div>
-          </label>
-          <label>
-            <input type="radio" name="role" value="student" class="role-option">
-            <div class="role-card">
-              <div class="role-icon ri-student">🎓</div>
-              <span class="role-name">Студент</span>
-            </div>
-          </label>
+        <div class="teacher-badge">
+          <span>👨‍🏫</span>
+          <span>Доступ тільки для викладачів</span>
         </div>
 
-        <div class="divider">або продовжте через</div>
+        <div class="divider">авторизація через</div>
 
         <div id="authError" class="auth-error"></div>
 
@@ -458,7 +395,6 @@
           Продовжуючи, ви погоджуєтесь з
           <a href="#">умовами використання</a> та
           <a href="#">політикою конфіденційності</a>.
-          <br/>Роль зберігається при першому вході.
         </p>
       </div>
     </div>
@@ -467,4 +403,3 @@
   </div>
 </body>
 </html>
-
