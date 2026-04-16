@@ -482,7 +482,17 @@
         </div>
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Предмет/Дисципліна</label><select id="lessonSubject" class="form-input"></select></div>
-          <div class="form-group"><label class="form-label">Вид заняття</label><select id="lessonType" class="form-input"><option>Лекція</option><option>Практичне</option><option>Лабораторне</option><option>Семінарське</option><option>Самостійне вивчення</option><option>Залік з модуля</option><option>Тематичне оцінювання</option></select></div>
+          <div class="form-group"><label class="form-label">Вид заняття</label>
+            <select id="lessonType" class="form-input">
+              <option>Лекція</option>
+              <option>Практичне заняття</option>
+              <option>Лабораторне заняття</option>
+              <option>Семінарське заняття</option>
+              <option>Самостійне вивчення</option>
+              <option>Залік з модуля</option>
+              <option>Тематичне оцінювання</option>
+            </select>
+          </div>
           <div class="form-group"><label class="form-label">Дата</label><input type="date" id="lessonDate" class="form-input"></div>
         </div>
         <div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
@@ -1184,9 +1194,9 @@
     const order = {
       'Лекція': 1,
       'Самостійне вивчення': 2,
-      'Практичне': 3,
-      'Лабораторне': 3,
-      'Семінарське': 4,
+      'Практичне заняття': 3,
+      'Лабораторне заняття': 3,
+      'Семінарське заняття': 4,
       'Залік з модуля': 5,
       'Тематичне оцінювання': 6
     };
@@ -1202,17 +1212,25 @@
     );
     const snap = await getDocs(q);
     
-    const sameTypeLessons = [];
+    // Збираємо всі заняття за цю дату
+    const lessonsOnDate = [];
     snap.forEach(doc => {
-      const lesson = doc.data();
-      if(lesson.type === type) {
-        sameTypeLessons.push(lesson);
-      }
+      lessonsOnDate.push({id: doc.id, ...doc.data()});
     });
     
+    // Сортуємо їх за порядком категорій
+    lessonsOnDate.sort((a, b) => {
+      const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
+      if(orderCompare !== 0) return orderCompare;
+      return (a.number || 1) - (b.number || 1);
+    });
+    
+    // Знаходимо останній номер для цього типу
     let maxNumber = 0;
-    sameTypeLessons.forEach(lesson => {
-      if(lesson.number && lesson.number > maxNumber) maxNumber = lesson.number;
+    lessonsOnDate.forEach(lesson => {
+      if(lesson.type === type && lesson.number && lesson.number > maxNumber) {
+        maxNumber = lesson.number;
+      }
     });
     
     return maxNumber + 1;
@@ -1220,9 +1238,9 @@
   
   function formatLessonDisplay(lesson) {
     const typeShort = lesson.type === 'Лекція' ? 'Лек' : 
-                     lesson.type === 'Практичне' ? 'Прак' :
-                     lesson.type === 'Лабораторне' ? 'Лаб' :
-                     lesson.type === 'Семінарське' ? 'Сем' :
+                     lesson.type === 'Практичне заняття' ? 'Прак' :
+                     lesson.type === 'Лабораторне заняття' ? 'Лаб' :
+                     lesson.type === 'Семінарське заняття' ? 'Сем' :
                      lesson.type === 'Самостійне вивчення' ? 'С.в.' :
                      lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.оц';
     return `${typeShort} №${lesson.number || 1}`;
@@ -1236,8 +1254,22 @@
       lessonsQuery = query(lessonsQuery, where("subjectId","==",filterSubject));
     }
     const snap = await getDocs(lessonsQuery); 
+    
+    // Отримуємо всі предмети з групами
     const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))); 
-    const subMap={}; subjectsSnap.forEach(d=>subMap[d.id]=d.data().name); 
+    const subMap = {};
+    for(const docSnap of subjectsSnap.docs){
+      const s = docSnap.data();
+      const groupsSnap = await getDocs(query(collection(db,"groups"), where("id","==",s.groupId)));
+      let groupName = '';
+      let academicYear = '';
+      if(!groupsSnap.empty){
+        groupName = groupsSnap.docs[0].data().name;
+        academicYear = groupsSnap.docs[0].data().academicYear || '';
+      }
+      subMap[docSnap.id] = {name: s.name, group: groupName, year: academicYear || s.academicYear};
+    }
+    
     const container = document.getElementById("lessonsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Занять не знайдено</div>'; return; } 
     
@@ -1258,7 +1290,9 @@
       const dateParts = l.date.split('-');
       const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
       const displayType = formatLessonDisplay(l);
-      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subMap[l.subjectId]||l.subjectId} | ${displayType} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`; 
+      const subjectInfo = subMap[l.subjectId];
+      const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
+      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subjectDisplay} | ${displayType} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`; 
     }); 
     html+='</div>'; 
     container.innerHTML=html; 
@@ -1392,6 +1426,38 @@
       renderJournal();
     };
     
+    // Оновлюємо предмети при зміні групи - з групою та роком в дужках
+    document.getElementById("journalGroupSelect").onchange = async () => {
+      const selectedGroup = document.getElementById("journalGroupSelect").value;
+      if(!selectedGroup) {
+        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
+        return;
+      }
+      
+      // Отримуємо інформацію про групу
+      const groupDoc = await getDoc(doc(db,"groups",selectedGroup));
+      const groupName = groupDoc.exists() ? groupDoc.data().name : '';
+      const groupYear = groupDoc.exists() ? groupDoc.data().academicYear : '';
+      
+      const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("groupId","==",selectedGroup), where("teacherId","==",currentTeacherId)));
+      let subjectOptions = '<option value="">Оберіть предмет</option>';
+      for(const docSnap of subjectsSnap.docs){
+        const s = docSnap.data();
+        const displayText = `${s.name} (${groupName} | ${groupYear})`;
+        subjectOptions += `<option value="${docSnap.id}">${displayText}</option>`;
+      }
+      document.getElementById("journalSubjectSelect").innerHTML = subjectOptions;
+      
+      saveLastSelection();
+      renderJournal();
+    };
+    
+    document.getElementById("journalSubjectSelect").onchange = () => {
+      saveLastSelection();
+      renderJournal();
+    };
+  }
+    
     // Оновлюємо предмети при зміні групи
     document.getElementById("journalGroupSelect").onchange = async () => {
       const selectedGroup = document.getElementById("journalGroupSelect").value;
@@ -1432,12 +1498,27 @@
       document.getElementById("subjectGroup").innerHTML=opts; 
     });
     
-    // Для форми додавання заняття
-    getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))).then(snap=>{ 
+    // Для форми додавання заняття - з групою та роком
+    getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))).then(async snap=>{ 
       let opts='<option value="">Оберіть предмет</option>'; 
-      snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
+      let filterOpts='<option value="all">Всі предмети</option>';
+      
+      for(const docSnap of snap.docs){
+        const s = docSnap.data();
+        const groupsSnap = await getDocs(query(collection(db,"groups"), where("id","==",s.groupId)));
+        let groupName = '';
+        let academicYear = '';
+        if(!groupsSnap.empty){
+          groupName = groupsSnap.docs[0].data().name;
+          academicYear = groupsSnap.docs[0].data().academicYear || '';
+        }
+        const displayText = `${s.name} (${groupName} | ${academicYear || s.academicYear || 'рік не вказано'})`;
+        opts += `<option value="${docSnap.id}">${displayText}</option>`;
+        filterOpts += `<option value="${docSnap.id}">${displayText}</option>`;
+      }
+      
       document.getElementById("lessonSubject").innerHTML=opts; 
-      document.getElementById("lessonFilterSubject").innerHTML='<option value="all">Всі предмети</option>' + opts;
+      document.getElementById("lessonFilterSubject").innerHTML=filterOpts;
     }); 
     
     populateJournalFilters();
