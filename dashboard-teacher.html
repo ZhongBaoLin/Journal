@@ -1260,19 +1260,9 @@
     );
     const snap = await getDocs(q);
     
-    const lessonsOnDate = [];
-    snap.forEach(doc => {
-      lessonsOnDate.push({id: doc.id, ...doc.data()});
-    });
-    
-    lessonsOnDate.sort((a, b) => {
-      const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
-      if(orderCompare !== 0) return orderCompare;
-      return (a.number || 1) - (b.number || 1);
-    });
-    
     let maxNumber = 0;
-    lessonsOnDate.forEach(lesson => {
+    snap.forEach(doc => {
+      const lesson = doc.data();
       if(lesson.type === type && lesson.number && lesson.number > maxNumber) {
         maxNumber = lesson.number;
       }
@@ -1415,19 +1405,22 @@
     }
   };
   
-  async function updateLesson(id){ 
+   async function updateLesson(id){ 
     const subjectId = document.getElementById("lessonSubject").value;
     const sectionSelect = document.getElementById("lessonSection");
     let sectionId = sectionSelect.value;
     const newSectionName = document.getElementById("newSectionName").value.trim();
     
-    // Якщо вибрано створення нового розділу
     if(sectionId === "new" && newSectionName) {
       sectionId = await createNewSection(subjectId, newSectionName);
     } else if(sectionId === "new" && !newSectionName) {
       alert("Будь ласка, введіть назву нового розділу!");
       return;
     }
+    
+    // Отримуємо поточне заняття, щоб зберегти номер
+    const currentLesson = await getDoc(doc(db,"lessons",id));
+    const currentNumber = currentLesson.data().number;
     
     const data = { 
       subjectId: subjectId, 
@@ -1437,15 +1430,86 @@
       sectionId: sectionId || null,
       teacherId: currentTeacherId
     }; 
-    await updateDoc(doc(db,"lessons",id),data); 
+    
+    // Зберігаємо номер, якщо він був
+    if(currentNumber) data.number = currentNumber;
+    
+    await updateDoc(doc(db,"lessons",id), data); 
     resetLessonForm(); 
     loadMyLessons(); 
     if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
   }
   
-  document.getElementById("saveLessonBtn").onclick = async()=>{ 
-    if(currentEditId) await updateLesson(currentEditId); 
-    else { 
+    document.getElementById("saveLessonBtn").onclick = async()=>{ 
+    console.log("=== ЗБЕРЕЖЕННЯ ЗАНЯТТЯ ===");
+    console.log("currentEditId:", currentEditId);
+    
+    if(currentEditId) {
+      console.log("РЕЖИМ: ОНОВЛЕННЯ - заняття з ID:", currentEditId);
+      await updateLesson(currentEditId);
+      console.log("Оновлення завершено");
+      return;
+    }
+    
+    console.log("РЕЖИМ: СТВОРЕННЯ НОВОГО ЗАНЯТТЯ");
+    
+    const date = document.getElementById("lessonDate").value;
+    const type = document.getElementById("lessonType").value;
+    const subjectId = document.getElementById("lessonSubject").value;
+    const sectionSelect = document.getElementById("lessonSection");
+    let sectionId = sectionSelect.value;
+    const newSectionName = document.getElementById("newSectionName").value.trim();
+    
+    console.log("Дані форми:", { date, type, subjectId, sectionId, newSectionName });
+    
+    if(!subjectId || !date) {
+      alert("Будь ласка, заповніть всі обов'язкові поля!");
+      return;
+    }
+    
+    if(sectionId === "new" && newSectionName) {
+      console.log("Створюємо новий розділ:", newSectionName);
+      sectionId = await createNewSection(subjectId, newSectionName);
+      console.log("Новий розділ створено з ID:", sectionId);
+    } else if(sectionId === "new" && !newSectionName) {
+      alert("Будь ласка, введіть назву нового розділу!");
+      return;
+    }
+    
+    const nextNumber = await getNextLessonNumber(date, type, subjectId);
+    console.log("Наступний номер для типу:", type, "=", nextNumber);
+    
+    const data = { 
+      subjectId: subjectId, 
+      type: type, 
+      date: date, 
+      topic: document.getElementById("lessonTopic").value,
+      number: nextNumber,
+      sectionId: sectionId || null,
+      teacherId: currentTeacherId
+    }; 
+    
+    console.log("Дані для збереження:", data);
+    
+    await addDoc(collection(db,"lessons"), data);
+    console.log("Заняття успішно додано!");
+    
+    resetLessonForm(); 
+    loadMyLessons(); 
+    if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
+  };
+  
+  function resetLessonForm(){ 
+    document.getElementById("lessonTopic").value = ""; 
+    document.getElementById("lessonDate").value = ""; 
+    document.getElementById("lessonSection").value = "";
+    document.getElementById("newSectionGroup").style.display = "none";
+    document.getElementById("newSectionName").value = "";
+    currentEditId = null; 
+    const btn = document.getElementById("saveLessonBtn"); 
+    btn.innerText = "Зберегти"; 
+    // Скидаємо обробник на стандартний
+    btn.onclick = async () => {
       const date = document.getElementById("lessonDate").value;
       const type = document.getElementById("lessonType").value;
       const subjectId = document.getElementById("lessonSubject").value;
@@ -1458,7 +1522,6 @@
         return;
       }
       
-      // Якщо вибрано створення нового розділу
       if(sectionId === "new" && newSectionName) {
         sectionId = await createNewSection(subjectId, newSectionName);
       } else if(sectionId === "new" && !newSectionName) {
@@ -1478,19 +1541,12 @@
         teacherId: currentTeacherId
       }; 
       
-      await addDoc(collection(db,"lessons"),data);
+      await addDoc(collection(db,"lessons"), data);
       resetLessonForm(); 
       loadMyLessons(); 
       if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-    } 
-  };
-  
-  function resetLessonForm(){ 
-    document.getElementById("lessonTopic").value=""; 
-    document.getElementById("lessonDate").value=""; 
-    currentEditId=null; 
-    document.getElementById("saveLessonBtn").innerText="Зберегти"; 
-    document.getElementById("form-add-lesson").style.display="none"; 
+    };
+    document.getElementById("form-add-lesson").style.display = "none"; 
   }
   
   document.getElementById("lessonFilterSubject").addEventListener("change", () => loadMyLessons());
