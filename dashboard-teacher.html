@@ -1216,9 +1216,9 @@
       'Самостійне вивчення': 2,
       'Практичне заняття': 3,
       'Лабораторне заняття': 3,
-      'Семінарське заняття': 4,
-      'Залік з модуля': 5,
-      'Тематичне оцінювання': 6
+      'Семінарське заняття': 3,
+      'Залік з модуля': 4,
+      'Тематичне оцінювання': 4
     };
     return order[type] || 99;
   }
@@ -1259,7 +1259,7 @@
                      lesson.type === 'Лабораторне заняття' ? 'Лаб' :
                      lesson.type === 'Семінарське заняття' ? 'Сем' :
                      lesson.type === 'Самостійне вивчення' ? 'С.в.' :
-                     lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.оц';
+                     lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
     return `${typeShort} №${lesson.number || 1}`;
   }
 
@@ -1732,7 +1732,7 @@
         case 'Семінарське заняття': typeShort = 'Сем.'; break;
         case 'Самостійне вивчення': typeShort = 'С.в.'; break;
         case 'Залік з модуля': typeShort = 'Залік'; break;
-        case 'Тематичне оцінювання': typeShort = 'Тем.оц.'; break;
+        case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
         default: typeShort = lesson.type;
       }
       const isSpecial = lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання';
@@ -1887,9 +1887,14 @@
     const cell = e.target.closest('.date-cell');
     if(!cell) return;
     
-    const lessonType = cell.dataset.lessonType;
+    let lessonType = cell.dataset.lessonType;
     const lessonTopic = cell.dataset.lessonTopic;
     const lessonDate = cell.dataset.lessonDate;
+    
+    // Додаємо слово "заняття" до відповідних типів
+    if(lessonType === 'Практичне') lessonType = 'Практичне заняття';
+    if(lessonType === 'Лабораторне') lessonType = 'Лабораторне заняття';
+    if(lessonType === 'Семінарське') lessonType = 'Семінарське заняття';
     
     const dateParts = lessonDate.split('-');
     const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
