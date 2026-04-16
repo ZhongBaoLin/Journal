@@ -288,8 +288,11 @@
       font-size: 12px;
       z-index: 1000;
       pointer-events: none;
-      white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-width: 300px;
+      white-space: normal;
+      word-wrap: break-word;
+      text-align: left;
+      line-height: 1.4;
     }
     
     /* Модальне вікно */
@@ -383,6 +386,25 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    
+    .year-group {
+      margin-bottom: 24px;
+    }
+    .year-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .group-count {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 8px;
+      font-weight: normal;
+    }
   </style>
 </head>
 <body>
@@ -409,7 +431,7 @@
   <div class="stats-row">
     <div class="stat-card"><div class="stat-icon bg-students">👥</div><div><div class="stat-lbl">Студентів</div><div class="stat-val" id="statStudents">0</div></div></div>
     <div class="stat-card"><div class="stat-icon bg-groups">📁</div><div><div class="stat-lbl">Груп</div><div class="stat-val" id="statGroups">0</div></div></div>
-    <div class="stat-card"><div class="stat-icon bg-subjects">📘</div><div><div class="stat-lbl">Моїх предметів</div><div class="stat-val" id="statSubjects">0</div></div></div>
+    <div class="stat-card"><div class="stat-icon bg-subjects">📘</div><div><div class="stat-lbl">Моїх предметів/дисциплін</div><div class="stat-val" id="statSubjects">0</div></div></div>
   </div>
 
   <div class="tabs">
@@ -417,7 +439,7 @@
     <button class="tab-btn" onclick="switchTab('tab-lessons')">Заняття</button>
     <button class="tab-btn" onclick="switchTab('tab-groups')">Групи</button>
     <button class="tab-btn" onclick="switchTab('tab-students')">Студенти</button>
-    <button class="tab-btn" onclick="switchTab('tab-subjects')">Мої предмети</button>
+    <button class="tab-btn" onclick="switchTab('tab-subjects')">Мої предмети/дисципліни</button>
   </div>
 
   <div id="tab-journal" class="tab-content active">
@@ -425,7 +447,7 @@
       <div class="panel-header"><h2 class="panel-title">Журнал оцінок</h2></div>
       <div class="journal-controls">
         <div class="form-group"><label class="form-label">ГРУПА</label><select id="journalGroupSelect" class="form-input"><option>Оберіть групу</option></select></div>
-        <div class="form-group"><label class="form-label">ПРЕДМЕТ</label><select id="journalSubjectSelect" class="form-input"><option>Оберіть предмет</option></select></div>
+        <div class="form-group"><label class="form-label">ПРЕДМЕТ/ДИСЦИПЛІНА</label><select id="journalSubjectSelect" class="form-input"><option>Оберіть предмет</option></select></div>
       </div>
       <div class="journal-info">
         💡 <strong>Як користуватися:</strong><br>
@@ -434,7 +456,7 @@
         Наведіть на дату в таблиці, щоб побачити тему заняття.
       </div>
       <div class="journal-table-wrapper" id="journalTableContainer">
-        <div class="empty-state">Оберіть групу та предмет</div>
+        <div class="empty-state">Оберіть групу та предмет/дисципліну</div>
       </div>
     </div>
   </div>
@@ -444,7 +466,7 @@
       <div class="panel-header"><h2 class="panel-title">Заняття</h2><button class="btn-primary" onclick="toggleForm('form-add-lesson')">+ Додати заняття</button></div>
       <div class="filter-bar">
         <div class="form-group">
-          <label class="form-label">Фільтр за предметом</label>
+          <label class="form-label">Фільтр за предметом/дисципліною</label>
           <select id="lessonFilterSubject" class="form-input">
             <option value="all">Всі предмети</option>
           </select>
@@ -452,7 +474,7 @@
       </div>
       <div id="form-add-lesson" class="form-section">
         <div class="form-grid">
-          <div class="form-group"><label class="form-label">Предмет</label><select id="lessonSubject" class="form-input"></select></div>
+          <div class="form-group"><label class="form-label">Предмет/Дисципліна</label><select id="lessonSubject" class="form-input"></select></div>
           <div class="form-group"><label class="form-label">Вид заняття</label><select id="lessonType" class="form-input"><option>Лекція</option><option>Практичне</option><option>Лабораторне</option><option>Семінарське</option><option>Залік з модуля</option><option>Тематичне оцінювання</option></select></div>
           <div class="form-group"><label class="form-label">Дата</label><input type="date" id="lessonDate" class="form-input"></div>
         </div>
@@ -466,14 +488,29 @@
   <div id="tab-groups" class="tab-content">
     <div class="panel">
       <div class="panel-header"><h2 class="panel-title">Групи</h2><button class="btn-primary" onclick="toggleForm('form-add-group')">+ Додати групу</button></div>
-      <div id="form-add-group" class="form-section"><div class="form-group"><label class="form-label">Назва групи</label><input type="text" id="groupName" class="form-input" placeholder="Наприклад: ПЗ-21"></div><button class="btn-primary" id="saveGroupBtn">Зберегти</button></div>
+      <div id="form-add-group" class="form-section">
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Назва групи</label><input type="text" id="groupName" class="form-input" placeholder="Наприклад: ПЗ-21"></div>
+          <div class="form-group"><label class="form-label">Навчальний рік</label><select id="groupYear" class="form-input">
+            <option value="2025/2026">2025/2026</option>
+            <option value="2024/2025">2024/2025</option>
+            <option value="2023/2024">2023/2024</option>
+            <option value="2022/2023">2022/2023</option>
+          </select></div>
+        </div>
+        <button class="btn-primary" id="saveGroupBtn">Зберегти</button>
+      </div>
       <div id="groupsList" class="data-list"><div class="empty-state">Груп не знайдено</div></div>
     </div>
   </div>
 
   <div id="tab-students" class="tab-content">
     <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Студенти</h2><div style="display: flex; gap: 12px;"><select id="studentGroupFilter" class="form-input"><option value="all">Всі групи</option></select><button class="btn-primary" onclick="toggleForm('form-add-student')">+ Додати студента</button></div></div>
+      <div class="panel-header"><h2 class="panel-title">Студенти</h2><div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <select id="studentYearFilter" class="form-input"><option value="all">Всі роки</option></select>
+        <select id="studentGroupFilter" class="form-input"><option value="all">Всі групи</option></select>
+        <button class="btn-primary" onclick="toggleForm('form-add-student')">+ Додати студента</button>
+      </div></div>
       <div id="form-add-student" class="form-section">
         <div class="form-grid">
           <div class="form-group"><label class="form-label">ПІБ</label><input type="text" id="studentName" class="form-input" placeholder="Прізвище Ім'я По батькові"></div>
@@ -489,7 +526,7 @@
 
   <div id="tab-subjects" class="tab-content">
     <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Мої предмети</h2><button class="btn-primary" onclick="toggleForm('form-add-subject')">+ Додати предмет</button></div>
+      <div class="panel-header"><h2 class="panel-title">Мої предмети/дисципліни</h2><button class="btn-primary" onclick="toggleForm('form-add-subject')">+ Додати предмет</button></div>
       <div id="form-add-subject" class="form-section">
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Назва</label><input type="text" id="subjectName" class="form-input" placeholder="Назва предмета"></div>
@@ -510,7 +547,7 @@
         </div>
         <button class="btn-primary" id="saveSubjectBtn" style="margin-top: 16px;">Зберегти</button>
       </div>
-      <div id="subjectsList" class="data-list"><div class="empty-state">Предметів не знайдено. Додайте ваш перший предмет!</div></div>
+      <div id="subjectsList" class="data-list"><div class="empty-state">Предметів/дисциплін не знайдено. Додайте ваш перший предмет!</div></div>
     </div>
   </div>
 </main>
@@ -532,7 +569,7 @@
 <div id="subjectModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3 class="modal-title" id="subjectModalTitle">Інформація про предмет</h3>
+      <h3 class="modal-title" id="subjectModalTitle">Інформація про предмет/дисципліну</h3>
       <button class="modal-close" onclick="closeSubjectModal()">&times;</button>
     </div>
     <div id="subjectModalBody"></div>
@@ -640,12 +677,48 @@
     const snap = await getDocs(collection(db,"groups")); 
     const container = document.getElementById("groupsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Груп не знайдено</div>'; return; } 
-    let html='<div class="data-list">'; 
-    snap.forEach(docSnap=>{ const g = docSnap.data(); 
-      html+=`<div class="data-card" onclick="showGroupStats('${docSnap.id}','${g.name}')"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editGroup('${docSnap.id}','${g.name}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('groups','${docSnap.id}')">🗑️</button></div></div>`; 
-    }); 
-    html+='</div>'; 
-    container.innerHTML=html; 
+    
+    // Підраховуємо кількість студентів у кожній групі
+    const studentsSnap = await getDocs(collection(db,"students"));
+    const studentCountByGroup = {};
+    studentsSnap.forEach(s => {
+      const groupId = s.data().groupId;
+      if(groupId) studentCountByGroup[groupId] = (studentCountByGroup[groupId] || 0) + 1;
+    });
+    
+    // Групуємо групи за навчальним роком
+    const groupsByYear = {};
+    snap.forEach(docSnap => { 
+      const g = docSnap.data(); 
+      const year = g.academicYear || 'Не вказано';
+      if(!groupsByYear[year]) groupsByYear[year] = [];
+      groupsByYear[year].push({
+        id: docSnap.id, 
+        name: g.name, 
+        studentCount: studentCountByGroup[docSnap.id] || 0
+      });
+    });
+    
+    // Сортуємо роки в порядку спадання (найновіший перший)
+    const sortedYears = Object.keys(groupsByYear).sort((a, b) => {
+      if(a === 'Не вказано') return 1;
+      if(b === 'Не вказано') return -1;
+      const aStart = parseInt(a.split('/')[0]);
+      const bStart = parseInt(b.split('/')[0]);
+      return bStart - aStart;
+    });
+    
+    let html = '';
+    for(const year of sortedYears) {
+      const groups = groupsByYear[year];
+      html += `<div class="year-group"><div class="year-title">${year} <span class="group-count">(${groups.length} груп)</span></div><div class="data-list">`;
+      groups.forEach(g => {
+        html += `<div class="data-card" onclick="showGroupStats('${g.id}','${g.name}')"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div><div class="data-sub">Студентів: ${g.studentCount}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editGroup('${g.id}','${g.name}','${year}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('groups','${g.id}')">🗑️</button></div></div>`;
+      });
+      html += `</div></div>`;
+    }
+    
+    container.innerHTML = html; 
     populateSelects(); 
   }
   
@@ -683,7 +756,6 @@
     }
     
     const statsHtml = subjects.map(subject => {
-      const studentGrades = [];
       let gradeCounts = {5:0,4:0,3:0,2:0,1:0};
       let totalPoints = 0;
       let totalGrades = 0;
@@ -698,12 +770,10 @@
           else if(grade === 1) gradeCounts[1]++;
           totalPoints += grade;
           totalGrades++;
-          studentGrades.push(grade);
         }
       });
       
       const avgGrade = totalGrades > 0 ? (totalPoints / totalGrades).toFixed(2) : 0;
-      // Якість знань: ((кількість 5 + кількість 4) / кількість студентів) * 100
       const quality = students.length > 0 ? ((gradeCounts[5] + gradeCounts[4]) / students.length * 100).toFixed(1) : 0;
       
       return `
@@ -729,7 +799,6 @@
     if(snap.exists()){
       const s = snap.data();
       
-      // Формуємо рядок з розподілом годин (тільки ненульові значення)
       const hoursParts = [];
       if(s.lectures && s.lectures > 0) hoursParts.push(`Лекції: ${s.lectures}`);
       if(s.practicals && s.practicals > 0) hoursParts.push(`Практичні: ${s.practicals}`);
@@ -756,16 +825,52 @@
     document.getElementById("subjectModal").classList.remove("active");
   };
   
-  window.editGroup = (id, name)=>{ currentEditId=id; document.getElementById("groupName").value=name; toggleForm('form-add-group'); const btn = document.getElementById("saveGroupBtn"); btn.innerText="Оновити"; btn.onclick = ()=> updateGroup(id); };
-  async function updateGroup(id){ const name = document.getElementById("groupName").value; if(!name) return; await updateDoc(doc(db,"groups",id),{name}); resetGroupForm(); loadGroups(); updateStats(); }
-  document.getElementById("saveGroupBtn").onclick = async()=>{ if(currentEditId){ await updateGroup(currentEditId); } else { const name = document.getElementById("groupName").value; if(name) await addDoc(collection(db,"groups"),{name}); resetGroupForm(); loadGroups(); updateStats(); } };
-  function resetGroupForm(){ document.getElementById("groupName").value=""; currentEditId=null; document.getElementById("saveGroupBtn").innerText="Зберегти"; document.getElementById("form-add-group").style.display="none"; }
+  window.editGroup = (id, name, year)=>{ 
+    currentEditId=id; 
+    document.getElementById("groupName").value=name; 
+    document.getElementById("groupYear").value=year || '2025/2026';
+    toggleForm('form-add-group'); 
+    const btn = document.getElementById("saveGroupBtn"); 
+    btn.innerText="Оновити"; 
+    btn.onclick = ()=> updateGroup(id); 
+  };
+  
+  async function updateGroup(id){ 
+    const name = document.getElementById("groupName").value; 
+    const academicYear = document.getElementById("groupYear").value;
+    if(!name) return; 
+    await updateDoc(doc(db,"groups",id),{name, academicYear}); 
+    resetGroupForm(); 
+    loadGroups(); 
+    updateStats(); 
+  }
+  
+  document.getElementById("saveGroupBtn").onclick = async()=>{ 
+    if(currentEditId){ 
+      await updateGroup(currentEditId); 
+    } else { 
+      const name = document.getElementById("groupName").value; 
+      const academicYear = document.getElementById("groupYear").value;
+      if(name) await addDoc(collection(db,"groups"),{name, academicYear}); 
+      resetGroupForm(); 
+      loadGroups(); 
+      updateStats(); 
+    } 
+  };
+  
+  function resetGroupForm(){ 
+    document.getElementById("groupName").value=""; 
+    document.getElementById("groupYear").value="2025/2026";
+    currentEditId=null; 
+    document.getElementById("saveGroupBtn").innerText="Зберегти"; 
+    document.getElementById("form-add-group").style.display="none"; 
+  }
 
   // SUBJECTS
   async function loadMySubjects(){ 
     const snap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))); 
     const container = document.getElementById("subjectsList"); 
-    if(snap.empty){ container.innerHTML='<div class="empty-state">Предметів не знайдено. Додайте ваш перший предмет!</div>'; return; } 
+    if(snap.empty){ container.innerHTML='<div class="empty-state">Предметів/дисциплін не знайдено. Додайте ваш перший предмет!</div>'; return; } 
     let html='<div class="data-list">'; 
     snap.forEach(docSnap=>{ const s = docSnap.data(); 
       html+=`<div class="data-card" onclick="showSubjectInfo('${docSnap.id}')"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name} (${s.scale}-бальна)</div><div class="data-sub">${s.type} | Кредити: ${s.credits||0} | Годин: ${s.hours||0}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; 
@@ -862,25 +967,77 @@
     document.getElementById("form-add-subject").style.display="none"; 
   }
 
-  // STUDENTS (з сортуванням за алфавітом)
+  // STUDENTS (з сортуванням за алфавітом та фільтрацією за роком і групою)
   async function loadStudents(){ 
     const snap = await getDocs(collection(db,"students")); 
     const groupsSnap = await getDocs(collection(db,"groups")); 
-    const groupsMap = {}; groupsSnap.forEach(d=>groupsMap[d.id]=d.data().name); 
-    const filter = document.getElementById("studentGroupFilter").value;
-    const container = document.getElementById("studentsList"); 
+    const groupsMap = {}; 
+    const groupsByYear = {};
+    
+    groupsSnap.forEach(d => {
+      const group = {id: d.id, name: d.data().name, academicYear: d.data().academicYear || 'Не вказано'};
+      groupsMap[d.id] = group;
+      if(!groupsByYear[group.academicYear]) groupsByYear[group.academicYear] = [];
+      groupsByYear[group.academicYear].push(group);
+    });
+    
+    // Оновлюємо фільтр років
+    const yearFilter = document.getElementById("studentYearFilter");
+    const currentYearValue = yearFilter.value;
+    let yearOptions = '<option value="all">Всі роки</option>';
+    const sortedYears = Object.keys(groupsByYear).sort((a, b) => {
+      if(a === 'Не вказано') return 1;
+      if(b === 'Не вказано') return -1;
+      const aStart = parseInt(a.split('/')[0]);
+      const bStart = parseInt(b.split('/')[0]);
+      return bStart - aStart;
+    });
+    sortedYears.forEach(year => {
+      yearOptions += `<option value="${year}">${year}</option>`;
+    });
+    yearFilter.innerHTML = yearOptions;
+    if(currentYearValue !== 'all' && currentYearValue !== yearFilter.value) {
+      yearFilter.value = currentYearValue;
+    }
+    
+    const selectedYear = document.getElementById("studentYearFilter").value;
+    const selectedGroup = document.getElementById("studentGroupFilter").value;
+    
+    // Фільтруємо групи за вибраним роком
+    let availableGroups = [];
+    if(selectedYear !== 'all') {
+      availableGroups = groupsByYear[selectedYear] || [];
+    } else {
+      availableGroups = Object.values(groupsMap);
+    }
+    
+    // Оновлюємо випадаючий список груп
+    const groupFilter = document.getElementById("studentGroupFilter");
+    let groupOptions = '<option value="all">Всі групи</option>';
+    availableGroups.forEach(g => {
+      groupOptions += `<option value="${g.id}">${g.name}</option>`;
+    });
+    groupFilter.innerHTML = groupOptions;
+    if(selectedGroup !== 'all' && groupFilter.querySelector(`option[value="${selectedGroup}"]`)) {
+      groupFilter.value = selectedGroup;
+    } else {
+      groupFilter.value = 'all';
+    }
     
     let students = [];
     snap.forEach(docSnap=>{ students.push({id:docSnap.id, ...docSnap.data()}); });
     
-    if(filter !== "all") students = students.filter(s => s.groupId === filter);
+    // Фільтруємо студентів
+    const finalGroupId = document.getElementById("studentGroupFilter").value;
+    if(finalGroupId !== "all") students = students.filter(s => s.groupId === finalGroupId);
     
     // Сортуємо студентів за алфавітом
     students.sort((a, b) => a.name.localeCompare(b.name));
     
+    const container = document.getElementById("studentsList"); 
     if(students.length === 0){ container.innerHTML='<div class="empty-state">Студентів не знайдено</div>'; return; } 
     let html='<div class="data-list">'; 
-    students.forEach(s=>{ const groupName = groupsMap[s.groupId]||s.groupId; 
+    students.forEach(s=>{ const groupName = groupsMap[s.groupId]?.name || s.groupId; 
       html+=`<div class="data-card"><div class="data-info"><div class="data-icon">👨‍🎓</div><div><div class="data-title">${s.name} ${s.role==='prefect'?'<span class="prefect-badge">Староста</span>':''}</div><div class="data-sub">${groupName} | ${s.phone||''}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editStudent('${s.id}','${s.name}','${s.groupId}','${s.phone||''}','${s.role||'student'}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('students','${s.id}')">🗑️</button></div></div>`; 
     }); 
     html+='</div>'; 
@@ -892,7 +1049,52 @@
   document.getElementById("saveStudentBtn").onclick = async()=>{ if(currentEditId) await updateStudent(currentEditId); else { const data = { name:document.getElementById("studentName").value, groupId:document.getElementById("studentGroup").value, phone:document.getElementById("studentPhone").value, role:document.getElementById("studentRole").value }; if(data.name && data.groupId) await addDoc(collection(db,"students"),data); resetStudentForm(); loadStudents(); updateStats(); } };
   function resetStudentForm(){ document.getElementById("studentName").value=""; document.getElementById("studentPhone").value=""; document.getElementById("studentRole").value="student"; currentEditId=null; document.getElementById("saveStudentBtn").innerText="Зберегти"; document.getElementById("form-add-student").style.display="none"; }
   
+  document.getElementById("studentYearFilter").addEventListener("change", () => loadStudents());
   document.getElementById("studentGroupFilter").addEventListener("change", () => loadStudents());
+
+  // Функція для визначення порядку категорій занять
+  function getCategoryOrder(type) {
+    const order = {
+      'Лекція': 1,
+      'Практичне': 2,
+      'Лабораторне': 3,
+      'Семінарське': 4,
+      'Залік з модуля': 5,
+      'Тематичне оцінювання': 6
+    };
+    return order[type] || 99;
+  }
+  
+  // Функція для отримання наступного номера заняття в категорії для конкретного дня
+  async function getNextLessonNumber(date, type, subjectId) {
+    const q = query(
+      collection(db,"lessons"), 
+      where("date","==",date),
+      where("subjectId","==",subjectId),
+      where("teacherId","==",currentTeacherId)
+    );
+    const snap = await getDocs(q);
+    
+    const sameTypeLessons = [];
+    snap.forEach(doc => {
+      const lesson = doc.data();
+      if(lesson.type === type) {
+        sameTypeLessons.push(lesson);
+      }
+    });
+    
+    return sameTypeLessons.length + 1;
+  }
+  
+  // Функція для форматування відображення заняття з номером
+  function formatLessonDisplay(lesson) {
+    const typeShort = lesson.type === 'Лекція' ? 'Лек' : 
+                     lesson.type === 'Практичне' ? 'Прак' :
+                     lesson.type === 'Лабораторне' ? 'Лаб' :
+                     lesson.type === 'Семінарське' ? 'Сем' :
+                     lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.оц';
+    return `${typeShort} №${lesson.number || 1}`;
+  }
 
   // LESSONS
   async function loadMyLessons(){ 
@@ -907,19 +1109,24 @@
     const container = document.getElementById("lessonsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Занять не знайдено</div>'; return; } 
     
-    // Сортуємо заняття від новішої дати до старішої
     const lessonsArray = [];
     snap.forEach(docSnap => {
       lessonsArray.push({id: docSnap.id, ...docSnap.data()});
     });
-    lessonsArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+    lessonsArray.sort((a, b) => {
+      const dateCompare = new Date(b.date) - new Date(a.date);
+      if(dateCompare !== 0) return dateCompare;
+      const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
+      if(orderCompare !== 0) return orderCompare;
+      return (a.number || 1) - (b.number || 1);
+    });
     
     let html='<div class="data-list">'; 
     lessonsArray.forEach(l => { 
-      // Форматуємо дату ДД.ММ.РРРР
       const dateParts = l.date.split('-');
       const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subMap[l.subjectId]||l.subjectId} | ${l.type} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`; 
+      const displayType = formatLessonDisplay(l);
+      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subMap[l.subjectId]||l.subjectId} | ${displayType} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`; 
     }); 
     html+='</div>'; 
     container.innerHTML=html; 
@@ -958,16 +1165,27 @@
   document.getElementById("saveLessonBtn").onclick = async()=>{ 
     if(currentEditId) await updateLesson(currentEditId); 
     else { 
+      const date = document.getElementById("lessonDate").value;
+      const type = document.getElementById("lessonType").value;
+      const subjectId = document.getElementById("lessonSubject").value;
+      
+      if(!subjectId || !date) {
+        alert("Будь ласка, заповніть всі обов'язкові поля!");
+        return;
+      }
+      
+      const nextNumber = await getNextLessonNumber(date, type, subjectId);
+      
       const data = { 
-        subjectId:document.getElementById("lessonSubject").value, 
-        type:document.getElementById("lessonType").value, 
-        date:document.getElementById("lessonDate").value, 
-        topic:document.getElementById("lessonTopic").value,
+        subjectId: subjectId, 
+        type: type, 
+        date: date, 
+        topic: document.getElementById("lessonTopic").value,
+        number: nextNumber,
         teacherId: currentTeacherId
       }; 
-      if(data.subjectId && data.date) {
-        await addDoc(collection(db,"lessons"),data);
-      }
+      
+      await addDoc(collection(db,"lessons"),data);
       resetLessonForm(); 
       loadMyLessons(); 
       if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
@@ -1002,8 +1220,6 @@
       snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
       document.getElementById("journalGroupSelect").innerHTML=opts; 
       document.getElementById("studentGroup").innerHTML=opts.replace('<option value="">Оберіть групу</option>',''); 
-      const filter = document.getElementById("studentGroupFilter"); 
-      filter.innerHTML='<option value="all">Всі групи</option>'+opts.replace('<option value="">Оберіть групу</option>',''); 
     }); 
     
     getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))).then(snap=>{ 
@@ -1040,7 +1256,6 @@
   
   // Функція для збереження підсумкової оцінки
   async function saveFinalGrade(studentId, subjectId, newGrade, scale, cell) {
-    // Якщо поле пусте - видаляємо оцінку
     if(newGrade === '') {
       const q = query(collection(db,"finalGrades"), where("studentId","==",studentId), where("subjectId","==",subjectId));
       const existing = await getDocs(q);
@@ -1128,19 +1343,16 @@
     const subjectId = document.getElementById("journalSubjectSelect").value;
     
     if(!groupId || !subjectId || groupId === "Оберіть групу" || subjectId === "Оберіть предмет"){ 
-      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть групу та предмет</div>'; 
+      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть групу та предмет/дисципліну</div>'; 
       return; 
     } 
     
-    // Отримуємо інформацію про предмет (шкалу оцінювання)
     const subjectDoc = await getDoc(doc(db,"subjects",subjectId));
     const subjectScale = subjectDoc.exists() ? subjectDoc.data().scale : '12';
     
-    // Отримуємо студентів групи
     const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId))); 
     const students = []; 
     studentsSnap.forEach(d=>students.push({id:d.id,...d.data()})); 
-    // Сортуємо студентів за алфавітом
     students.sort((a, b) => a.name.localeCompare(b.name));
     
     if(students.length===0){ 
@@ -1148,20 +1360,23 @@
       return; 
     }
     
-    // Отримуємо заняття з цього предмета
     const lessonsSnap = await getDocs(query(collection(db,"lessons"), where("subjectId","==",subjectId), where("teacherId","==",currentTeacherId)));
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({id: l.id, ...l.data()}));
     
-    // Сортуємо заняття від старішої дати до новішої (для журналу зліва направо)
-    lessons.sort((a,b) => new Date(a.date) - new Date(b.date));
+    lessons.sort((a, b) => {
+      const dateCompare = new Date(a.date) - new Date(b.date);
+      if(dateCompare !== 0) return dateCompare;
+      const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
+      if(orderCompare !== 0) return orderCompare;
+      return (a.number || 1) - (b.number || 1);
+    });
     
     if(lessons.length === 0){
       document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
       return;
     }
     
-    // Отримуємо всі оцінки
     const allGrades = {};
     for(const lesson of lessons){
       const gradesSnap = await getDocs(query(collection(db,"grades"), where("lessonId","==",lesson.id)));
@@ -1172,14 +1387,12 @@
       });
     }
     
-    // Отримуємо підсумкові оцінки
     const finalGrades = {};
     const finalGradesSnap = await getDocs(query(collection(db,"finalGrades"), where("subjectId","==",subjectId)));
     finalGradesSnap.forEach(g => {
       finalGrades[g.data().studentId] = g.data().grade;
     });
     
-    // Підраховуємо статистику для кожного студента
     const studentStats = {};
     students.forEach(student => {
       let totalPoints = 0;
@@ -1209,25 +1422,18 @@
       };
     });
     
-    // Будуємо HTML таблиці
     let html = '<table class="journal-table"><thead><tr><th>Студент</th>';
     
-    // Заголовки з датами (формат ДД.ММ.РР)
     lessons.forEach(lesson => {
       const dateParts = lesson.date.split('-');
       const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
-      const typeShort = lesson.type === 'Лекція' ? 'Лек.' : 
-                       lesson.type === 'Практичне' ? 'Прак.' :
-                       lesson.type === 'Лабораторне' ? 'Лаб.' :
-                       lesson.type === 'Семінарське' ? 'Сем.' :
-                       lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем. оц.';
+      const displayType = formatLessonDisplay(lesson);
       const isSpecial = lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання';
-      html += `<th class="date-cell ${isSpecial ? 'lesson-special' : ''}" data-lesson-id="${lesson.id}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
+      html += `<th class="date-cell ${isSpecial ? 'lesson-special' : ''}" data-lesson-id="${lesson.id}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${displayType}</small></th>`;
     });
     
     html += `<th>Сер.</th><th>Н</th><th>СВ</th><th>Підсумкова</th></tr></thead><tbody>`;
     
-    // Рядки студентів
     students.forEach(student => {
       const stats = studentStats[student.id];
       const finalGrade = finalGrades[student.id] || '';
@@ -1278,14 +1484,12 @@
     html += '</tbody></table>';
     document.getElementById("journalTableContainer").innerHTML = html;
     
-    // Додаємо обробники для тултіпів
     document.querySelectorAll('.date-cell').forEach(cell => {
       cell.addEventListener('mouseenter', showTooltip);
       cell.addEventListener('mouseleave', hideTooltip);
     });
   }
   
-  // Функція для редагування оцінки прямо в таблиці
   window.startEditGrade = function(cell) {
     if(currentEditingCell) return;
     
@@ -1335,7 +1539,6 @@
   };
   
   async function saveGradeDirect(lessonId, studentId, newGrade, scale) {
-    // Якщо поле пусте - видаляємо оцінку
     if(newGrade === '') {
       const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
       const existing = await getDocs(q);
@@ -1390,8 +1593,19 @@
     document.body.appendChild(tooltip);
     
     const rect = cell.getBoundingClientRect();
-    tooltip.style.left = rect.left + 'px';
-    tooltip.style.top = (rect.top - tooltip.offsetHeight - 5) + 'px';
+    let left = rect.left;
+    let top = rect.top - tooltip.offsetHeight - 5;
+    
+    if(top < 0) {
+      top = rect.bottom + 5;
+    }
+    if(left + tooltip.offsetWidth > window.innerWidth) {
+      left = window.innerWidth - tooltip.offsetWidth - 10;
+    }
+    if(left < 0) left = 10;
+    
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
     
     currentTooltip = tooltip;
   }
