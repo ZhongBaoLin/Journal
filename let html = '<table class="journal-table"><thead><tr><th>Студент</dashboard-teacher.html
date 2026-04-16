@@ -215,9 +215,31 @@
       left: 0;
       background: var(--card-bg);
       z-index: 2;
+      text-align: center;
+      border-right: 2px solid var(--border);
+      white-space: nowrap;
+      width: 50px;
+    }
+
+        .journal-table th:nth-child(2),
+    .journal-table td:nth-child(2) {
+      position: sticky;
+      left: 50px;
+      background: var(--card-bg);
+      z-index: 2;
       text-align: left;
       border-right: 2px solid var(--border);
-      white-space: nowrap;  /* Додайте цей рядок */
+      white-space: nowrap;
+    }
+    
+    .journal-table th:first-child {
+      background: #f3f4f6;
+      z-index: 3;
+    }
+    
+    .journal-table th:nth-child(2) {
+      background: #f3f4f6;
+      z-index: 3;
     }
     
     .journal-table th:first-child {
@@ -1251,11 +1273,12 @@
     return order[type] || 99;
   }
   
-  async function getNextLessonNumber(date, type, subjectId) {
+  async function getNextLessonNumber(type, subjectId) {
+    // Шукаємо максимальний номер для цього типу занять у всьому предметі
     const q = query(
       collection(db,"lessons"), 
-      where("date","==",date),
       where("subjectId","==",subjectId),
+      where("type","==",type),
       where("teacherId","==",currentTeacherId)
     );
     const snap = await getDocs(q);
@@ -1263,7 +1286,7 @@
     let maxNumber = 0;
     snap.forEach(doc => {
       const lesson = doc.data();
-      if(lesson.type === type && lesson.number && lesson.number > maxNumber) {
+      if(lesson.number && lesson.number > maxNumber) {
         maxNumber = lesson.number;
       }
     });
@@ -1503,7 +1526,7 @@
       return;
     }
     
-    const nextNumber = await getNextLessonNumber(date, type, subjectId);
+      const nextNumber = await getNextLessonNumber(type, subjectId);
     console.log("Наступний номер для типу:", type, "=", nextNumber);
     
     const data = { 
@@ -1989,7 +2012,7 @@
       };
     });
     
-    let html = '<table class="journal-table"><thead><tr><th>Студент</th>';
+    let html = '<table class="journal-table"><thead><tr><th>№</th><th>Студент</th>';
     
     lessons.forEach(lesson => {
       const dateParts = lesson.date.split('-');
@@ -2022,7 +2045,8 @@
       else if(finalNum === 2) finalGradeClass = 'grade-2';
       else if(finalNum === 1) finalGradeClass = 'grade-1';
       
-      html += `<tr><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
+      const studentNumber = students.indexOf(student) + 1;
+      html += `<tr><td style="text-align:center; width: 40px;">${studentNumber}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
       
       lessons.forEach(lesson => {
         const grade = allGrades[lesson.id]?.[student.id] || '';
