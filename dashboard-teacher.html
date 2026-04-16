@@ -1331,15 +1331,22 @@
     return maxNumber + 1;
   }
   
-  function formatLessonDisplay(lesson) {
-    const typeShort = lesson.type === 'Лекція' ? 'Лек' : 
-                     lesson.type === 'Практичне заняття' ? 'Прак' :
-                     lesson.type === 'Лабораторне заняття' ? 'Лаб' :
-                     lesson.type === 'Семінарське заняття' ? 'Сем' :
-                     lesson.type === 'Самостійне вивчення' ? 'С.в.' :
-                     lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
-    return `${typeShort} №${lesson.number || 1}`;
-  }
+function formatLessonDisplay(lesson, allLessons) {
+  const typeShort = lesson.type === 'Лекція' ? 'Лек' : 
+                   lesson.type === 'Практичне заняття' ? 'Прак' :
+                   lesson.type === 'Лабораторне заняття' ? 'Лаб' :
+                   lesson.type === 'Семінарське заняття' ? 'Сем' :
+                   lesson.type === 'Самостійне вивчення' ? 'С.в.' :
+                   lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
+  
+  // Динамічна нумерація: серед усіх занять того ж типу, відсортованих за датою
+  const sameType = (allLessons || [])
+    .filter(l => l.type === lesson.type)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const num = sameType.findIndex(l => l.id === lesson.id) + 1;
+  
+  return `${typeShort} №${num}`;
+}
 
   // LESSONS
   async function loadMyLessons(){ 
@@ -1439,7 +1446,7 @@
       for(const l of section.lessons) {
         const dateParts = l.date.split('-');
         const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-        const displayType = formatLessonDisplay(l);
+        const displayType = formatLessonDisplay(l, lessonsArray);
         const subjectInfo = subMap[l.subjectId];
         const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
         html += `<div class="data-card" onclick="editLesson('${l.id}')"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subjectDisplay} | ${displayType} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`;
@@ -1949,6 +1956,13 @@
       document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
       return;
     }
+
+    function getLessonNumber(lesson, allLessons) {
+      const sameType = allLessons
+        .filter(l => l.type === lesson.type)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      return sameType.findIndex(l => l.id === lesson.id) + 1;
+    }
     
     const allGrades = {};
     for(const lesson of lessons){
@@ -2012,7 +2026,9 @@
         default: typeShort = lesson.type;
       }
       const isSpecial = lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання';
-      html += `<th class="date-cell ${isSpecial ? 'lesson-special' : ''}" data-lesson-id="${lesson.id}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
+      const lessonNum = getLessonNumber(lesson, lessons);
+      const typeShortWithNum = `${typeShort} №${lessonNum}`;
+      html += `<th class="date-cell ..." ...>${dateStr}<br><small>${typeShortWithNum}</small></th>`;
     });
     
     html += `<th>Сер.</th><th>Н</th><th>СВ</th><th>Підсумкова</th></tr></thead><tbody>`;
