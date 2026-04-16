@@ -1304,7 +1304,8 @@
       if(dateCompare !== 0) return dateCompare;
       const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
       if(orderCompare !== 0) return orderCompare;
-      return (a.number || 1) - (b.number || 1);
+      // Сортуємо за номером від більшого до меншого (новіші заняття вище)
+      return (b.number || 1) - (a.number || 1);
     });
     
     let html='<div class="data-list">'; 
