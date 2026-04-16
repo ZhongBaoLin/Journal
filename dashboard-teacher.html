@@ -1340,16 +1340,28 @@
     for(const sectionId in groupedBySection) {
       const lessons = groupedBySection[sectionId];
       const latestDate = lessons[0]?.date;
+      // Отримуємо дату створення розділу
+      const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db,"sections",sectionId)) : null;
+      const createdAt = sectionDoc?.data()?.createdAt || null;
+      
       sectionsList.push({
         id: sectionId,
         name: sectionMap[sectionId] || 'Без розділу',
         lessons: lessons,
-        latestDate: latestDate
+        latestDate: latestDate,
+        createdAt: createdAt
       });
     }
     
-    // Сортуємо розділи від найновішого до найстарішого (за найновішою датою заняття)
-    sectionsList.sort((a, b) => new Date(b.latestDate) - new Date(a.latestDate));
+    // Сортуємо розділи: спочатку за датою найновішого заняття (від новішої до старішої),
+    // потім за датою створення розділу (новіший вище)
+    sectionsList.sort((a, b) => {
+      const dateCompare = new Date(b.latestDate) - new Date(a.latestDate);
+      if(dateCompare !== 0) return dateCompare;
+      const aTime = a.createdAt ? new Date(a.createdAt) : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt) : 0;
+      return bTime - aTime;
+    });
     
     let html = '';
     for(const section of sectionsList) {
