@@ -1704,9 +1704,20 @@
     lessons.forEach(lesson => {
       const dateParts = lesson.date.split('-');
       const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
-      const displayType = formatLessonDisplay(lesson);
+      // Отримуємо коротку назву типу без номера
+      let typeShort = '';
+      switch(lesson.type) {
+        case 'Лекція': typeShort = 'Лек.'; break;
+        case 'Практичне заняття': typeShort = 'Прак.'; break;
+        case 'Лабораторне заняття': typeShort = 'Лаб.'; break;
+        case 'Семінарське заняття': typeShort = 'Сем.'; break;
+        case 'Самостійне вивчення': typeShort = 'С.в.'; break;
+        case 'Залік з модуля': typeShort = 'Залік'; break;
+        case 'Тематичне оцінювання': typeShort = 'Тем.оц.'; break;
+        default: typeShort = lesson.type;
+      }
       const isSpecial = lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання';
-      html += `<th class="date-cell ${isSpecial ? 'lesson-special' : ''}" data-lesson-id="${lesson.id}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${displayType}</small></th>`;
+      html += `<th class="date-cell ${isSpecial ? 'lesson-special' : ''}" data-lesson-id="${lesson.id}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
     });
     
     html += `<th>Сер.</th><th>Н</th><th>СВ</th><th>Підсумкова</th></tr></thead><tbody>`;
