@@ -691,11 +691,13 @@
   let currentTooltip = null;
   let currentEditingCell = null;
 
-  const STORAGE_KEYS = {
+const STORAGE_KEYS = {
     lastYear: 'journal_last_year',
     lastGroup: 'journal_last_group',
-    lastSubject: 'journal_last_subject'
+    lastSubject: 'journal_last_subject',
+    lastStudentGroup: 'student_last_group'
   };
+  
   const TAB_KEY = 'active_tab';
 
   function saveActiveTab(tabId) {
@@ -1258,14 +1260,16 @@
     const btn = document.getElementById("saveStudentBtn"); 
     btn.innerText = "Зберегти"; 
     btn.onclick = async () => {
+      const groupId = document.getElementById("studentGroup").value;
       const data = { 
         name: document.getElementById("studentName").value, 
-        groupId: document.getElementById("studentGroup").value, 
+        groupId: groupId, 
         academicYear: document.getElementById("studentYear").value,
         phone: document.getElementById("studentPhone").value, 
         role: document.getElementById("studentRole").value 
       }; 
       if(data.name && data.groupId) {
+        sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId);
         await addDoc(collection(db,"students"), data); 
         resetStudentForm(); 
         loadStudents(); 
@@ -1276,16 +1280,18 @@
     document.getElementById("form-add-student").style.display = "none"; 
   }
   
-  document.getElementById("saveStudentBtn").onclick = async () => { 
+document.getElementById("saveStudentBtn").onclick = async () => { 
     if(currentEditId) return;
+    const groupId = document.getElementById("studentGroup").value;
     const data = { 
       name: document.getElementById("studentName").value, 
-      groupId: document.getElementById("studentGroup").value, 
+      groupId: groupId, 
       academicYear: document.getElementById("studentYear").value,
       phone: document.getElementById("studentPhone").value, 
       role: document.getElementById("studentRole").value 
     }; 
     if(data.name && data.groupId) {
+      sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId);
       await addDoc(collection(db,"students"), data); 
       resetStudentForm(); 
       loadStudents(); 
@@ -1728,13 +1734,12 @@ function formatLessonDisplay(lesson, allLessons) {
     getDocs(collection(db,"groups")).then(snap=>{ 
       let opts='<option value="">Оберіть групу</option>'; 
       snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
-      document.getElementById("studentGroup").innerHTML=opts; 
-    });
-    
-    getDocs(collection(db,"groups")).then(snap=>{ 
-      let opts='<option value="">Оберіть групу</option>'; 
-      snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
-      document.getElementById("subjectGroup").innerHTML=opts; 
+      document.getElementById("studentGroup").innerHTML=opts;
+      // Відновлюємо останню обрану групу
+      const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastStudentGroup);
+      if(lastGroup && document.querySelector(`#studentGroup option[value="${lastGroup}"]`)) {
+        document.getElementById("studentGroup").value = lastGroup;
+      }
     });
     
     getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))).then(async snap=>{ 
