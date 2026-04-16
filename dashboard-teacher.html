@@ -1212,20 +1212,17 @@
     );
     const snap = await getDocs(q);
     
-    // Збираємо всі заняття за цю дату
     const lessonsOnDate = [];
     snap.forEach(doc => {
       lessonsOnDate.push({id: doc.id, ...doc.data()});
     });
     
-    // Сортуємо їх за порядком категорій
     lessonsOnDate.sort((a, b) => {
       const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
       if(orderCompare !== 0) return orderCompare;
       return (a.number || 1) - (b.number || 1);
     });
     
-    // Знаходимо останній номер для цього типу
     let maxNumber = 0;
     lessonsOnDate.forEach(lesson => {
       if(lesson.type === type && lesson.number && lesson.number > maxNumber) {
@@ -1255,7 +1252,6 @@
     }
     const snap = await getDocs(lessonsQuery); 
     
-    // Отримуємо всі предмети з групами
     const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))); 
     const subMap = {};
     for(const docSnap of subjectsSnap.docs){
@@ -1386,7 +1382,6 @@
   };
 
   async function populateJournalFilters() {
-    // Заповнюємо фільтр років для журналу
     const groupsSnap = await getDocs(collection(db,"groups"));
     const yearsSet = new Set();
     groupsSnap.forEach(g => {
@@ -1405,10 +1400,8 @@
     });
     document.getElementById("journalYearSelect").innerHTML = yearOptions;
     
-    // Зберігаємо поточний вибраний рік
     const currentYear = document.getElementById("journalYearSelect").value;
     
-    // Оновлюємо групи при зміні року
     document.getElementById("journalYearSelect").onchange = async () => {
       const selectedYear = document.getElementById("journalYearSelect").value;
       if(!selectedYear) {
@@ -1429,10 +1422,8 @@
       document.getElementById("journalGroupSelect").innerHTML = groupOptions;
       document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
       
-      // Якщо є тільки одна група - автоматично вибираємо її та завантажуємо предмети
       if(groupsArray.length === 1) {
         document.getElementById("journalGroupSelect").value = groupsArray[0].id;
-        // Штучно викликаємо подію зміни групи, щоб завантажити предмети
         const event = new Event('change');
         document.getElementById("journalGroupSelect").dispatchEvent(event);
       } else {
@@ -1441,7 +1432,6 @@
       }
     };
     
-    // Оновлюємо предмети при зміні групи
     document.getElementById("journalGroupSelect").onchange = async () => {
       const selectedGroup = document.getElementById("journalGroupSelect").value;
       if(!selectedGroup) {
@@ -1451,7 +1441,6 @@
         return;
       }
       
-      // Отримуємо інформацію про групу
       const groupDoc = await getDoc(doc(db,"groups",selectedGroup));
       const groupName = groupDoc.exists() ? groupDoc.data().name : '';
       const groupYear = groupDoc.exists() ? groupDoc.data().academicYear : '';
@@ -1467,7 +1456,6 @@
       }
       document.getElementById("journalSubjectSelect").innerHTML = subjectOptions;
       
-      // Якщо є тільки один предмет - автоматично вибираємо його
       if(subjectsArray.length === 1) {
         document.getElementById("journalSubjectSelect").value = subjectsArray[0].id;
       }
@@ -1481,92 +1469,45 @@
       renderJournal();
     };
     
-    // Якщо є збережений рік, запускаємо оновлення груп
     if(currentYear && currentYear !== "Оберіть рік") {
       const event = new Event('change');
       document.getElementById("journalYearSelect").dispatchEvent(event);
     }
   }
-    
-    // Оновлюємо предмети при зміні групи
-    document.getElementById("journalGroupSelect").onchange = async () => {
-      const selectedGroup = document.getElementById("journalGroupSelect").value;
-      if(!selectedGroup) {
-        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
-        saveLastSelection();
-        renderJournal();
-        return;
-      }
-      
-      // Отримуємо інформацію про групу
-      const groupDoc = await getDoc(doc(db,"groups",selectedGroup));
-      const groupName = groupDoc.exists() ? groupDoc.data().name : '';
-      const groupYear = groupDoc.exists() ? groupDoc.data().academicYear : '';
-      
-      const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("groupId","==",selectedGroup), where("teacherId","==",currentTeacherId)));
-      let subjectOptions = '<option value="">Оберіть предмет</option>';
-      const subjectsArray = [];
-      for(const docSnap of subjectsSnap.docs){
-        const s = docSnap.data();
-        const displayText = `${s.name} (${groupName} | ${groupYear})`;
-        subjectOptions += `<option value="${docSnap.id}">${displayText}</option>`;
-        subjectsArray.push({id: docSnap.id, displayText});
-      }
-      document.getElementById("journalSubjectSelect").innerHTML = subjectOptions;
-      
-      // Якщо є тільки один предмет - автоматично вибираємо його
-      if(subjectsArray.length === 1) {
-        document.getElementById("journalSubjectSelect").value = subjectsArray[0].id;
-      }
-      
-      saveLastSelection();
-      renderJournal();
-    };
-    
-    
-    // Якщо є збережений рік, запускаємо оновлення груп
-    if(currentYear && currentYear !== "Оберіть рік") {
-      const event = new Event('change');
-      document.getElementById("journalYearSelect").dispatchEvent(event);
-    }
-  
-    
-    document.getElementById("journalSubjectSelect").onchange = () => {
-      saveLastSelection();
-      renderJournal();
-    };
-   
-  
+
   function populateSelects(){ 
-    // Для форми додавання студента
     getDocs(collection(db,"groups")).then(snap=>{ 
       let opts='<option value="">Оберіть групу</option>'; 
       snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
       document.getElementById("studentGroup").innerHTML=opts; 
     });
     
-    // Для форми додавання предмета
     getDocs(collection(db,"groups")).then(snap=>{ 
       let opts='<option value="">Оберіть групу</option>'; 
       snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
       document.getElementById("subjectGroup").innerHTML=opts; 
     });
     
-    // Для форми додавання заняття - з групою та роком
     getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))).then(async snap=>{ 
       let opts='<option value="">Оберіть предмет</option>'; 
       let filterOpts='<option value="all">Всі предмети</option>';
       
       for(const docSnap of snap.docs){
         const s = docSnap.data();
-        const groupsSnap = await getDocs(query(collection(db,"groups"), where("id","==",s.groupId)));
         let groupName = '';
         let academicYear = '';
-        if(!groupsSnap.empty){
-          groupName = groupsSnap.docs[0].data().name;
-          academicYear = groupsSnap.docs[0].data().academicYear || '';
+        if(s.groupId) {
+          const groupDoc = await getDoc(doc(db,"groups",s.groupId));
+          if(groupDoc.exists()){
+            groupName = groupDoc.data().name;
+            academicYear = groupDoc.data().academicYear || '';
+          }
         }
-        const displayText = `${s.name} (${groupName} | ${academicYear || s.academicYear || 'рік не вказано'})`;
+        if(!groupName) {
+          groupName = s.groupName || 'Групу не обрано';
+          academicYear = s.academicYear || '';
+        }
+        const displayText = `${s.name} (${groupName} | ${academicYear || 'рік не вказано'})`;
         opts += `<option value="${docSnap.id}">${displayText}</option>`;
         filterOpts += `<option value="${docSnap.id}">${displayText}</option>`;
       }
@@ -1758,7 +1699,6 @@
     lessons.forEach(lesson => {
       const dateParts = lesson.date.split('-');
       const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
-      // Отримуємо коротку назву типу без номера
       let typeShort = '';
       switch(lesson.type) {
         case 'Лекція': typeShort = 'Лек.'; break;
@@ -1820,7 +1760,7 @@
                <td class="stat-cell">${stats.n}</td>
                <td class="stat-cell">${stats.sv}</td>
                <td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
-      html += `</tr>`;
+      html += `<tr>`;
     });
     
     html += '</tbody></table>';
