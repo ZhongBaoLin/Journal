@@ -38,7 +38,7 @@
 
     body::before {
       content: '';
-      position: fixed; inset: 0; z-index: 0;
+      position: fixed; inset: 0; z-index: -1;
       background-image:
         linear-gradient(rgba(37,99,235,.06) 1px, transparent 1px),
         linear-gradient(90deg, rgba(37,99,235,.06) 1px, transparent 1px);
@@ -47,7 +47,7 @@
 
     .blob {
       position: fixed; border-radius: 50%; filter: blur(80px);
-      opacity: .25; z-index: 0; pointer-events: none;
+      opacity: .25; z-index: -1; pointer-events: none;
     }
     .blob-1 { width:400px; height:400px; top:-100px; right:-50px; background: radial-gradient(circle, #7c3aed, #2563eb); }
     .blob-2 { width:300px; height:300px; bottom:-50px; left:-50px; background: radial-gradient(circle, #2563eb, #0ea5e9); }
@@ -185,18 +185,17 @@
     
     .journal-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+      border-collapse: collapse;
       min-width: 600px;
     }
     
     .journal-table th,
     .journal-table td {
-      padding: 12px;
+      padding: 10px 12px;
       text-align: center;
       border-bottom: 1px solid var(--border);
       border-right: 1px solid var(--border);
-      font-size: 14px;
+      font-size: 13px;
     }
     
     .journal-table th:first-child,
@@ -229,12 +228,12 @@
     
     .grade-cell {
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.2s;
       min-width: 60px;
     }
     
     .grade-cell:hover {
-      background: var(--accent-light);
+      background: var(--accent-light) !important;
     }
     
     .grade-input {
@@ -242,26 +241,36 @@
       text-align: center;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 4px;
+      padding: 6px 4px;
       font-size: 13px;
+      background: white;
     }
     
-    .grade-5, .grade-5-bg { background: rgba(16, 185, 129, 0.2); color: #065f46; font-weight: 600; }
-    .grade-4, .grade-4-bg { background: rgba(59, 130, 246, 0.2); color: #1e40af; font-weight: 600; }
-    .grade-3, .grade-3-bg { background: rgba(245, 158, 11, 0.2); color: #92400e; font-weight: 600; }
-    .grade-2, .grade-2-bg { background: rgba(239, 68, 68, 0.2); color: #991b1b; font-weight: 600; }
-    .grade-1, .grade-1-bg { background: rgba(127, 29, 29, 0.2); color: #7f1d1d; font-weight: 600; }
-    .grade-n { background: rgba(239, 68, 68, 0.3); color: #dc2626; font-weight: 600; }
-    .grade-sv { background: rgba(245, 158, 11, 0.3); color: #d97706; font-weight: 600; }
+    .grade-5 { background: rgba(16, 185, 129, 0.15); color: #065f46; font-weight: 600; }
+    .grade-4 { background: rgba(59, 130, 246, 0.15); color: #1e40af; font-weight: 600; }
+    .grade-3 { background: rgba(245, 158, 11, 0.15); color: #92400e; font-weight: 600; }
+    .grade-2 { background: rgba(239, 68, 68, 0.15); color: #991b1b; font-weight: 600; }
+    .grade-1 { background: rgba(127, 29, 29, 0.15); color: #7f1d1d; font-weight: 600; }
+    .grade-n { background: rgba(239, 68, 68, 0.25); color: #dc2626; font-weight: 600; }
+    .grade-sv { background: rgba(245, 158, 11, 0.25); color: #d97706; font-weight: 600; }
     
     .stat-cell {
-      background: white !important;
-      color: var(--ink) !important;
+      background: white;
+      color: var(--ink);
+    }
+    
+    .final-grade-cell {
+      cursor: pointer;
+      transition: background 0.2s;
+      min-width: 60px;
+    }
+    
+    .final-grade-cell:hover {
+      background: var(--accent-light) !important;
     }
     
     .lesson-special {
-      background: rgba(239, 68, 68, 0.2);
-      color: #dc2626;
+      color: #dc2626 !important;
       font-weight: 700;
     }
     
@@ -625,6 +634,8 @@
     const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId)));
     const students = [];
     studentsSnap.forEach(s => students.push({id: s.id, ...s.data()}));
+    // Сортуємо студентів за алфавітом
+    students.sort((a, b) => a.name.localeCompare(b.name));
     
     const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId)));
     const subjects = [];
@@ -661,13 +672,14 @@
       }
       
       const avgGrade = totalGrades > 0 ? (totalPoints / totalGrades).toFixed(2) : 0;
-      const quality = students.length > 0 ? (((gradeCounts[5] + gradeCounts[4]) / students.length) * 100).toFixed(1) : 0;
+      const totalPossibleGrades = students.length * lessons.length;
+      const quality = totalPossibleGrades > 0 ? ((gradeCounts[5] + gradeCounts[4]) / totalPossibleGrades * 100).toFixed(1) : 0;
       
       return `
         <div class="stat-item">
           <div class="stat-label">${subject.name}</div>
           <div class="stat-value">Середній бал: ${avgGrade}</div>
-          <div class="stat-label">Якість знань: ${quality}%</div>
+          <div class="stat-label">Якість знань: ${Math.min(quality, 100)}%</div>
           <div class="stat-label">Оцінки: 5:${gradeCounts[5]} | 4:${gradeCounts[4]} | 3:${gradeCounts[3]} | 2:${gradeCounts[2]} | 1:${gradeCounts[1]}</div>
         </div>
       `;
@@ -803,7 +815,7 @@
     document.getElementById("form-add-subject").style.display="none"; 
   }
 
-  // STUDENTS
+  // STUDENTS (з сортуванням за алфавітом)
   async function loadStudents(){ 
     const snap = await getDocs(collection(db,"students")); 
     const groupsSnap = await getDocs(collection(db,"groups")); 
@@ -815,6 +827,9 @@
     snap.forEach(docSnap=>{ students.push({id:docSnap.id, ...docSnap.data()}); });
     
     if(filter !== "all") students = students.filter(s => s.groupId === filter);
+    
+    // Сортуємо студентів за алфавітом
+    students.sort((a, b) => a.name.localeCompare(b.name));
     
     if(students.length === 0){ container.innerHTML='<div class="empty-state">Студентів не знайдено</div>'; return; } 
     let html='<div class="data-list">'; 
@@ -965,6 +980,89 @@
     return null;
   }
   
+  // Функція для збереження підсумкової оцінки
+  async function saveFinalGrade(studentId, subjectId, newGrade, scale, cell) {
+    if(newGrade === '') {
+      const q = query(collection(db,"finalGrades"), where("studentId","==",studentId), where("subjectId","==",subjectId));
+      const existing = await getDocs(q);
+      if(!existing.empty){
+        await deleteDoc(doc(db,"finalGrades",existing.docs[0].id));
+      }
+      return;
+    }
+    
+    const validatedGrade = validateGrade(newGrade, scale);
+    if(validatedGrade === null) {
+      alert(`Невірна оцінка! Для цього предмета дозволені оцінки: 1-${scale}`);
+      return;
+    }
+    
+    const q = query(collection(db,"finalGrades"), where("studentId","==",studentId), where("subjectId","==",subjectId));
+    const existing = await getDocs(q);
+    
+    const gradeData = {
+      studentId,
+      subjectId,
+      grade: validatedGrade,
+      updatedAt: new Date().toISOString()
+    };
+    
+    if(existing.empty){
+      await addDoc(collection(db,"finalGrades"), gradeData);
+    } else {
+      await updateDoc(doc(db,"finalGrades",existing.docs[0].id), gradeData);
+    }
+  }
+  
+  // Функція для редагування підсумкової оцінки
+  window.startEditFinalGrade = function(cell) {
+    if(currentEditingCell) return;
+    
+    const currentGrade = cell.dataset.currentGrade || '';
+    const studentId = cell.dataset.studentId;
+    const subjectId = cell.dataset.subjectId;
+    const scale = cell.dataset.scale;
+    
+    currentEditingCell = cell;
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = '';
+    input.placeholder = currentGrade || 'оцінка';
+    input.className = 'grade-input';
+    input.style.width = '60px';
+    
+    input.addEventListener('blur', async () => {
+      const newGrade = input.value.trim();
+      await saveFinalGrade(studentId, subjectId, newGrade, scale, cell);
+      cell.removeChild(input);
+      cell.style.padding = '10px 12px';
+      currentEditingCell = null;
+      renderJournal();
+    });
+    
+    input.addEventListener('keypress', async (e) => {
+      if(e.key === 'Enter') {
+        const newGrade = input.value.trim();
+        await saveFinalGrade(studentId, subjectId, newGrade, scale, cell);
+        cell.removeChild(input);
+        cell.style.padding = '10px 12px';
+        currentEditingCell = null;
+        renderJournal();
+      }
+      if(e.key === 'Escape') {
+        cell.removeChild(input);
+        cell.style.padding = '10px 12px';
+        currentEditingCell = null;
+      }
+    });
+    
+    cell.innerHTML = '';
+    cell.style.padding = '4px';
+    cell.appendChild(input);
+    input.focus();
+  };
+  
   // ГОЛОВНА ФУНКЦІЯ РЕНДЕРУ ЖУРНАЛУ
   async function renderJournal(){ 
     const groupId = document.getElementById("journalGroupSelect").value; 
@@ -983,6 +1081,8 @@
     const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId))); 
     const students = []; 
     studentsSnap.forEach(d=>students.push({id:d.id,...d.data()})); 
+    // Сортуємо студентів за алфавітом
+    students.sort((a, b) => a.name.localeCompare(b.name));
     
     if(students.length===0){ 
       document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає студентів у групі</div>'; 
@@ -1012,6 +1112,13 @@
         allGrades[lesson.id][gradeData.studentId] = gradeData.grade;
       });
     }
+    
+    // Отримуємо підсумкові оцінки
+    const finalGrades = {};
+    const finalGradesSnap = await getDocs(query(collection(db,"finalGrades"), where("subjectId","==",subjectId)));
+    finalGradesSnap.forEach(g => {
+      finalGrades[g.data().studentId] = g.data().grade;
+    });
     
     // Підраховуємо статистику для кожного студента
     const studentStats = {};
@@ -1059,16 +1166,26 @@
       html += `<th class="date-cell ${isSpecial ? 'lesson-special' : ''}" data-lesson-id="${lesson.id}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
     });
     
-    html += `<th>Сер.</th><th>Н</th><th>СВ</th></tr></thead><tbody>`;
+    html += `<th>Сер.</th><th>Н</th><th>СВ</th><th>Підсумкова</th></thead><tbody>`;
     
     // Рядки студентів
     students.forEach(student => {
       const stats = studentStats[student.id];
+      const finalGrade = finalGrades[student.id] || '';
+      let finalGradeClass = '';
+      const finalNum = parseFloat(finalGrade);
+      if(finalNum === 5) finalGradeClass = 'grade-5';
+      else if(finalNum === 4) finalGradeClass = 'grade-4';
+      else if(finalNum === 3) finalGradeClass = 'grade-3';
+      else if(finalNum === 2) finalGradeClass = 'grade-2';
+      else if(finalNum === 1) finalGradeClass = 'grade-1';
+      
       html += `<tr><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
       
       lessons.forEach(lesson => {
         const grade = allGrades[lesson.id]?.[student.id] || '';
         let gradeClass = '';
+        let displayGrade = grade;
         if(grade === 'н') gradeClass = 'grade-n';
         else if(grade === 'св') gradeClass = 'grade-sv';
         else {
@@ -1078,9 +1195,10 @@
           else if(num === 3) gradeClass = 'grade-3';
           else if(num === 2) gradeClass = 'grade-2';
           else if(num === 1) gradeClass = 'grade-1';
+          displayGrade = grade;
         }
         
-        html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${grade || '—'}</td>`;
+        html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade || '—'}</td>`;
       });
       
       const avgNum = parseFloat(stats.avg);
@@ -1092,8 +1210,10 @@
       else if(avgNum === 1) avgClass = 'grade-1';
       
       html += `<td class="stat-cell ${avgClass}">${stats.avg}</td>
-               <td class="stat-cell grade-n">${stats.n}</td>
-               <td class="stat-cell grade-sv">${stats.sv}</td></tr>`;
+               <td class="stat-cell">${stats.n}</td>
+               <td class="stat-cell">${stats.sv}</td>
+               <td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
+      html += `</tr>`;
     });
     
     html += '</tbody></table>';
@@ -1126,10 +1246,9 @@
     
     input.addEventListener('blur', async () => {
       const newGrade = input.value.trim();
-      await saveGradeDirect(lessonId, studentId, newGrade, scale, cell);
+      await saveGradeDirect(lessonId, studentId, newGrade, scale);
       cell.removeChild(input);
-      cell.style.padding = '12px';
-      cell.style.backgroundColor = '';
+      cell.style.padding = '10px 12px';
       currentEditingCell = null;
       renderJournal();
     });
@@ -1137,17 +1256,15 @@
     input.addEventListener('keypress', async (e) => {
       if(e.key === 'Enter') {
         const newGrade = input.value.trim();
-        await saveGradeDirect(lessonId, studentId, newGrade, scale, cell);
+        await saveGradeDirect(lessonId, studentId, newGrade, scale);
         cell.removeChild(input);
-        cell.style.padding = '12px';
-        cell.style.backgroundColor = '';
+        cell.style.padding = '10px 12px';
         currentEditingCell = null;
         renderJournal();
       }
       if(e.key === 'Escape') {
         cell.removeChild(input);
-        cell.style.padding = '12px';
-        cell.style.backgroundColor = '';
+        cell.style.padding = '10px 12px';
         currentEditingCell = null;
       }
     });
@@ -1158,8 +1275,7 @@
     input.focus();
   };
   
-  async function saveGradeDirect(lessonId, studentId, newGrade, scale, cell) {
-    // Якщо поле порожнє — нічого не робимо
+  async function saveGradeDirect(lessonId, studentId, newGrade, scale) {
     if(newGrade === '') {
       return;
     }
@@ -1188,7 +1304,6 @@
   }
   
   function showTooltip(e) {
-    // Спочатку видаляємо старий тултіп, якщо є
     if(currentTooltip) {
       currentTooltip.remove();
       currentTooltip = null;
