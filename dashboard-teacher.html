@@ -21,6 +21,12 @@
       --border:  #e5e7eb;
       --error:   #ef4444;
       --success: #10b981;
+      --warning: #f59e0b;
+      --grade-5: #10b981;
+      --grade-4: #3b82f6;
+      --grade-3: #f59e0b;
+      --grade-2: #ef4444;
+      --grade-1: #7f1d1d;
     }
 
     html, body {
@@ -71,7 +77,7 @@
     .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
     .logout-btn { background: none; border: none; color: var(--error); cursor: pointer; font-size: 14px; font-weight: 500; }
 
-    .container { max-width: 1200px; margin: 40px auto; padding: 0 24px; }
+    .container { max-width: 1400px; margin: 40px auto; padding: 0 24px; }
 
     .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
     .stat-card {
@@ -134,7 +140,10 @@
       display: flex; justify-content: space-between; align-items: center;
       padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px;
       background: #fafafa;
+      cursor: pointer;
+      transition: all 0.2s;
     }
+    .data-card:hover { background: #f0f0f0; transform: translateX(4px); }
     .data-info { display: flex; align-items: center; gap: 16px; flex:1; }
     .data-icon {
       width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center;
@@ -150,13 +159,175 @@
 
     .journal-controls { display: flex; gap: 16px; margin-bottom: 24px; background: #fafafa; padding: 16px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }
     .journal-info { font-size: 13px; color: var(--muted); margin-bottom: 16px; padding: 12px; background: #f8fafc; border-left: 4px solid var(--ink); border-radius: 4px; }
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { background: #f3f4f6; padding: 12px; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); white-space: nowrap;}
-    td { padding: 12px; border: 1px solid var(--border); font-size: 14px; }
-    .input-grade { width: 80px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; text-align: center; }
-    .save-grade-btn { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-    .grade-saved { font-size: 11px; color: var(--success); margin-left: 8px; display: none; }
+    
+    /* Стилі для таблиці журналу з фіксованими колонками */
+    .journal-table-wrapper {
+      overflow-x: auto;
+      position: relative;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    
+    .journal-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 600px;
+    }
+    
+    .journal-table th,
+    .journal-table td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      font-size: 14px;
+    }
+    
+    .journal-table th:first-child,
+    .journal-table td:first-child {
+      position: sticky;
+      left: 0;
+      background: var(--card-bg);
+      z-index: 2;
+      text-align: left;
+      border-right: 2px solid var(--border);
+    }
+    
+    .journal-table th:first-child {
+      background: #f3f4f6;
+      z-index: 3;
+    }
+    
+    .journal-table th {
+      background: #f3f4f6;
+      font-weight: 600;
+      color: var(--muted);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    
+    .journal-table th:first-child {
+      z-index: 3;
+    }
+    
+    .grade-cell {
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 60px;
+    }
+    
+    .grade-cell:hover {
+      background: var(--accent-light);
+    }
+    
+    .grade-input {
+      width: 60px;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 14px;
+    }
+    
+    .grade-5 { background: rgba(16, 185, 129, 0.2); color: #065f46; font-weight: 600; }
+    .grade-4 { background: rgba(59, 130, 246, 0.2); color: #1e40af; font-weight: 600; }
+    .grade-3 { background: rgba(245, 158, 11, 0.2); color: #92400e; font-weight: 600; }
+    .grade-2 { background: rgba(239, 68, 68, 0.2); color: #991b1b; font-weight: 600; }
+    .grade-1 { background: rgba(127, 29, 29, 0.2); color: #7f1d1d; font-weight: 600; }
+    .grade-n { background: rgba(107, 114, 128, 0.1); color: #6b7280; font-style: italic; }
+    
+    .lesson-special {
+      background: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+      font-weight: 600;
+    }
+    
+    .date-cell {
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .tooltip {
+      position: fixed;
+      background: var(--ink);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      z-index: 1000;
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Модальне вікно */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .modal-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: var(--muted);
+    }
+    
+    .stat-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'Unbounded', sans-serif;
+    }
     
     .filter-bar {
       display: flex;
@@ -167,9 +338,6 @@
       border-radius: 12px;
       border: 1px solid var(--border);
     }
-    .filter-bar .form-group {
-      min-width: 200px;
-    }
   </style>
 </head>
 <body>
@@ -178,8 +346,18 @@
 <div class="blob blob-2"></div>
 
 <header class="header">
-  <div class="brand"><div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg></div><div class="brand-name">Електронний журнал успішності<span>Навчальний заклад</span></div></div>
-  <div class="user-profile"><div class="user-info"><div class="user-name" id="userName">Завантаження...</div><div class="user-role" id="userRole">Викладач</div><button class="logout-btn" onclick="logout()">Вийти</button></div><img src="" alt="Аватар" class="user-avatar" id="userAvatar"></div>
+  <div class="brand">
+    <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg></div>
+    <div class="brand-name">Електронний журнал успішності<span>Навчальний заклад</span></div>
+  </div>
+  <div class="user-profile">
+    <div class="user-info">
+      <div class="user-name" id="userName">Завантаження...</div>
+      <div class="user-role" id="userRole">Викладач</div>
+      <button class="logout-btn" onclick="logout()">Вийти</button>
+    </div>
+    <img src="" alt="Аватар" class="user-avatar" id="userAvatar">
+  </div>
 </header>
 
 <main class="container">
@@ -203,18 +381,19 @@
       <div class="journal-controls">
         <div class="form-group"><label class="form-label">Група</label><select id="journalGroupSelect" class="form-input"><option>Оберіть групу</option></select></div>
         <div class="form-group"><label class="form-label">Предмет</label><select id="journalSubjectSelect" class="form-input"><option>Оберіть предмет</option></select></div>
-        <div class="form-group"><label class="form-label">Заняття</label><select id="journalLessonSelect" class="form-input"><option>Оберіть заняття</option></select></div>
       </div>
-      <div class="journal-info">Введіть оцінку (1-5 або 1-12) або "н" - пропуск. Оцінки зберігаються після натискання кнопки "Зберегти".</div>
-      <div class="table-wrapper" id="journalTableContainer"><div class="empty-state">Оберіть групу, предмет та заняття</div></div>
+      <div class="journal-info">
+        💡 Як користуватися: Натисніть на оцінку, щоб змінити. Введіть число (1-12) або "н" - пропуск. Наведіть на дату, щоб побачити тему заняття.
+      </div>
+      <div class="journal-table-wrapper" id="journalTableContainer">
+        <div class="empty-state">Оберіть групу та предмет</div>
+      </div>
     </div>
   </div>
 
   <div id="tab-lessons" class="tab-content">
     <div class="panel">
       <div class="panel-header"><h2 class="panel-title">Заняття</h2><button class="btn-primary" onclick="toggleForm('form-add-lesson')">+ Додати заняття</button></div>
-      
-      <!-- Фільтр для занять -->
       <div class="filter-bar">
         <div class="form-group">
           <label class="form-label">Фільтр за предметом</label>
@@ -223,7 +402,6 @@
           </select>
         </div>
       </div>
-      
       <div id="form-add-lesson" class="form-section">
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Предмет</label><select id="lessonSubject" class="form-input"></select></div>
@@ -287,6 +465,28 @@
   </div>
 </main>
 
+<!-- Модальне вікно для статистики групи -->
+<div id="groupModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">Статистика групи</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Модальне вікно для інформації про предмет -->
+<div id="subjectModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title" id="subjectModalTitle">Інформація про предмет</h3>
+      <button class="modal-close" onclick="closeSubjectModal()">&times;</button>
+    </div>
+    <div id="subjectModalBody"></div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -298,6 +498,7 @@
   const db = getFirestore(app);
   let currentEditId = null;
   let currentTeacherId = null;
+  let currentTooltip = null;
 
   onAuthStateChanged(auth, async (user) => { 
     if(user){ 
@@ -341,33 +542,120 @@
     document.getElementById("statSubjects").innerText = subjectsSnap.size; 
   }
 
-  // GROUPS (спільні)
+  // GROUPS
   async function loadGroups(){ 
     const snap = await getDocs(collection(db,"groups")); 
     const container = document.getElementById("groupsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Груп не знайдено</div>'; return; } 
     let html='<div class="data-list">'; 
     snap.forEach(docSnap=>{ const g = docSnap.data(); 
-      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editGroup('${docSnap.id}','${g.name}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('groups','${docSnap.id}')">🗑️</button></div></div>`; 
+      html+=`<div class="data-card" onclick="showGroupStats('${docSnap.id}','${g.name}')"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editGroup('${docSnap.id}','${g.name}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('groups','${docSnap.id}')">🗑️</button></div></div>`; 
     }); 
     html+='</div>'; 
     container.innerHTML=html; 
     populateSelects(); 
   }
   
+  window.showGroupStats = async (groupId, groupName) => {
+    const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId)));
+    const students = [];
+    studentsSnap.forEach(s => students.push({id: s.id, ...s.data()}));
+    
+    // Отримуємо всі заняття з предметів викладача
+    const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId)));
+    const subjects = [];
+    subjectsSnap.forEach(s => subjects.push({id: s.id, name: s.data().name, scale: s.data().scale}));
+    
+    const statsHtml = await Promise.all(subjects.map(async (subject) => {
+      // Отримуємо заняття з цього предмета
+      const lessonsSnap = await getDocs(query(collection(db,"lessons"), where("subjectId","==",subject.id), where("teacherId","==",currentTeacherId)));
+      const lessons = [];
+      lessonsSnap.forEach(l => lessons.push({id: l.id, ...l.data()}));
+      
+      if(lessons.length === 0 || students.length === 0) return null;
+      
+      // Збираємо всі оцінки
+      let gradeCounts = {5:0,4:0,3:0,2:0,1:0};
+      let totalPoints = 0;
+      let totalGrades = 0;
+      
+      for(const student of students){
+        for(const lesson of lessons){
+          const gradeSnap = await getDocs(query(collection(db,"grades"), where("lessonId","==",lesson.id), where("studentId","==",student.id)));
+          if(!gradeSnap.empty){
+            const grade = gradeSnap.docs[0].data().grade;
+            const numGrade = parseFloat(grade);
+            if(!isNaN(numGrade) && numGrade > 0){
+              if(numGrade === 5) gradeCounts[5]++;
+              else if(numGrade === 4) gradeCounts[4]++;
+              else if(numGrade === 3) gradeCounts[3]++;
+              else if(numGrade === 2) gradeCounts[2]++;
+              else if(numGrade === 1) gradeCounts[1]++;
+              totalPoints += numGrade;
+              totalGrades++;
+            }
+          }
+        }
+      }
+      
+      const avgGrade = totalGrades > 0 ? (totalPoints / totalGrades).toFixed(2) : 0;
+      const quality = students.length > 0 ? (((gradeCounts[5] + gradeCounts[4]) / students.length) * 100).toFixed(1) : 0;
+      
+      return `
+        <div class="stat-item">
+          <div class="stat-label">${subject.name}</div>
+          <div class="stat-value">Середній бал: ${avgGrade}</div>
+          <div class="stat-label">Якість знань: ${quality}%</div>
+          <div class="stat-label">Оцінки: 5:${gradeCounts[5]} | 4:${gradeCounts[4]} | 3:${gradeCounts[3]} | 2:${gradeCounts[2]} | 1:${gradeCounts[1]}</div>
+        </div>
+      `;
+    }));
+    
+    const validStats = statsHtml.filter(s => s !== null);
+    
+    document.getElementById("modalTitle").innerHTML = `Статистика групи ${groupName}`;
+    document.getElementById("modalBody").innerHTML = validStats.length > 0 ? validStats.join('') : '<div class="stat-item">Немає даних для статистики</div>';
+    document.getElementById("groupModal").classList.add("active");
+  };
+  
+  window.closeModal = () => {
+    document.getElementById("groupModal").classList.remove("active");
+  };
+  
+  window.showSubjectInfo = async (subjectId) => {
+    const snap = await getDoc(doc(db,"subjects",subjectId));
+    if(snap.exists()){
+      const s = snap.data();
+      document.getElementById("subjectModalTitle").innerHTML = s.name;
+      document.getElementById("subjectModalBody").innerHTML = `
+        <div class="stat-item"><div class="stat-label">Система оцінювання</div><div class="stat-value">${s.scale}-бальна</div></div>
+        <div class="stat-item"><div class="stat-label">Вид</div><div class="stat-value">${s.type}</div></div>
+        <div class="stat-item"><div class="stat-label">Кредити ЄКТС</div><div class="stat-value">${s.credits || 0}</div></div>
+        <div class="stat-item"><div class="stat-label">Загально годин</div><div class="stat-value">${s.hours || 0}</div></div>
+        <div class="stat-item"><div class="stat-label">Кількість модулів</div><div class="stat-value">${s.modules || 0}</div></div>
+        <div class="stat-item"><div class="stat-label">Розподіл годин</div><div class="stat-value">Лекції: ${s.lectures || 0} | Практичні: ${s.practicals || 0} | Лабораторні: ${s.labs || 0}</div></div>
+      `;
+      document.getElementById("subjectModal").classList.add("active");
+    }
+  };
+  
+  window.closeSubjectModal = () => {
+    document.getElementById("subjectModal").classList.remove("active");
+  };
+  
   window.editGroup = (id, name)=>{ currentEditId=id; document.getElementById("groupName").value=name; toggleForm('form-add-group'); const btn = document.getElementById("saveGroupBtn"); btn.innerText="Оновити"; btn.onclick = ()=> updateGroup(id); };
   async function updateGroup(id){ const name = document.getElementById("groupName").value; if(!name) return; await updateDoc(doc(db,"groups",id),{name}); resetGroupForm(); loadGroups(); updateStats(); }
   document.getElementById("saveGroupBtn").onclick = async()=>{ if(currentEditId){ await updateGroup(currentEditId); } else { const name = document.getElementById("groupName").value; if(name) await addDoc(collection(db,"groups"),{name}); resetGroupForm(); loadGroups(); updateStats(); } };
   function resetGroupForm(){ document.getElementById("groupName").value=""; currentEditId=null; document.getElementById("saveGroupBtn").innerText="Зберегти"; document.getElementById("form-add-group").style.display="none"; }
 
-  // SUBJECTS (тільки для поточного викладача)
+  // SUBJECTS
   async function loadMySubjects(){ 
     const snap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))); 
     const container = document.getElementById("subjectsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Предметів не знайдено. Додайте ваш перший предмет!</div>'; return; } 
     let html='<div class="data-list">'; 
     snap.forEach(docSnap=>{ const s = docSnap.data(); 
-      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name} (${s.scale}-бальна)</div><div class="data-sub">${s.type} | Кредити: ${s.credits||0} | Годин: ${s.hours||0}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; 
+      html+=`<div class="data-card" onclick="showSubjectInfo('${docSnap.id}')"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name} (${s.scale}-бальна)</div><div class="data-sub">${s.type} | Кредити: ${s.credits||0} | Годин: ${s.hours||0}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; 
     }); 
     html+='</div>'; 
     container.innerHTML=html; 
@@ -392,8 +680,6 @@
       const btn = document.getElementById("saveSubjectBtn"); 
       btn.innerText="Оновити"; 
       btn.onclick = ()=> updateSubject(id); 
-    } else {
-      alert("У вас немає доступу до цього предмета");
     }
   };
   
@@ -433,7 +719,6 @@
       }; 
       if(data.name) {
         await addDoc(collection(db,"subjects"),data);
-        alert(`Предмет "${data.name}" додано!`);
       }
       resetSubjectForm(); 
       loadMySubjects(); 
@@ -456,7 +741,7 @@
     document.getElementById("form-add-subject").style.display="none"; 
   }
 
-  // STUDENTS (спільні)
+  // STUDENTS
   async function loadStudents(){ 
     const snap = await getDocs(collection(db,"students")); 
     const groupsSnap = await getDocs(collection(db,"groups")); 
@@ -485,15 +770,13 @@
   
   document.getElementById("studentGroupFilter").addEventListener("change", () => loadStudents());
 
-  // LESSONS (тільки для поточного викладача з фільтрацією)
+  // LESSONS
   async function loadMyLessons(){ 
     let lessonsQuery = query(collection(db,"lessons"), where("teacherId","==",currentTeacherId));
-    
     const filterSubject = document.getElementById("lessonFilterSubject").value;
     if(filterSubject !== "all"){
       lessonsQuery = query(lessonsQuery, where("subjectId","==",filterSubject));
     }
-    
     const snap = await getDocs(lessonsQuery); 
     const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))); 
     const subMap={}; subjectsSnap.forEach(d=>subMap[d.id]=d.data().name); 
@@ -520,8 +803,6 @@
       const btn = document.getElementById("saveLessonBtn"); 
       btn.innerText="Оновити"; 
       btn.onclick = ()=> updateLesson(id); 
-    } else {
-      alert("У вас немає доступу до цього заняття");
     }
   };
   
@@ -536,6 +817,7 @@
     await updateDoc(doc(db,"lessons",id),data); 
     resetLessonForm(); 
     loadMyLessons(); 
+    if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
   }
   
   document.getElementById("saveLessonBtn").onclick = async()=>{ 
@@ -550,7 +832,6 @@
       }; 
       if(data.subjectId && data.date) {
         await addDoc(collection(db,"lessons"),data);
-        alert("Заняття додано!");
       }
       resetLessonForm(); 
       loadMyLessons(); 
@@ -565,7 +846,6 @@
     document.getElementById("form-add-lesson").style.display="none"; 
   }
   
-  // Фільтр для занять
   document.getElementById("lessonFilterSubject").addEventListener("change", () => loadMyLessons());
 
   window.deleteItem = async (col, id)=>{ 
@@ -576,6 +856,7 @@
       if(col==='subjects') loadMySubjects(); 
       if(col==='lessons') loadMyLessons(); 
       updateStats(); 
+      if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
     } 
   };
 
@@ -602,36 +883,20 @@
     }); 
   }
   
-  async function populateLessonSelect(){
-    const subjectId = document.getElementById("journalSubjectSelect").value;
-    if(!subjectId){
-      document.getElementById("journalLessonSelect").innerHTML='<option value="">Оберіть предмет спочатку</option>';
-      return;
-    }
-    const snap = await getDocs(query(collection(db,"lessons"), where("subjectId","==",subjectId), where("teacherId","==",currentTeacherId)));
-    let opts='<option value="">Оберіть заняття</option>';
-    snap.forEach(d=>{
-      const l = d.data();
-      opts+=`<option value="${d.id}">${l.date} - ${l.type}${l.topic?': '+l.topic.substring(0,30):''}</option>`;
-    });
-    document.getElementById("journalLessonSelect").innerHTML=opts;
-  }
-  
-  document.getElementById("journalSubjectSelect").addEventListener("change", () => populateLessonSelect());
   document.getElementById("journalGroupSelect").addEventListener("change", () => renderJournal());
-  document.getElementById("journalLessonSelect").addEventListener("change", () => renderJournal());
+  document.getElementById("journalSubjectSelect").addEventListener("change", () => renderJournal());
   
-  // JOURNAL зберігання оцінок
+  // ГОЛОВНА ФУНКЦІЯ РЕНДЕРУ ЖУРНАЛУ
   async function renderJournal(){ 
     const groupId = document.getElementById("journalGroupSelect").value; 
-    const subjectId = document.getElementById("journalSubjectSelect").value; 
-    const lessonId = document.getElementById("journalLessonSelect").value;
+    const subjectId = document.getElementById("journalSubjectSelect").value;
     
-    if(!groupId || !subjectId || !lessonId){ 
-      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть групу, предмет та заняття</div>'; 
+    if(!groupId || !subjectId){ 
+      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть групу та предмет</div>'; 
       return; 
     } 
     
+    // Отримуємо студентів групи
     const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId))); 
     const students = []; 
     studentsSnap.forEach(d=>students.push({id:d.id,...d.data()})); 
@@ -641,35 +906,122 @@
       return; 
     }
     
-    // Завантажуємо існуючі оцінки для цього заняття
-    const gradesSnap = await getDocs(query(collection(db,"grades"), where("lessonId","==",lessonId)));
-    const gradesMap = {};
-    gradesSnap.forEach(g => { gradesMap[g.data().studentId] = g.data().grade; });
+    // Отримуємо заняття з цього предмета
+    const lessonsSnap = await getDocs(query(collection(db,"lessons"), where("subjectId","==",subjectId), where("teacherId","==",currentTeacherId)));
+    const lessons = [];
+    lessonsSnap.forEach(l => lessons.push({id: l.id, ...l.data()}));
     
-    let html=`<table><thead><tr><th>Студент</th><th>Оцінка</th><th></th></tr></thead><tbody>`;
-    students.forEach(s=>{ 
-      const currentGrade = gradesMap[s.id] || "";
-      html+=`<tr>
-        <td>${s.name} ${s.role==='prefect'?'⭐':''}</td>
-        <td><input type="text" class="input-grade" id="grade-${s.id}" value="${currentGrade}" placeholder="н/св"></td>
-        <td><button class="save-grade-btn" onclick="saveGrade('${lessonId}','${s.id}')">Зберегти</button><span class="grade-saved" id="saved-${s.id}">✓</span></td>
-      </tr>`; 
-    }); 
-    html+='</tbody></table>'; 
-    document.getElementById("journalTableContainer").innerHTML=html; 
+    // Сортуємо заняття за датою
+    lessons.sort((a,b) => new Date(a.date) - new Date(b.date));
+    
+    if(lessons.length === 0){
+      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
+      return;
+    }
+    
+    // Отримуємо всі оцінки
+    const allGrades = {};
+    for(const lesson of lessons){
+      const gradesSnap = await getDocs(query(collection(db,"grades"), where("lessonId","==",lesson.id)));
+      gradesSnap.forEach(g => {
+        const gradeData = g.data();
+        if(!allGrades[lesson.id]) allGrades[lesson.id] = {};
+        allGrades[lesson.id][gradeData.studentId] = gradeData.grade;
+      });
+    }
+    
+    // Підраховуємо статистику для кожного студента
+    const studentStats = {};
+    students.forEach(student => {
+      let totalPoints = 0;
+      let gradeCount = 0;
+      let nCount = 0;
+      let svCount = 0;
+      
+      lessons.forEach(lesson => {
+        const grade = allGrades[lesson.id]?.[student.id];
+        if(grade){
+          if(grade === 'н') nCount++;
+          else if(grade === 'св') svCount++;
+          else {
+            const num = parseFloat(grade);
+            if(!isNaN(num)){
+              totalPoints += num;
+              gradeCount++;
+            }
+          }
+        }
+      });
+      
+      studentStats[student.id] = {
+        avg: gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-',
+        n: nCount,
+        sv: svCount
+      };
+    });
+    
+    // Будуємо HTML таблиці
+    let html = '<table class="journal-table"><thead><tr><th>Студент</th>';
+    
+    // Заголовки з датами
+    lessons.forEach(lesson => {
+      const dateStr = lesson.date.split('-').reverse().slice(0,2).join('.');
+      const typeShort = lesson.type === 'Лекція' ? 'Лек.' : 
+                       lesson.type === 'Практичне' ? 'Прак.' :
+                       lesson.type === 'Лабораторне' ? 'Лаб.' :
+                       lesson.type === 'Семінарське' ? 'Сем.' :
+                       lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем. оц.';
+      const isSpecial = lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання';
+      html += `<th class="date-cell ${isSpecial ? 'lesson-special' : ''}" data-lesson-id="${lesson.id}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
+    });
+    
+    html += `<th>Сер.</th><th>Н</th><th>СВ</th></tr></thead><tbody>`;
+    
+    // Рядки студентів
+    students.forEach(student => {
+      const stats = studentStats[student.id];
+      html += `<tr><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
+      
+      lessons.forEach(lesson => {
+        const grade = allGrades[lesson.id]?.[student.id] || '';
+        let gradeClass = '';
+        if(grade === 'н') gradeClass = 'grade-n';
+        else if(grade === 'св') gradeClass = 'grade-n';
+        else {
+          const num = parseFloat(grade);
+          if(num === 5) gradeClass = 'grade-5';
+          else if(num === 4) gradeClass = 'grade-4';
+          else if(num === 3) gradeClass = 'grade-3';
+          else if(num === 2) gradeClass = 'grade-2';
+          else if(num === 1) gradeClass = 'grade-1';
+        }
+        
+        html += `<td class="grade-cell ${gradeClass}" onclick="editGrade('${lesson.id}','${student.id}','${grade}')">${grade || '—'}</td>`;
+      });
+      
+      html += `<td class="grade-${stats.avg !== '-' ? Math.floor(parseFloat(stats.avg)) : ''}">${stats.avg}</td>
+               <td>${stats.n}</td>
+               <td>${stats.sv}</td></tr>`;
+    });
+    
+    html += '</tbody></table>';
+    document.getElementById("journalTableContainer").innerHTML = html;
+    
+    // Додаємо обробники для тултіпів
+    document.querySelectorAll('.date-cell').forEach(cell => {
+      cell.addEventListener('mouseenter', showTooltip);
+      cell.addEventListener('mouseleave', hideTooltip);
+    });
   }
   
-  window.saveGrade = async (lessonId, studentId) => {
-    const gradeInput = document.getElementById(`grade-${studentId}`);
-    const grade = gradeInput.value.trim();
-    const savedSpan = document.getElementById(`saved-${studentId}`);
+  window.editGrade = async (lessonId, studentId, currentGrade) => {
+    const newGrade = prompt(`Введіть оцінку (1-12), "н" - пропуск, "св" - відсутність світла, або залиште порожнім для видалення:`, currentGrade);
+    if(newGrade === null) return;
     
-    // Шукаємо існуючу оцінку
     const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
     const existing = await getDocs(q);
     
-    if(grade === ""){
-      // Видаляємо оцінку
+    if(newGrade === ""){
       if(!existing.empty){
         await deleteDoc(doc(db,"grades",existing.docs[0].id));
       }
@@ -677,7 +1029,7 @@
       const gradeData = {
         lessonId,
         studentId,
-        grade,
+        grade: newGrade,
         updatedAt: new Date().toISOString()
       };
       
@@ -688,10 +1040,35 @@
       }
     }
     
-    // Показуємо індикатор збереження
-    savedSpan.style.display = "inline";
-    setTimeout(() => { savedSpan.style.display = "none"; }, 1500);
+    renderJournal();
   };
+  
+  function showTooltip(e) {
+    const cell = e.target.closest('.date-cell');
+    if(!cell) return;
+    
+    const lessonType = cell.dataset.lessonType;
+    const lessonTopic = cell.dataset.lessonTopic;
+    const lessonDate = cell.dataset.lessonDate;
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    tooltip.innerHTML = `<strong>${lessonDate}</strong><br>${lessonType}<br>${lessonTopic || 'Без теми'}`;
+    document.body.appendChild(tooltip);
+    
+    const rect = cell.getBoundingClientRect();
+    tooltip.style.left = rect.left + 'px';
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 5) + 'px';
+    
+    currentTooltip = tooltip;
+  }
+  
+  function hideTooltip() {
+    if(currentTooltip) {
+      currentTooltip.remove();
+      currentTooltip = null;
+    }
+  }
 </script>
 </body>
 </html>
