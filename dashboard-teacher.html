@@ -368,6 +368,21 @@
       border-radius: 12px;
       border: 1px solid var(--border);
     }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-left: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -490,6 +505,8 @@
           <div class="form-group"><label class="form-label">Лекційні (год)</label><input type="number" id="subjectLectures" class="form-input" min="0" value="0"></div>
           <div class="form-group"><label class="form-label">Практичні (год)</label><input type="number" id="subjectPracticals" class="form-input" min="0" value="0"></div>
           <div class="form-group"><label class="form-label">Лабораторні (год)</label><input type="number" id="subjectLabs" class="form-input" min="0" value="0"></div>
+          <div class="form-group"><label class="form-label">Семінарські (год)</label><input type="number" id="subjectSeminars" class="form-input" min="0" value="0"></div>
+          <div class="form-group"><label class="form-label">Самостійна робота (год)</label><input type="number" id="subjectSelfStudy" class="form-input" min="0" value="0"></div>
         </div>
         <button class="btn-primary" id="saveSubjectBtn" style="margin-top: 16px;">Зберегти</button>
       </div>
@@ -505,7 +522,9 @@
       <h3 class="modal-title" id="modalTitle">Статистика групи</h3>
       <button class="modal-close" onclick="closeModal()">&times;</button>
     </div>
-    <div id="modalBody"></div>
+    <div id="modalBody">
+      <div class="loading-spinner"></div> Завантаження...
+    </div>
   </div>
 </div>
 
@@ -631,49 +650,61 @@
   }
   
   window.showGroupStats = async (groupId, groupName) => {
+    // Показуємо модальне вікно з індикатором завантаження
+    const modal = document.getElementById("groupModal");
+    const modalBody = document.getElementById("modalBody");
+    modalBody.innerHTML = '<div class="loading-spinner"></div> Завантаження...';
+    modal.classList.add("active");
+    
+    // Виконуємо асинхронні запити
     const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId)));
     const students = [];
     studentsSnap.forEach(s => students.push({id: s.id, ...s.data()}));
-    // Сортуємо студентів за алфавітом
     students.sort((a, b) => a.name.localeCompare(b.name));
     
     const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId)));
     const subjects = [];
     subjectsSnap.forEach(s => subjects.push({id: s.id, name: s.data().name, scale: s.data().scale}));
     
-    const statsHtml = await Promise.all(subjects.map(async (subject) => {
-      const lessonsSnap = await getDocs(query(collection(db,"lessons"), where("subjectId","==",subject.id), where("teacherId","==",currentTeacherId)));
-      const lessons = [];
-      lessonsSnap.forEach(l => lessons.push({id: l.id, ...l.data()}));
-      
-      if(lessons.length === 0 || students.length === 0) return null;
-      
+    // Отримуємо всі підсумкові оцінки для цих студентів і предметів
+    const finalGrades = {};
+    for(const student of students){
+      for(const subject of subjects){
+        const finalSnap = await getDocs(query(collection(db,"finalGrades"), where("studentId","==",student.id), where("subjectId","==",subject.id)));
+        if(!finalSnap.empty){
+          const grade = finalSnap.docs[0].data().grade;
+          const numGrade = parseFloat(grade);
+          if(!isNaN(numGrade) && numGrade > 0){
+            if(!finalGrades[subject.id]) finalGrades[subject.id] = {};
+            finalGrades[subject.id][student.id] = numGrade;
+          }
+        }
+      }
+    }
+    
+    const statsHtml = subjects.map(subject => {
+      const studentGrades = [];
       let gradeCounts = {5:0,4:0,3:0,2:0,1:0};
       let totalPoints = 0;
       let totalGrades = 0;
       
-      for(const student of students){
-        for(const lesson of lessons){
-          const gradeSnap = await getDocs(query(collection(db,"grades"), where("lessonId","==",lesson.id), where("studentId","==",student.id)));
-          if(!gradeSnap.empty){
-            const grade = gradeSnap.docs[0].data().grade;
-            const numGrade = parseFloat(grade);
-            if(!isNaN(numGrade) && numGrade > 0){
-              if(numGrade === 5) gradeCounts[5]++;
-              else if(numGrade === 4) gradeCounts[4]++;
-              else if(numGrade === 3) gradeCounts[3]++;
-              else if(numGrade === 2) gradeCounts[2]++;
-              else if(numGrade === 1) gradeCounts[1]++;
-              totalPoints += numGrade;
-              totalGrades++;
-            }
-          }
+      students.forEach(student => {
+        const grade = finalGrades[subject.id]?.[student.id];
+        if(grade){
+          if(grade === 5) gradeCounts[5]++;
+          else if(grade === 4) gradeCounts[4]++;
+          else if(grade === 3) gradeCounts[3]++;
+          else if(grade === 2) gradeCounts[2]++;
+          else if(grade === 1) gradeCounts[1]++;
+          totalPoints += grade;
+          totalGrades++;
+          studentGrades.push(grade);
         }
-      }
+      });
       
       const avgGrade = totalGrades > 0 ? (totalPoints / totalGrades).toFixed(2) : 0;
-      const totalPossibleGrades = students.length * lessons.length;
-      const quality = totalPossibleGrades > 0 ? ((gradeCounts[5] + gradeCounts[4]) / totalPossibleGrades * 100).toFixed(1) : 0;
+      // Якість знань: ((кількість 5 + кількість 4) / кількість студентів) * 100
+      const quality = students.length > 0 ? ((gradeCounts[5] + gradeCounts[4]) / students.length * 100).toFixed(1) : 0;
       
       return `
         <div class="stat-item">
@@ -683,13 +714,10 @@
           <div class="stat-label">Оцінки: 5:${gradeCounts[5]} | 4:${gradeCounts[4]} | 3:${gradeCounts[3]} | 2:${gradeCounts[2]} | 1:${gradeCounts[1]}</div>
         </div>
       `;
-    }));
-    
-    const validStats = statsHtml.filter(s => s !== null);
+    }).filter(s => s !== null);
     
     document.getElementById("modalTitle").innerHTML = `Статистика групи ${groupName}`;
-    document.getElementById("modalBody").innerHTML = validStats.length > 0 ? validStats.join('') : '<div class="stat-item">Немає даних для статистики</div>';
-    document.getElementById("groupModal").classList.add("active");
+    modalBody.innerHTML = statsHtml.length > 0 ? statsHtml.join('') : '<div class="stat-item">Немає підсумкових оцінок для статистики</div>';
   };
   
   window.closeModal = () => {
@@ -700,6 +728,17 @@
     const snap = await getDoc(doc(db,"subjects",subjectId));
     if(snap.exists()){
       const s = snap.data();
+      
+      // Формуємо рядок з розподілом годин (тільки ненульові значення)
+      const hoursParts = [];
+      if(s.lectures && s.lectures > 0) hoursParts.push(`Лекції: ${s.lectures}`);
+      if(s.practicals && s.practicals > 0) hoursParts.push(`Практичні: ${s.practicals}`);
+      if(s.labs && s.labs > 0) hoursParts.push(`Лабораторні: ${s.labs}`);
+      if(s.seminars && s.seminars > 0) hoursParts.push(`Семінарські: ${s.seminars}`);
+      if(s.selfStudy && s.selfStudy > 0) hoursParts.push(`Самостійна робота: ${s.selfStudy}`);
+      
+      const hoursString = hoursParts.length > 0 ? hoursParts.join(' | ') : 'Не вказано';
+      
       document.getElementById("subjectModalTitle").innerHTML = s.name;
       document.getElementById("subjectModalBody").innerHTML = `
         <div class="stat-item"><div class="stat-label">Система оцінювання</div><div class="stat-value">${s.scale}-бальна</div></div>
@@ -707,7 +746,7 @@
         <div class="stat-item"><div class="stat-label">Кредити ЄКТС</div><div class="stat-value">${s.credits || 0}</div></div>
         <div class="stat-item"><div class="stat-label">Загально годин</div><div class="stat-value">${s.hours || 0}</div></div>
         <div class="stat-item"><div class="stat-label">Кількість модулів</div><div class="stat-value">${s.modules || 0}</div></div>
-        <div class="stat-item"><div class="stat-label">Розподіл годин</div><div class="stat-value">Лекції: ${s.lectures || 0} | Практичні: ${s.practicals || 0} | Лабораторні: ${s.labs || 0}</div></div>
+        <div class="stat-item"><div class="stat-label">Розподіл годин</div><div class="stat-value">${hoursString}</div></div>
       `;
       document.getElementById("subjectModal").classList.add("active");
     }
@@ -750,6 +789,8 @@
       document.getElementById("subjectLectures").value=d.lectures||0; 
       document.getElementById("subjectPracticals").value=d.practicals||0; 
       document.getElementById("subjectLabs").value=d.labs||0; 
+      document.getElementById("subjectSeminars").value=d.seminars||0;
+      document.getElementById("subjectSelfStudy").value=d.selfStudy||0;
       toggleForm('form-add-subject'); 
       const btn = document.getElementById("saveSubjectBtn"); 
       btn.innerText="Оновити"; 
@@ -768,6 +809,8 @@
       lectures:parseInt(document.getElementById("subjectLectures").value)||0, 
       practicals:parseInt(document.getElementById("subjectPracticals").value)||0, 
       labs:parseInt(document.getElementById("subjectLabs").value)||0,
+      seminars:parseInt(document.getElementById("subjectSeminars").value)||0,
+      selfStudy:parseInt(document.getElementById("subjectSelfStudy").value)||0,
       teacherId: currentTeacherId
     }; 
     await updateDoc(doc(db,"subjects",id),data); 
@@ -789,6 +832,8 @@
         lectures:parseInt(document.getElementById("subjectLectures").value)||0, 
         practicals:parseInt(document.getElementById("subjectPracticals").value)||0, 
         labs:parseInt(document.getElementById("subjectLabs").value)||0,
+        seminars:parseInt(document.getElementById("subjectSeminars").value)||0,
+        selfStudy:parseInt(document.getElementById("subjectSelfStudy").value)||0,
         teacherId: currentTeacherId
       }; 
       if(data.name) {
@@ -810,6 +855,8 @@
     document.getElementById("subjectLectures").value="0"; 
     document.getElementById("subjectPracticals").value="0"; 
     document.getElementById("subjectLabs").value="0"; 
+    document.getElementById("subjectSeminars").value="0";
+    document.getElementById("subjectSelfStudy").value="0";
     currentEditId=null; 
     document.getElementById("saveSubjectBtn").innerText="Зберегти"; 
     document.getElementById("form-add-subject").style.display="none"; 
@@ -1166,7 +1213,7 @@
       html += `<th class="date-cell ${isSpecial ? 'lesson-special' : ''}" data-lesson-id="${lesson.id}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
     });
     
-    html += `<th>Сер.</th><th>Н</th><th>СВ</th><th>Підсумкова</th></thead><tbody>`;
+    html += `<th>Сер.</th><th>Н</th><th>СВ</th><th>Підсумкова</th></tr></thead><tbody>`;
     
     // Рядки студентів
     students.forEach(student => {
