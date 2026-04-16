@@ -517,12 +517,7 @@
           <div class="form-group"><label class="form-label">Розділ</label>
             <select id="lessonSection" class="form-input">
               <option value="">Оберіть розділ</option>
-              <option value="new">+ Створити новий розділ</option>
             </select>
-          </div>
-          <div class="form-group" id="newSectionGroup" style="display: none;">
-            <label class="form-label">Назва нового розділу</label>
-            <input type="text" id="newSectionName" class="form-input" placeholder="Введіть назву розділу">
           </div>
           <div class="form-group"><label class="form-label">Вид заняття</label>
             <select id="lessonType" class="form-input">
@@ -537,7 +532,11 @@
           </div>
           <div class="form-group"><label class="form-label">Дата</label><input type="date" id="lessonDate" class="form-input"></div>
         </div>
-        <div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
+        <div class="form-group" id="newSectionGroup" style="display: none; margin-bottom: 16px;">
+          <label class="form-label">Назва нового розділу</label>
+          <input type="text" id="newSectionName" class="form-input" placeholder="Введіть назву розділу">
+        </div>
+<div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
         <button class="btn-primary" id="saveLessonBtn">Зберегти</button>
       </div>
       <div id="lessonsList" class="data-list"><div class="empty-state">Занять не знайдено</div></div>
@@ -1388,11 +1387,27 @@
     const snap = await getDoc(doc(db,"lessons",id)); 
     if(snap.exists() && snap.data().teacherId === currentTeacherId){ 
       currentEditId=id; 
-      const d=snap.data(); 
+      const d=snap.data();
+      
+      // Завантажуємо розділи для цього предмета
+      await updateSectionSelect(d.subjectId);
+      
       document.getElementById("lessonSubject").value=d.subjectId; 
       document.getElementById("lessonType").value=d.type; 
       document.getElementById("lessonDate").value=d.date; 
-      document.getElementById("lessonTopic").value=d.topic||""; 
+      document.getElementById("lessonTopic").value=d.topic||"";
+      
+      // Встановлюємо розділ, якщо він є
+      if(d.sectionId) {
+        // Чекаємо поки розділи завантажаться
+        setTimeout(() => {
+          const sectionSelect = document.getElementById("lessonSection");
+          if(sectionSelect.querySelector(`option[value="${d.sectionId}"]`)) {
+            sectionSelect.value = d.sectionId;
+          }
+        }, 300);
+      }
+      
       toggleForm('form-add-lesson'); 
       const btn = document.getElementById("saveLessonBtn"); 
       btn.innerText="Оновити"; 
@@ -1401,11 +1416,25 @@
   };
   
   async function updateLesson(id){ 
+    const subjectId = document.getElementById("lessonSubject").value;
+    const sectionSelect = document.getElementById("lessonSection");
+    let sectionId = sectionSelect.value;
+    const newSectionName = document.getElementById("newSectionName").value.trim();
+    
+    // Якщо вибрано створення нового розділу
+    if(sectionId === "new" && newSectionName) {
+      sectionId = await createNewSection(subjectId, newSectionName);
+    } else if(sectionId === "new" && !newSectionName) {
+      alert("Будь ласка, введіть назву нового розділу!");
+      return;
+    }
+    
     const data = { 
-      subjectId:document.getElementById("lessonSubject").value, 
-      type:document.getElementById("lessonType").value, 
-      date:document.getElementById("lessonDate").value, 
-      topic:document.getElementById("lessonTopic").value,
+      subjectId: subjectId, 
+      type: document.getElementById("lessonType").value, 
+      date: document.getElementById("lessonDate").value, 
+      topic: document.getElementById("lessonTopic").value,
+      sectionId: sectionId || null,
       teacherId: currentTeacherId
     }; 
     await updateDoc(doc(db,"lessons",id),data); 
@@ -1624,9 +1653,26 @@
     }); 
     
     // Додаємо обробник зміни предмета для завантаження розділів
-    document.getElementById("lessonSubject").addEventListener("change", async (e) => {
-      await updateSectionSelect(e.target.value);
-    });
+    const lessonSubject = document.getElementById("lessonSubject");
+    if(lessonSubject) {
+      lessonSubject.addEventListener("change", async (e) => {
+        await updateSectionSelect(e.target.value);
+      });
+    }
+    
+    // Обробник для вибору "Створити новий розділ"
+    const lessonSection = document.getElementById("lessonSection");
+    if(lessonSection) {
+      lessonSection.addEventListener("change", (e) => {
+        const newSectionGroup = document.getElementById("newSectionGroup");
+        if(e.target.value === "new") {
+          newSectionGroup.style.display = "block";
+        } else {
+          newSectionGroup.style.display = "none";
+          document.getElementById("newSectionName").value = "";
+        }
+      });
+    }
     
     // Обробник для вибору "Створити новий розділ"
     document.getElementById("lessonSection").addEventListener("change", (e) => {
