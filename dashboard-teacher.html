@@ -254,6 +254,11 @@
     .grade-n { background: rgba(239, 68, 68, 0.3); color: #dc2626; font-weight: 600; }
     .grade-sv { background: rgba(245, 158, 11, 0.3); color: #d97706; font-weight: 600; }
     
+    .stat-cell {
+      background: white !important;
+      color: var(--ink) !important;
+    }
+    
     .lesson-special {
       background: rgba(239, 68, 68, 0.2);
       color: #dc2626;
@@ -520,6 +525,12 @@
   let currentTooltip = null;
   let currentEditingCell = null;
 
+  // Ключі для збереження останнього вибору
+  const STORAGE_KEYS = {
+    lastGroup: 'journal_last_group',
+    lastSubject: 'journal_last_subject'
+  };
+
   onAuthStateChanged(auth, async (user) => { 
     if(user){ 
       const snap = await getDoc(doc(db,"users",user.uid)); 
@@ -527,10 +538,43 @@
         currentTeacherId = user.uid;
         document.getElementById("userName").textContent = snap.data().displayName||"Викладач"; 
         document.getElementById("userAvatar").src = snap.data().photoURL||"https://ui-avatars.com/api/?name="+encodeURIComponent(snap.data().displayName||"Teacher"); 
-        loadAllData(); 
+        await loadAllData(); 
+        
+        // Після завантаження даних відновлюємо останній вибір
+        restoreLastSelection();
       } else window.location.href="index.html"; 
     } else window.location.href="index.html"; 
   });
+  
+  function restoreLastSelection() {
+    const lastGroup = localStorage.getItem(STORAGE_KEYS.lastGroup);
+    const lastSubject = localStorage.getItem(STORAGE_KEYS.lastSubject);
+    
+    if(lastGroup && document.querySelector(`#journalGroupSelect option[value="${lastGroup}"]`)) {
+      document.getElementById("journalGroupSelect").value = lastGroup;
+    }
+    if(lastSubject && document.querySelector(`#journalSubjectSelect option[value="${lastSubject}"]`)) {
+      document.getElementById("journalSubjectSelect").value = lastSubject;
+    }
+    
+    // Якщо є обидва значення, рендеримо журнал
+    const currentGroup = document.getElementById("journalGroupSelect").value;
+    const currentSubject = document.getElementById("journalSubjectSelect").value;
+    if(currentGroup && currentSubject && currentGroup !== "Оберіть групу" && currentSubject !== "Оберіть предмет") {
+      renderJournal();
+    }
+  }
+  
+  function saveLastSelection() {
+    const groupId = document.getElementById("journalGroupSelect").value;
+    const subjectId = document.getElementById("journalSubjectSelect").value;
+    if(groupId && groupId !== "Оберіть групу") {
+      localStorage.setItem(STORAGE_KEYS.lastGroup, groupId);
+    }
+    if(subjectId && subjectId !== "Оберіть предмет") {
+      localStorage.setItem(STORAGE_KEYS.lastSubject, subjectId);
+    }
+  }
   
   window.logout = async()=>{ await signOut(auth); window.location.href="index.html"; };
   window.switchTab = (tabId)=>{ 
@@ -902,8 +946,14 @@
     }); 
   }
   
-  document.getElementById("journalGroupSelect").addEventListener("change", () => renderJournal());
-  document.getElementById("journalSubjectSelect").addEventListener("change", () => renderJournal());
+  document.getElementById("journalGroupSelect").addEventListener("change", () => {
+    saveLastSelection();
+    renderJournal();
+  });
+  document.getElementById("journalSubjectSelect").addEventListener("change", () => {
+    saveLastSelection();
+    renderJournal();
+  });
   
   // Функція для валідації оцінки
   function validateGrade(grade, scale) {
@@ -920,7 +970,7 @@
     const groupId = document.getElementById("journalGroupSelect").value; 
     const subjectId = document.getElementById("journalSubjectSelect").value;
     
-    if(!groupId || !subjectId){ 
+    if(!groupId || !subjectId || groupId === "Оберіть групу" || subjectId === "Оберіть предмет"){ 
       document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть групу та предмет</div>'; 
       return; 
     } 
@@ -1041,9 +1091,9 @@
       else if(avgNum === 2) avgClass = 'grade-2';
       else if(avgNum === 1) avgClass = 'grade-1';
       
-      html += `<td class="${avgClass}">${stats.avg}</td>
-               <td class="grade-n">${stats.n}</td>
-               <td class="grade-sv">${stats.sv}</td></tr>`;
+      html += `<td class="stat-cell ${avgClass}">${stats.avg}</td>
+               <td class="stat-cell grade-n">${stats.n}</td>
+               <td class="stat-cell grade-sv">${stats.sv}</td></tr>`;
     });
     
     html += '</tbody></table>';
@@ -1069,7 +1119,8 @@
     
     const input = document.createElement('input');
     input.type = 'text';
-    input.value = currentGrade;
+    input.value = '';
+    input.placeholder = currentGrade || 'оцінка';
     input.className = 'grade-input';
     input.style.width = '60px';
     
@@ -1078,6 +1129,7 @@
       await saveGradeDirect(lessonId, studentId, newGrade, scale, cell);
       cell.removeChild(input);
       cell.style.padding = '12px';
+      cell.style.backgroundColor = '';
       currentEditingCell = null;
       renderJournal();
     });
@@ -1088,12 +1140,14 @@
         await saveGradeDirect(lessonId, studentId, newGrade, scale, cell);
         cell.removeChild(input);
         cell.style.padding = '12px';
+        cell.style.backgroundColor = '';
         currentEditingCell = null;
         renderJournal();
       }
       if(e.key === 'Escape') {
         cell.removeChild(input);
         cell.style.padding = '12px';
+        cell.style.backgroundColor = '';
         currentEditingCell = null;
       }
     });
@@ -1105,14 +1159,8 @@
   };
   
   async function saveGradeDirect(lessonId, studentId, newGrade, scale, cell) {
-    // Валідація
+    // Якщо поле порожнє — нічого не робимо
     if(newGrade === '') {
-      // Видаляємо оцінку
-      const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
-      const existing = await getDocs(q);
-      if(!existing.empty){
-        await deleteDoc(doc(db,"grades",existing.docs[0].id));
-      }
       return;
     }
     
@@ -1140,6 +1188,12 @@
   }
   
   function showTooltip(e) {
+    // Спочатку видаляємо старий тултіп, якщо є
+    if(currentTooltip) {
+      currentTooltip.remove();
+      currentTooltip = null;
+    }
+    
     const cell = e.target.closest('.date-cell');
     if(!cell) return;
     
