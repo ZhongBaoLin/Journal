@@ -832,7 +832,13 @@
     toggleForm('form-add-group'); 
     const btn = document.getElementById("saveGroupBtn"); 
     btn.innerText="Оновити"; 
-    btn.onclick = ()=> updateGroup(id); 
+    // Видаляємо старий обробник і додаємо новий
+    btn.onclick = async () => {
+      await updateGroup(id);
+      resetGroupForm();
+      loadGroups();
+      updateStats();
+    };
   };
   
   async function updateGroup(id){ 
@@ -840,21 +846,23 @@
     const academicYear = document.getElementById("groupYear").value;
     if(!name) return; 
     await updateDoc(doc(db,"groups",id),{name, academicYear}); 
-    resetGroupForm(); 
-    loadGroups(); 
-    updateStats(); 
   }
   
   document.getElementById("saveGroupBtn").onclick = async()=>{ 
     if(currentEditId){ 
       await updateGroup(currentEditId); 
-    } else { 
-      const name = document.getElementById("groupName").value; 
-      const academicYear = document.getElementById("groupYear").value;
-      if(name) await addDoc(collection(db,"groups"),{name, academicYear}); 
       resetGroupForm(); 
       loadGroups(); 
       updateStats(); 
+    } else { 
+      const name = document.getElementById("groupName").value; 
+      const academicYear = document.getElementById("groupYear").value;
+      if(name) {
+        await addDoc(collection(db,"groups"),{name, academicYear}); 
+        resetGroupForm(); 
+        loadGroups(); 
+        updateStats(); 
+      }
     } 
   };
   
@@ -862,7 +870,19 @@
     document.getElementById("groupName").value=""; 
     document.getElementById("groupYear").value="2025/2026";
     currentEditId=null; 
-    document.getElementById("saveGroupBtn").innerText="Зберегти"; 
+    const btn = document.getElementById("saveGroupBtn"); 
+    btn.innerText="Зберегти"; 
+    // Повертаємо стандартний обробник
+    btn.onclick = async () => {
+      const name = document.getElementById("groupName").value; 
+      const academicYear = document.getElementById("groupYear").value;
+      if(name) {
+        await addDoc(collection(db,"groups"),{name, academicYear}); 
+        resetGroupForm(); 
+        loadGroups(); 
+        updateStats(); 
+      }
+    };
     document.getElementById("form-add-group").style.display="none"; 
   }
 
