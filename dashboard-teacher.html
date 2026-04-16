@@ -906,9 +906,20 @@
     const subMap={}; subjectsSnap.forEach(d=>subMap[d.id]=d.data().name); 
     const container = document.getElementById("lessonsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Занять не знайдено</div>'; return; } 
+    
+    // Сортуємо заняття від новішої дати до старішої
+    const lessonsArray = [];
+    snap.forEach(docSnap => {
+      lessonsArray.push({id: docSnap.id, ...docSnap.data()});
+    });
+    lessonsArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
     let html='<div class="data-list">'; 
-    snap.forEach(docSnap=>{ const l = docSnap.data(); 
-      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subMap[l.subjectId]||l.subjectId} | ${l.type} | ${l.date}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editLesson('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${docSnap.id}')">🗑️</button></div></div>`; 
+    lessonsArray.forEach(l => { 
+      // Форматуємо дату ДД.ММ.РРРР
+      const dateParts = l.date.split('-');
+      const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subMap[l.subjectId]||l.subjectId} | ${l.type} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`; 
     }); 
     html+='</div>'; 
     container.innerHTML=html; 
@@ -1141,7 +1152,7 @@
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({id: l.id, ...l.data()}));
     
-    // Сортуємо заняття за датою
+    // Сортуємо заняття від старішої дати до новішої (для журналу зліва направо)
     lessons.sort((a,b) => new Date(a.date) - new Date(b.date));
     
     if(lessons.length === 0){
