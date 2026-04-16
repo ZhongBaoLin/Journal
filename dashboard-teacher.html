@@ -38,7 +38,7 @@
 
     body::before {
       content: '';
-      position: fixed; inset: 0; z-index: -1;
+      position: fixed; inset: 0; z-index: 0;
       background-image:
         linear-gradient(rgba(37,99,235,.06) 1px, transparent 1px),
         linear-gradient(90deg, rgba(37,99,235,.06) 1px, transparent 1px);
@@ -47,7 +47,7 @@
 
     .blob {
       position: fixed; border-radius: 50%; filter: blur(80px);
-      opacity: .25; z-index: -1; pointer-events: none;
+      opacity: .25; z-index: 0; pointer-events: none;
     }
     .blob-1 { width:400px; height:400px; top:-100px; right:-50px; background: radial-gradient(circle, #7c3aed, #2563eb); }
     .blob-2 { width:300px; height:300px; bottom:-50px; left:-50px; background: radial-gradient(circle, #2563eb, #0ea5e9); }
