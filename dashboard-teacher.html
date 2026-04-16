@@ -1040,6 +1040,7 @@
   
   // Функція для збереження підсумкової оцінки
   async function saveFinalGrade(studentId, subjectId, newGrade, scale, cell) {
+    // Якщо поле пусте - видаляємо оцінку
     if(newGrade === '') {
       const q = query(collection(db,"finalGrades"), where("studentId","==",studentId), where("subjectId","==",subjectId));
       const existing = await getDocs(q);
@@ -1334,7 +1335,13 @@
   };
   
   async function saveGradeDirect(lessonId, studentId, newGrade, scale) {
+    // Якщо поле пусте - видаляємо оцінку
     if(newGrade === '') {
+      const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
+      const existing = await getDocs(q);
+      if(!existing.empty){
+        await deleteDoc(doc(db,"grades",existing.docs[0].id));
+      }
       return;
     }
     
