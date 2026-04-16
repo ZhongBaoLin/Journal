@@ -172,7 +172,6 @@
     }
     .journal-info strong { color: var(--ink); }
     
-    /* Стилі для таблиці журналу з фіксованими колонками */
     .journal-table-wrapper {
       overflow-x: auto;
       position: relative;
@@ -295,7 +294,6 @@
       line-height: 1.4;
     }
     
-    /* Модальне вікно */
     .modal {
       display: none;
       position: fixed;
@@ -405,6 +403,11 @@
       margin-left: 8px;
       font-weight: normal;
     }
+    .subject-group-info {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -446,17 +449,18 @@
     <div class="panel">
       <div class="panel-header"><h2 class="panel-title">Журнал оцінок</h2></div>
       <div class="journal-controls">
+        <div class="form-group"><label class="form-label">НАВЧАЛЬНИЙ РІК</label><select id="journalYearSelect" class="form-input"><option>Оберіть рік</option></select></div>
         <div class="form-group"><label class="form-label">ГРУПА</label><select id="journalGroupSelect" class="form-input"><option>Оберіть групу</option></select></div>
         <div class="form-group"><label class="form-label">ПРЕДМЕТ/ДИСЦИПЛІНА</label><select id="journalSubjectSelect" class="form-input"><option>Оберіть предмет</option></select></div>
       </div>
       <div class="journal-info">
         💡 <strong>Як користуватися:</strong><br>
-        Виберіть групу та предмет. Оцінки зберігаються автоматично.<br>
+        Виберіть навчальний рік, групу та предмет. Оцінки зберігаються автоматично.<br>
         <strong>н</strong> — пропуск, <strong>св</strong> — відсутність світла.<br>
         Наведіть на дату в таблиці, щоб побачити тему заняття.
       </div>
       <div class="journal-table-wrapper" id="journalTableContainer">
-        <div class="empty-state">Оберіть групу та предмет/дисципліну</div>
+        <div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div>
       </div>
     </div>
   </div>
@@ -472,18 +476,18 @@
           </select>
         </div>
       </div>
-        <div id="form-add-lesson" class="form-section">
-          <div style="display: flex; justify-content: flex-end;">
-            <button class="icon-btn" onclick="toggleForm('form-add-lesson')" style="color: #ef4444; font-size: 20px;">&times;</button>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Предмет/Дисципліна</label><select id="lessonSubject" class="form-input"></select></div>
-            <div class="form-group"><label class="form-label">Вид заняття</label><select id="lessonType" class="form-input"><option>Лекція</option><option>Практичне</option><option>Лабораторне</option><option>Семінарське</option><option>Самостійне вивчення</option><option>Залік з модуля</option><option>Тематичне оцінювання</option></select></div>
-            <div class="form-group"><label class="form-label">Дата</label><input type="date" id="lessonDate" class="form-input"></div>
-          </div>
-          <div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
-          <button class="btn-primary" id="saveLessonBtn">Зберегти</button>
+      <div id="form-add-lesson" class="form-section">
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="icon-btn" onclick="toggleForm('form-add-lesson')" style="color: #ef4444; font-size: 20px;">&times;</button>
         </div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Предмет/Дисципліна</label><select id="lessonSubject" class="form-input"></select></div>
+          <div class="form-group"><label class="form-label">Вид заняття</label><select id="lessonType" class="form-input"><option>Лекція</option><option>Практичне</option><option>Лабораторне</option><option>Семінарське</option><option>Самостійне вивчення</option><option>Залік з модуля</option><option>Тематичне оцінювання</option></select></div>
+          <div class="form-group"><label class="form-label">Дата</label><input type="date" id="lessonDate" class="form-input"></div>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
+        <button class="btn-primary" id="saveLessonBtn">Зберегти</button>
+      </div>
       <div id="lessonsList" class="data-list"><div class="empty-state">Занять не знайдено</div></div>
     </div>
   </div>
@@ -491,21 +495,21 @@
   <div id="tab-groups" class="tab-content">
     <div class="panel">
       <div class="panel-header"><h2 class="panel-title">Групи</h2><button class="btn-primary" onclick="toggleForm('form-add-group')">+ Додати групу</button></div>
-        <div id="form-add-group" class="form-section">
-          <div style="display: flex; justify-content: flex-end;">
-            <button class="icon-btn" onclick="toggleForm('form-add-group')" style="color: #ef4444; font-size: 20px;">&times;</button>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Назва групи</label><input type="text" id="groupName" class="form-input" placeholder="Наприклад: ПЗ-21"></div>
-            <div class="form-group"><label class="form-label">Навчальний рік</label><select id="groupYear" class="form-input">
-              <option value="2025/2026">2025/2026</option>
-              <option value="2024/2025">2024/2025</option>
-              <option value="2023/2024">2023/2024</option>
-              <option value="2022/2023">2022/2023</option>
-            </select></div>
-          </div>
-          <button class="btn-primary" id="saveGroupBtn">Зберегти</button>
+      <div id="form-add-group" class="form-section">
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="icon-btn" onclick="toggleForm('form-add-group')" style="color: #ef4444; font-size: 20px;">&times;</button>
         </div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Назва групи</label><input type="text" id="groupName" class="form-input" placeholder="Наприклад: ПЗ-21"></div>
+          <div class="form-group"><label class="form-label">Навчальний рік</label><select id="groupYear" class="form-input">
+            <option value="2025/2026">2025/2026</option>
+            <option value="2024/2025">2024/2025</option>
+            <option value="2023/2024">2023/2024</option>
+            <option value="2022/2023">2022/2023</option>
+          </select></div>
+        </div>
+        <button class="btn-primary" id="saveGroupBtn">Зберегти</button>
+      </div>
       <div id="groupsList" class="data-list"><div class="empty-state">Груп не знайдено</div></div>
     </div>
   </div>
@@ -517,24 +521,24 @@
         <select id="studentGroupFilter" class="form-input"><option value="all">Всі групи</option></select>
         <button class="btn-primary" onclick="toggleForm('form-add-student')">+ Додати студента</button>
       </div></div>
-        <div id="form-add-student" class="form-section">
-          <div style="display: flex; justify-content: flex-end;">
-            <button class="icon-btn" onclick="toggleForm('form-add-student')" style="color: #ef4444; font-size: 20px;">&times;</button>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">ПІБ</label><input type="text" id="studentName" class="form-input" placeholder="Прізвище Ім'я По батькові"></div>
-            <div class="form-group"><label class="form-label">Група</label><select id="studentGroup" class="form-input"></select></div>
-            <div class="form-group"><label class="form-label">Навчальний рік</label><select id="studentYear" class="form-input">
-              <option value="2025/2026">2025/2026</option>
-              <option value="2024/2025">2024/2025</option>
-              <option value="2023/2024">2023/2024</option>
-              <option value="2022/2023">2022/2023</option>
-            </select></div>
-            <div class="form-group"><label class="form-label">Номер телефону</label><input type="tel" id="studentPhone" class="form-input" placeholder="+380..."></div>
-            <div class="form-group"><label class="form-label">Роль у групі</label><select id="studentRole" class="form-input"><option value="student">Студент</option><option value="prefect">Староста</option></select></div>
-          </div>
-          <button class="btn-primary" id="saveStudentBtn">Зберегти</button>
+      <div id="form-add-student" class="form-section">
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="icon-btn" onclick="toggleForm('form-add-student')" style="color: #ef4444; font-size: 20px;">&times;</button>
         </div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">ПІБ</label><input type="text" id="studentName" class="form-input" placeholder="Прізвище Ім'я По батькові"></div>
+          <div class="form-group"><label class="form-label">Група</label><select id="studentGroup" class="form-input"></select></div>
+          <div class="form-group"><label class="form-label">Навчальний рік</label><select id="studentYear" class="form-input">
+            <option value="2025/2026">2025/2026</option>
+            <option value="2024/2025">2024/2025</option>
+            <option value="2023/2024">2023/2024</option>
+            <option value="2022/2023">2022/2023</option>
+          </select></div>
+          <div class="form-group"><label class="form-label">Номер телефону</label><input type="tel" id="studentPhone" class="form-input" placeholder="+380..."></div>
+          <div class="form-group"><label class="form-label">Роль у групі</label><select id="studentRole" class="form-input"><option value="student">Студент</option><option value="prefect">Староста</option></select></div>
+        </div>
+        <button class="btn-primary" id="saveStudentBtn">Зберегти</button>
+      </div>
       <div id="studentsList" class="data-list"><div class="empty-state">Студентів не знайдено</div></div>
     </div>
   </div>
@@ -542,35 +546,41 @@
   <div id="tab-subjects" class="tab-content">
     <div class="panel">
       <div class="panel-header"><h2 class="panel-title">Мої предмети/дисципліни</h2><button class="btn-primary" onclick="toggleForm('form-add-subject')">+ Додати предмет</button></div>
-        <div id="form-add-subject" class="form-section">
-          <div style="display: flex; justify-content: flex-end;">
-            <button class="icon-btn" onclick="toggleForm('form-add-subject')" style="color: #ef4444; font-size: 20px;">&times;</button>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Назва</label><input type="text" id="subjectName" class="form-input" placeholder="Назва предмета"></div>
-            <div class="form-group"><label class="form-label">Система оцінювання</label><select id="subjectScale" class="form-input"><option value="12">12-бальна</option><option value="5">5-бальна</option></select></div>
-            <div class="form-group"><label class="form-label">Вид</label><select id="subjectType" class="form-input"><option>Обов'язкова</option><option>Вибіркова</option></select></div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Кредити ЄКТС</label><input type="number" id="subjectCredits" class="form-input" min="0"></div>
-            <div class="form-group"><label class="form-label">Загально годин</label><input type="number" id="subjectHours" class="form-input" min="0"></div>
-            <div class="form-group"><label class="form-label">Кількість модулів</label><input type="number" id="subjectModules" class="form-input" min="0"></div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Лекційні (год)</label><input type="number" id="subjectLectures" class="form-input" min="0" value="0"></div>
-            <div class="form-group"><label class="form-label">Практичні (год)</label><input type="number" id="subjectPracticals" class="form-input" min="0" value="0"></div>
-            <div class="form-group"><label class="form-label">Лабораторні (год)</label><input type="number" id="subjectLabs" class="form-input" min="0" value="0"></div>
-            <div class="form-group"><label class="form-label">Семінарські (год)</label><input type="number" id="subjectSeminars" class="form-input" min="0" value="0"></div>
-            <div class="form-group"><label class="form-label">Самостійна робота (год)</label><input type="number" id="subjectSelfStudy" class="form-input" min="0" value="0"></div>
-          </div>
-          <button class="btn-primary" id="saveSubjectBtn" style="margin-top: 16px;">Зберегти</button>
+      <div id="form-add-subject" class="form-section">
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="icon-btn" onclick="toggleForm('form-add-subject')" style="color: #ef4444; font-size: 20px;">&times;</button>
         </div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Назва</label><input type="text" id="subjectName" class="form-input" placeholder="Назва предмета"></div>
+          <div class="form-group"><label class="form-label">Система оцінювання</label><select id="subjectScale" class="form-input"><option value="12">12-бальна</option><option value="5">5-бальна</option></select></div>
+          <div class="form-group"><label class="form-label">Вид</label><select id="subjectType" class="form-input"><option>Обов'язкова</option><option>Вибіркова</option></select></div>
+          <div class="form-group"><label class="form-label">Група</label><select id="subjectGroup" class="form-input"></select></div>
+          <div class="form-group"><label class="form-label">Навчальний рік</label><select id="subjectYear" class="form-input">
+            <option value="2025/2026">2025/2026</option>
+            <option value="2024/2025">2024/2025</option>
+            <option value="2023/2024">2023/2024</option>
+            <option value="2022/2023">2022/2023</option>
+          </select></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Кредити ЄКТС</label><input type="number" id="subjectCredits" class="form-input" min="0"></div>
+          <div class="form-group"><label class="form-label">Загально годин</label><input type="number" id="subjectHours" class="form-input" min="0"></div>
+          <div class="form-group"><label class="form-label">Кількість модулів</label><input type="number" id="subjectModules" class="form-input" min="0"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Лекційні (год)</label><input type="number" id="subjectLectures" class="form-input" min="0" value="0"></div>
+          <div class="form-group"><label class="form-label">Практичні (год)</label><input type="number" id="subjectPracticals" class="form-input" min="0" value="0"></div>
+          <div class="form-group"><label class="form-label">Лабораторні (год)</label><input type="number" id="subjectLabs" class="form-input" min="0" value="0"></div>
+          <div class="form-group"><label class="form-label">Семінарські (год)</label><input type="number" id="subjectSeminars" class="form-input" min="0" value="0"></div>
+          <div class="form-group"><label class="form-label">Самостійна робота (год)</label><input type="number" id="subjectSelfStudy" class="form-input" min="0" value="0"></div>
+        </div>
+        <button class="btn-primary" id="saveSubjectBtn" style="margin-top: 16px;">Зберегти</button>
+      </div>
       <div id="subjectsList" class="data-list"><div class="empty-state">Предметів/дисциплін не знайдено. Додайте ваш перший предмет!</div></div>
     </div>
   </div>
 </main>
 
-<!-- Модальне вікно для статистики групи -->
 <div id="groupModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -583,7 +593,6 @@
   </div>
 </div>
 
-<!-- Модальне вікно для інформації про предмет -->
 <div id="subjectModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -608,8 +617,8 @@
   let currentTooltip = null;
   let currentEditingCell = null;
 
-  // Ключі для збереження останнього вибору
   const STORAGE_KEYS = {
+    lastYear: 'journal_last_year',
     lastGroup: 'journal_last_group',
     lastSubject: 'journal_last_subject'
   };
@@ -622,17 +631,19 @@
         document.getElementById("userName").textContent = snap.data().displayName||"Викладач"; 
         document.getElementById("userAvatar").src = snap.data().photoURL||"https://ui-avatars.com/api/?name="+encodeURIComponent(snap.data().displayName||"Teacher"); 
         await loadAllData(); 
-        
-        // Після завантаження даних відновлюємо останній вибір
         restoreLastSelection();
       } else window.location.href="index.html"; 
     } else window.location.href="index.html"; 
   });
   
   function restoreLastSelection() {
+    const lastYear = localStorage.getItem(STORAGE_KEYS.lastYear);
     const lastGroup = localStorage.getItem(STORAGE_KEYS.lastGroup);
     const lastSubject = localStorage.getItem(STORAGE_KEYS.lastSubject);
     
+    if(lastYear && document.querySelector(`#journalYearSelect option[value="${lastYear}"]`)) {
+      document.getElementById("journalYearSelect").value = lastYear;
+    }
     if(lastGroup && document.querySelector(`#journalGroupSelect option[value="${lastGroup}"]`)) {
       document.getElementById("journalGroupSelect").value = lastGroup;
     }
@@ -640,17 +651,21 @@
       document.getElementById("journalSubjectSelect").value = lastSubject;
     }
     
-    // Якщо є обидва значення, рендеримо журнал
+    const currentYear = document.getElementById("journalYearSelect").value;
     const currentGroup = document.getElementById("journalGroupSelect").value;
     const currentSubject = document.getElementById("journalSubjectSelect").value;
-    if(currentGroup && currentSubject && currentGroup !== "Оберіть групу" && currentSubject !== "Оберіть предмет") {
+    if(currentYear && currentYear !== "Оберіть рік" && currentGroup && currentGroup !== "Оберіть групу" && currentSubject && currentSubject !== "Оберіть предмет") {
       renderJournal();
     }
   }
   
   function saveLastSelection() {
+    const year = document.getElementById("journalYearSelect").value;
     const groupId = document.getElementById("journalGroupSelect").value;
     const subjectId = document.getElementById("journalSubjectSelect").value;
+    if(year && year !== "Оберіть рік") {
+      localStorage.setItem(STORAGE_KEYS.lastYear, year);
+    }
     if(groupId && groupId !== "Оберіть групу") {
       localStorage.setItem(STORAGE_KEYS.lastGroup, groupId);
     }
@@ -696,7 +711,6 @@
     const container = document.getElementById("groupsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Груп не знайдено</div>'; return; } 
     
-    // Підраховуємо кількість студентів у кожній групі
     const studentsSnap = await getDocs(collection(db,"students"));
     const studentCountByGroup = {};
     studentsSnap.forEach(s => {
@@ -704,7 +718,6 @@
       if(groupId) studentCountByGroup[groupId] = (studentCountByGroup[groupId] || 0) + 1;
     });
     
-    // Групуємо групи за навчальним роком
     const groupsByYear = {};
     snap.forEach(docSnap => { 
       const g = docSnap.data(); 
@@ -717,7 +730,6 @@
       });
     });
     
-    // Сортуємо роки в порядку спадання (найновіший перший)
     const sortedYears = Object.keys(groupsByYear).sort((a, b) => {
       if(a === 'Не вказано') return 1;
       if(b === 'Не вказано') return -1;
@@ -729,6 +741,7 @@
     let html = '';
     for(const year of sortedYears) {
       const groups = groupsByYear[year];
+      groups.sort((a, b) => a.name.localeCompare(b.name));
       html += `<div class="year-group"><div class="year-title">${year} <span class="group-count">(${groups.length} груп)</span></div><div class="data-list">`;
       groups.forEach(g => {
         html += `<div class="data-card" onclick="showGroupStats('${g.id}','${g.name}')"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div><div class="data-sub">Студентів: ${g.studentCount}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editGroup('${g.id}','${g.name}','${year}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('groups','${g.id}')">🗑️</button></div></div>`;
@@ -741,13 +754,11 @@
   }
   
   window.showGroupStats = async (groupId, groupName) => {
-    // Показуємо модальне вікно з індикатором завантаження
     const modal = document.getElementById("groupModal");
     const modalBody = document.getElementById("modalBody");
     modalBody.innerHTML = '<div class="loading-spinner"></div> Завантаження...';
     modal.classList.add("active");
     
-    // Виконуємо асинхронні запити
     const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId)));
     const students = [];
     studentsSnap.forEach(s => students.push({id: s.id, ...s.data()}));
@@ -757,7 +768,6 @@
     const subjects = [];
     subjectsSnap.forEach(s => subjects.push({id: s.id, name: s.data().name, scale: s.data().scale}));
     
-    // Отримуємо всі підсумкові оцінки для цих студентів і предметів
     const finalGrades = {};
     for(const student of students){
       for(const subject of subjects){
@@ -830,6 +840,8 @@
       document.getElementById("subjectModalBody").innerHTML = `
         <div class="stat-item"><div class="stat-label">Система оцінювання</div><div class="stat-value">${s.scale}-бальна</div></div>
         <div class="stat-item"><div class="stat-label">Вид</div><div class="stat-value">${s.type}</div></div>
+        <div class="stat-item"><div class="stat-label">Група</div><div class="stat-value">${s.groupName || s.groupId}</div></div>
+        <div class="stat-item"><div class="stat-label">Навчальний рік</div><div class="stat-value">${s.academicYear || 'Не вказано'}</div></div>
         <div class="stat-item"><div class="stat-label">Кредити ЄКТС</div><div class="stat-value">${s.credits || 0}</div></div>
         <div class="stat-item"><div class="stat-label">Загально годин</div><div class="stat-value">${s.hours || 0}</div></div>
         <div class="stat-item"><div class="stat-label">Кількість модулів</div><div class="stat-value">${s.modules || 0}</div></div>
@@ -844,74 +856,68 @@
   };
   
   window.editGroup = (id, name, year)=>{ 
-    currentEditId=id; 
-    document.getElementById("groupName").value=name; 
-    document.getElementById("groupYear").value=year || '2025/2026';
+    currentEditId = id; 
+    document.getElementById("groupName").value = name; 
+    document.getElementById("groupYear").value = year || '2025/2026';
     toggleForm('form-add-group'); 
     const btn = document.getElementById("saveGroupBtn"); 
-    btn.innerText="Оновити"; 
-    // Видаляємо старий обробник і додаємо новий
+    btn.innerText = "Оновити"; 
     btn.onclick = async () => {
-      await updateGroup(id);
-      resetGroupForm();
-      loadGroups();
-      updateStats();
-    };
-  };
-  
-  async function updateGroup(id){ 
-    const name = document.getElementById("groupName").value; 
-    const academicYear = document.getElementById("groupYear").value;
-    if(!name) return; 
-    await updateDoc(doc(db,"groups",id),{name, academicYear}); 
-  }
-  
-  document.getElementById("saveGroupBtn").onclick = async()=>{ 
-    if(currentEditId){ 
-      await updateGroup(currentEditId); 
-      resetGroupForm(); 
-      loadGroups(); 
-      updateStats(); 
-    } else { 
-      const name = document.getElementById("groupName").value; 
-      const academicYear = document.getElementById("groupYear").value;
-      if(name) {
-        await addDoc(collection(db,"groups"),{name, academicYear}); 
-        resetGroupForm(); 
-        loadGroups(); 
-        updateStats(); 
+      const newName = document.getElementById("groupName").value; 
+      const newYear = document.getElementById("groupYear").value;
+      if(newName) {
+        await updateDoc(doc(db,"groups",id), {name: newName, academicYear: newYear});
+        resetGroupForm();
+        loadGroups();
+        updateStats();
       }
-    } 
+    };
   };
   
   function resetGroupForm(){ 
-    document.getElementById("groupName").value=""; 
-    document.getElementById("groupYear").value="2025/2026";
-    currentEditId=null; 
+    document.getElementById("groupName").value = ""; 
+    document.getElementById("groupYear").value = "2025/2026";
+    currentEditId = null; 
     const btn = document.getElementById("saveGroupBtn"); 
-    btn.innerText="Зберегти"; 
-    // Повертаємо стандартний обробник
+    btn.innerText = "Зберегти"; 
     btn.onclick = async () => {
       const name = document.getElementById("groupName").value; 
       const academicYear = document.getElementById("groupYear").value;
       if(name) {
-        await addDoc(collection(db,"groups"),{name, academicYear}); 
+        await addDoc(collection(db,"groups"), {name, academicYear}); 
         resetGroupForm(); 
         loadGroups(); 
         updateStats(); 
       }
     };
-    document.getElementById("form-add-group").style.display="none"; 
+    document.getElementById("form-add-group").style.display = "none"; 
   }
+  
+  document.getElementById("saveGroupBtn").onclick = async () => { 
+    if(currentEditId) return;
+    const name = document.getElementById("groupName").value; 
+    const academicYear = document.getElementById("groupYear").value;
+    if(name) {
+      await addDoc(collection(db,"groups"), {name, academicYear}); 
+      resetGroupForm(); 
+      loadGroups(); 
+      updateStats(); 
+    }
+  };
 
   // SUBJECTS
   async function loadMySubjects(){ 
     const snap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))); 
+    const groupsSnap = await getDocs(collection(db,"groups"));
+    const groupsMap = {};
+    groupsSnap.forEach(g => { groupsMap[g.id] = g.data().name; });
+    
     const container = document.getElementById("subjectsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Предметів/дисциплін не знайдено. Додайте ваш перший предмет!</div>'; return; } 
     let html='<div class="data-list">'; 
     snap.forEach(docSnap=>{ const s = docSnap.data(); 
-      html+=`<div class="data-card" onclick="showSubjectInfo('${docSnap.id}')"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name} (${s.scale}-бальна)</div><div class="data-sub">${s.type} | Кредити: ${s.credits||0} | Годин: ${s.hours||0}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; 
+      const groupName = groupsMap[s.groupId] || s.groupId || 'Групу не обрано';
+      html+=`<div class="data-card" onclick="showSubjectInfo('${docSnap.id}')"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name}</div><div class="data-sub">${groupName} | ${s.academicYear || 'Не вказано'}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; 
     }); 
     html+='</div>'; 
     container.innerHTML=html; 
@@ -926,6 +932,8 @@
       document.getElementById("subjectName").value=d.name; 
       document.getElementById("subjectScale").value=d.scale; 
       document.getElementById("subjectType").value=d.type; 
+      document.getElementById("subjectGroup").value=d.groupId || '';
+      document.getElementById("subjectYear").value=d.academicYear || '2025/2026';
       document.getElementById("subjectCredits").value=d.credits||0; 
       document.getElementById("subjectHours").value=d.hours||0; 
       document.getElementById("subjectModules").value=d.modules||0; 
@@ -942,10 +950,18 @@
   };
   
   async function updateSubject(id){ 
+    const groupsSnap = await getDocs(collection(db,"groups"));
+    const groupsMap = {};
+    groupsSnap.forEach(g => { groupsMap[g.id] = g.data().name; });
+    
+    const groupId = document.getElementById("subjectGroup").value;
     const data = { 
       name:document.getElementById("subjectName").value, 
       scale:document.getElementById("subjectScale").value, 
       type:document.getElementById("subjectType").value, 
+      groupId: groupId,
+      groupName: groupsMap[groupId] || groupId,
+      academicYear: document.getElementById("subjectYear").value,
       credits:parseInt(document.getElementById("subjectCredits").value)||0, 
       hours:parseInt(document.getElementById("subjectHours").value)||0, 
       modules:parseInt(document.getElementById("subjectModules").value)||0, 
@@ -965,10 +981,18 @@
   document.getElementById("saveSubjectBtn").onclick = async()=>{ 
     if(currentEditId) await updateSubject(currentEditId); 
     else { 
+      const groupsSnap = await getDocs(collection(db,"groups"));
+      const groupsMap = {};
+      groupsSnap.forEach(g => { groupsMap[g.id] = g.data().name; });
+      
+      const groupId = document.getElementById("subjectGroup").value;
       const data = { 
         name:document.getElementById("subjectName").value, 
         scale:document.getElementById("subjectScale").value, 
         type:document.getElementById("subjectType").value, 
+        groupId: groupId,
+        groupName: groupsMap[groupId] || groupId,
+        academicYear: document.getElementById("subjectYear").value,
         credits:parseInt(document.getElementById("subjectCredits").value)||0, 
         hours:parseInt(document.getElementById("subjectHours").value)||0, 
         modules:parseInt(document.getElementById("subjectModules").value)||0, 
@@ -992,6 +1016,8 @@
     document.getElementById("subjectName").value=""; 
     document.getElementById("subjectScale").value="12"; 
     document.getElementById("subjectType").value="Обов'язкова"; 
+    document.getElementById("subjectGroup").value="";
+    document.getElementById("subjectYear").value="2025/2026";
     document.getElementById("subjectCredits").value=""; 
     document.getElementById("subjectHours").value=""; 
     document.getElementById("subjectModules").value=""; 
@@ -1005,7 +1031,7 @@
     document.getElementById("form-add-subject").style.display="none"; 
   }
 
-  // STUDENTS (з сортуванням за алфавітом та фільтрацією за роком і групою)
+  // STUDENTS
   async function loadStudents(){ 
     const snap = await getDocs(collection(db,"students")); 
     const groupsSnap = await getDocs(collection(db,"groups")); 
@@ -1079,7 +1105,7 @@
     container.innerHTML=html; 
   }
   
-    window.editStudent = (id, name, groupId, phone, role, year)=>{ 
+  window.editStudent = (id, name, groupId, phone, role, year)=>{ 
     currentEditId = id; 
     document.getElementById("studentName").value = name; 
     document.getElementById("studentGroup").value = groupId; 
@@ -1100,37 +1126,12 @@
       await updateDoc(doc(db,"students",id), data); 
       resetStudentForm(); 
       loadStudents(); 
+      loadGroups();
       updateStats(); 
     };
   };
-    async function updateStudent(id){ 
-    const data = { 
-      name: document.getElementById("studentName").value, 
-      groupId: document.getElementById("studentGroup").value, 
-      academicYear: document.getElementById("studentYear").value,
-      phone: document.getElementById("studentPhone").value, 
-      role: document.getElementById("studentRole").value 
-    }; 
-    await updateDoc(doc(db,"students",id), data); 
-  }
-   // Початковий обробник для кнопки "Зберегти" студента
-  document.getElementById("saveStudentBtn").onclick = async () => { 
-    if(currentEditId) return;
-    const data = { 
-      name: document.getElementById("studentName").value, 
-      groupId: document.getElementById("studentGroup").value, 
-      academicYear: document.getElementById("studentYear").value,
-      phone: document.getElementById("studentPhone").value, 
-      role: document.getElementById("studentRole").value 
-    }; 
-    if(data.name && data.groupId) {
-      await addDoc(collection(db,"students"), data); 
-      resetStudentForm(); 
-      loadStudents(); 
-      updateStats(); 
-    } 
-  };
-    function resetStudentForm(){ 
+  
+  function resetStudentForm(){ 
     document.getElementById("studentName").value = ""; 
     document.getElementById("studentPhone").value = ""; 
     document.getElementById("studentYear").value = "2025/2026";
@@ -1150,30 +1151,48 @@
         await addDoc(collection(db,"students"), data); 
         resetStudentForm(); 
         loadStudents(); 
+        loadGroups();
         updateStats(); 
       }
     };
     document.getElementById("form-add-student").style.display = "none"; 
   }
   
+  document.getElementById("saveStudentBtn").onclick = async () => { 
+    if(currentEditId) return;
+    const data = { 
+      name: document.getElementById("studentName").value, 
+      groupId: document.getElementById("studentGroup").value, 
+      academicYear: document.getElementById("studentYear").value,
+      phone: document.getElementById("studentPhone").value, 
+      role: document.getElementById("studentRole").value 
+    }; 
+    if(data.name && data.groupId) {
+      await addDoc(collection(db,"students"), data); 
+      resetStudentForm(); 
+      loadStudents(); 
+      loadGroups();
+      updateStats(); 
+    } 
+  };
+  
   document.getElementById("studentYearFilter").addEventListener("change", () => loadStudents());
   document.getElementById("studentGroupFilter").addEventListener("change", () => loadStudents());
 
-  // Функція для визначення порядку категорій занять
+  // Функції для занять
   function getCategoryOrder(type) {
     const order = {
       'Лекція': 1,
-      'Практичне': 2,
+      'Самостійне вивчення': 2,
+      'Практичне': 3,
       'Лабораторне': 3,
       'Семінарське': 4,
-      'Самостійне вивчення': 5,
-      'Залік з модуля': 6,
-      'Тематичне оцінювання': 7
+      'Залік з модуля': 5,
+      'Тематичне оцінювання': 6
     };
     return order[type] || 99;
   }
   
-  // Функція для отримання наступного номера заняття в категорії для конкретного дня
   async function getNextLessonNumber(date, type, subjectId) {
     const q = query(
       collection(db,"lessons"), 
@@ -1191,10 +1210,14 @@
       }
     });
     
-    return sameTypeLessons.length + 1;
+    let maxNumber = 0;
+    sameTypeLessons.forEach(lesson => {
+      if(lesson.number && lesson.number > maxNumber) maxNumber = lesson.number;
+    });
+    
+    return maxNumber + 1;
   }
   
-  // Функція для форматування відображення заняття з номером
   function formatLessonDisplay(lesson) {
     const typeShort = lesson.type === 'Лекція' ? 'Лек' : 
                      lesson.type === 'Практичне' ? 'Прак' :
@@ -1314,8 +1337,13 @@
   window.deleteItem = async (col, id)=>{ 
     if(confirm("Видалити?")){ 
       await deleteDoc(doc(db,col,id)); 
-      if(col==='groups') loadGroups(); 
-      if(col==='students') loadStudents(); 
+      if(col==='groups') {
+        loadGroups(); 
+      }
+      if(col==='students') {
+        loadStudents(); 
+        loadGroups();
+      }
       if(col==='subjects') loadMySubjects(); 
       if(col==='lessons') loadMyLessons(); 
       updateStats(); 
@@ -1323,37 +1351,98 @@
     } 
   };
 
+  async function populateJournalFilters() {
+    // Заповнюємо фільтр років для журналу
+    const groupsSnap = await getDocs(collection(db,"groups"));
+    const yearsSet = new Set();
+    groupsSnap.forEach(g => {
+      const year = g.data().academicYear;
+      if(year) yearsSet.add(year);
+    });
+    
+    let yearOptions = '<option value="">Оберіть рік</option>';
+    const sortedYears = Array.from(yearsSet).sort((a, b) => {
+      const aStart = parseInt(a.split('/')[0]);
+      const bStart = parseInt(b.split('/')[0]);
+      return bStart - aStart;
+    });
+    sortedYears.forEach(year => {
+      yearOptions += `<option value="${year}">${year}</option>`;
+    });
+    document.getElementById("journalYearSelect").innerHTML = yearOptions;
+    
+    // Оновлюємо групи при зміні року
+    document.getElementById("journalYearSelect").onchange = async () => {
+      const selectedYear = document.getElementById("journalYearSelect").value;
+      if(!selectedYear) {
+        document.getElementById("journalGroupSelect").innerHTML = '<option value="">Оберіть групу</option>';
+        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
+        return;
+      }
+      
+      const groupsSnap2 = await getDocs(query(collection(db,"groups"), where("academicYear","==",selectedYear)));
+      let groupOptions = '<option value="">Оберіть групу</option>';
+      groupsSnap2.forEach(g => {
+        groupOptions += `<option value="${g.id}">${g.data().name}</option>`;
+      });
+      document.getElementById("journalGroupSelect").innerHTML = groupOptions;
+      document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
+      
+      saveLastSelection();
+      renderJournal();
+    };
+    
+    // Оновлюємо предмети при зміні групи
+    document.getElementById("journalGroupSelect").onchange = async () => {
+      const selectedGroup = document.getElementById("journalGroupSelect").value;
+      if(!selectedGroup) {
+        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
+        return;
+      }
+      
+      const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("groupId","==",selectedGroup), where("teacherId","==",currentTeacherId)));
+      let subjectOptions = '<option value="">Оберіть предмет</option>';
+      subjectsSnap.forEach(s => {
+        subjectOptions += `<option value="${s.id}">${s.data().name}</option>`;
+      });
+      document.getElementById("journalSubjectSelect").innerHTML = subjectOptions;
+      
+      saveLastSelection();
+      renderJournal();
+    };
+    
+    document.getElementById("journalSubjectSelect").onchange = () => {
+      saveLastSelection();
+      renderJournal();
+    };
+  }
+  
   function populateSelects(){ 
+    // Для форми додавання студента
     getDocs(collection(db,"groups")).then(snap=>{ 
       let opts='<option value="">Оберіть групу</option>'; 
       snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
-      document.getElementById("journalGroupSelect").innerHTML=opts; 
-      document.getElementById("studentGroup").innerHTML=opts.replace('<option value="">Оберіть групу</option>',''); 
-    }); 
+      document.getElementById("studentGroup").innerHTML=opts; 
+    });
     
+    // Для форми додавання предмета
+    getDocs(collection(db,"groups")).then(snap=>{ 
+      let opts='<option value="">Оберіть групу</option>'; 
+      snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
+      document.getElementById("subjectGroup").innerHTML=opts; 
+    });
+    
+    // Для форми додавання заняття
     getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))).then(snap=>{ 
       let opts='<option value="">Оберіть предмет</option>'; 
-      let filterOpts='<option value="all">Всі предмети</option>';
-      snap.forEach(d=>{
-        opts+=`<option value="${d.id}">${d.data().name}</option>`;
-        filterOpts+=`<option value="${d.id}">${d.data().name}</option>`;
-      }); 
-      document.getElementById("journalSubjectSelect").innerHTML=opts; 
-      document.getElementById("lessonSubject").innerHTML=opts.replace('<option value="">Оберіть предмет</option>','');
-      document.getElementById("lessonFilterSubject").innerHTML=filterOpts;
+      snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
+      document.getElementById("lessonSubject").innerHTML=opts; 
+      document.getElementById("lessonFilterSubject").innerHTML='<option value="all">Всі предмети</option>' + opts;
     }); 
+    
+    populateJournalFilters();
   }
   
-  document.getElementById("journalGroupSelect").addEventListener("change", () => {
-    saveLastSelection();
-    renderJournal();
-  });
-  document.getElementById("journalSubjectSelect").addEventListener("change", () => {
-    saveLastSelection();
-    renderJournal();
-  });
-  
-  // Функція для валідації оцінки
   function validateGrade(grade, scale) {
     if(grade === 'н' || grade === 'св') return grade;
     const num = parseFloat(grade);
@@ -1363,7 +1452,6 @@
     return null;
   }
   
-  // Функція для збереження підсумкової оцінки
   async function saveFinalGrade(studentId, subjectId, newGrade, scale, cell) {
     if(newGrade === '') {
       const q = query(collection(db,"finalGrades"), where("studentId","==",studentId), where("subjectId","==",subjectId));
@@ -1397,7 +1485,6 @@
     }
   }
   
-  // Функція для редагування підсумкової оцінки
   window.startEditFinalGrade = function(cell) {
     if(currentEditingCell) return;
     
@@ -1446,13 +1533,13 @@
     input.focus();
   };
   
-  // ГОЛОВНА ФУНКЦІЯ РЕНДЕРУ ЖУРНАЛУ
   async function renderJournal(){ 
     const groupId = document.getElementById("journalGroupSelect").value; 
     const subjectId = document.getElementById("journalSubjectSelect").value;
+    const year = document.getElementById("journalYearSelect").value;
     
-    if(!groupId || !subjectId || groupId === "Оберіть групу" || subjectId === "Оберіть предмет"){ 
-      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть групу та предмет/дисципліну</div>'; 
+    if(!year || !groupId || !subjectId || groupId === "Оберіть групу" || subjectId === "Оберіть предмет"){ 
+      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div>'; 
       return; 
     } 
     
