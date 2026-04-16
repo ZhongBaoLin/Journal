@@ -1421,14 +1421,24 @@
       
       const groupsSnap2 = await getDocs(query(collection(db,"groups"), where("academicYear","==",selectedYear)));
       let groupOptions = '<option value="">Оберіть групу</option>';
+      const groupsArray = [];
       groupsSnap2.forEach(g => {
         groupOptions += `<option value="${g.id}">${g.data().name}</option>`;
+        groupsArray.push({id: g.id, name: g.data().name});
       });
       document.getElementById("journalGroupSelect").innerHTML = groupOptions;
       document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
       
-      saveLastSelection();
-      renderJournal();
+      // Якщо є тільки одна група - автоматично вибираємо її та завантажуємо предмети
+      if(groupsArray.length === 1) {
+        document.getElementById("journalGroupSelect").value = groupsArray[0].id;
+        // Штучно викликаємо подію зміни групи, щоб завантажити предмети
+        const event = new Event('change');
+        document.getElementById("journalGroupSelect").dispatchEvent(event);
+      } else {
+        saveLastSelection();
+        renderJournal();
+      }
     };
     
     // Оновлюємо предмети при зміні групи
@@ -1448,12 +1458,19 @@
       
       const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("groupId","==",selectedGroup), where("teacherId","==",currentTeacherId)));
       let subjectOptions = '<option value="">Оберіть предмет</option>';
+      const subjectsArray = [];
       for(const docSnap of subjectsSnap.docs){
         const s = docSnap.data();
         const displayText = `${s.name} (${groupName} | ${groupYear})`;
         subjectOptions += `<option value="${docSnap.id}">${displayText}</option>`;
+        subjectsArray.push({id: docSnap.id, displayText});
       }
       document.getElementById("journalSubjectSelect").innerHTML = subjectOptions;
+      
+      // Якщо є тільки один предмет - автоматично вибираємо його
+      if(subjectsArray.length === 1) {
+        document.getElementById("journalSubjectSelect").value = subjectsArray[0].id;
+      }
       
       saveLastSelection();
       renderJournal();
@@ -1466,7 +1483,49 @@
     
     // Якщо є збережений рік, запускаємо оновлення груп
     if(currentYear && currentYear !== "Оберіть рік") {
-      // Штучно викликаємо подію для завантаження груп
+      const event = new Event('change');
+      document.getElementById("journalYearSelect").dispatchEvent(event);
+    }
+  }
+    
+    // Оновлюємо предмети при зміні групи
+    document.getElementById("journalGroupSelect").onchange = async () => {
+      const selectedGroup = document.getElementById("journalGroupSelect").value;
+      if(!selectedGroup) {
+        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
+        saveLastSelection();
+        renderJournal();
+        return;
+      }
+      
+      // Отримуємо інформацію про групу
+      const groupDoc = await getDoc(doc(db,"groups",selectedGroup));
+      const groupName = groupDoc.exists() ? groupDoc.data().name : '';
+      const groupYear = groupDoc.exists() ? groupDoc.data().academicYear : '';
+      
+      const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("groupId","==",selectedGroup), where("teacherId","==",currentTeacherId)));
+      let subjectOptions = '<option value="">Оберіть предмет</option>';
+      const subjectsArray = [];
+      for(const docSnap of subjectsSnap.docs){
+        const s = docSnap.data();
+        const displayText = `${s.name} (${groupName} | ${groupYear})`;
+        subjectOptions += `<option value="${docSnap.id}">${displayText}</option>`;
+        subjectsArray.push({id: docSnap.id, displayText});
+      }
+      document.getElementById("journalSubjectSelect").innerHTML = subjectOptions;
+      
+      // Якщо є тільки один предмет - автоматично вибираємо його
+      if(subjectsArray.length === 1) {
+        document.getElementById("journalSubjectSelect").value = subjectsArray[0].id;
+      }
+      
+      saveLastSelection();
+      renderJournal();
+    };
+    
+    
+    // Якщо є збережений рік, запускаємо оновлення груп
+    if(currentYear && currentYear !== "Оберіть рік") {
       const event = new Event('change');
       document.getElementById("journalYearSelect").dispatchEvent(event);
     }
