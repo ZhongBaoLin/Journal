@@ -1320,7 +1320,22 @@
     });
     
     // Сортуємо заняття за датою (від новішої до старішої)
-    lessonsArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+        lessonsArray.sort((a, b) => {
+      const dateCompare = new Date(b.date) - new Date(a.date);
+      if(dateCompare !== 0) return dateCompare;
+      
+      // Визначаємо пріоритет: заліки та тематичні оцінювання мають вищий пріоритет (1)
+      const getPriority = (type) => {
+        if(type === 'Залік з модуля' || type === 'Тематичне оцінювання') return 1;
+        return 2;
+      };
+      const priorityCompare = getPriority(a.type) - getPriority(b.type);
+      if(priorityCompare !== 0) return priorityCompare;
+      
+      const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
+      if(orderCompare !== 0) return orderCompare;
+      return (b.number || 1) - (a.number || 1);
+    });
     
     // Групуємо за розділами
     const groupedBySection = {};
