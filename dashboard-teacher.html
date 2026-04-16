@@ -251,11 +251,17 @@
     .grade-input {
       width: 60px;
       text-align: center;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      border: none;
+      outline: none;
+      background: transparent;
       padding: 6px 4px;
       font-size: 13px;
-      background: white;
+      font-family: inherit;
+    }
+
+    .grade-cell.editing {
+      background: transparent !important;
+      padding: 0 !important;
     }
     
     .grade-5 { background: rgba(16, 185, 129, 0.15); color: #065f46; font-weight: 600; }
@@ -431,7 +437,7 @@
 <header class="header">
   <div class="brand">
     <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg></div>
-    <div class="brand-name">Електронний журнал успішності<span>Навчальний заклад</span></div>
+    <div class="brand-name">Електронний журнал успішності<span>ВСП "Технолого-економічний фаховий коледж БНАУ"</span></div>
   </div>
   <div class="user-profile">
     <div class="user-info">
