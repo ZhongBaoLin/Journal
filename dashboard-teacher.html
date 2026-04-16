@@ -291,6 +291,19 @@
       color: #dc2626 !important;
       font-weight: 700;
     }
+
+    .section-header {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: #e0e7ff;
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .section-header:first-child {
+      margin-top: 0;
+    }
     
     .date-cell {
       cursor: pointer;
@@ -501,6 +514,16 @@
         </div>
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Предмет/Дисципліна</label><select id="lessonSubject" class="form-input"></select></div>
+          <div class="form-group"><label class="form-label">Розділ</label>
+            <select id="lessonSection" class="form-input">
+              <option value="">Оберіть розділ</option>
+              <option value="new">+ Створити новий розділ</option>
+            </select>
+          </div>
+          <div class="form-group" id="newSectionGroup" style="display: none;">
+            <label class="form-label">Назва нового розділу</label>
+            <input type="text" id="newSectionName" class="form-input" placeholder="Введіть назву розділу">
+          </div>
           <div class="form-group"><label class="form-label">Вид заняття</label>
             <select id="lessonType" class="form-input">
               <option>Лекція</option>
@@ -1292,6 +1315,13 @@
       subMap[docSnap.id] = {name: s.name, group: groupName, year: academicYear || s.academicYear};
     }
     
+    // Отримуємо всі розділи
+    const sectionsSnap = await getDocs(query(collection(db,"sections"), where("teacherId","==",currentTeacherId)));
+    const sectionMap = {};
+    sectionsSnap.forEach(doc => {
+      sectionMap[doc.id] = doc.data().name;
+    });
+    
     const container = document.getElementById("lessonsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Занять не знайдено</div>'; return; } 
     
@@ -1299,26 +1329,59 @@
     snap.forEach(docSnap => {
       lessonsArray.push({id: docSnap.id, ...docSnap.data()});
     });
-    lessonsArray.sort((a, b) => {
-      const dateCompare = new Date(b.date) - new Date(a.date);
-      if(dateCompare !== 0) return dateCompare;
-      const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
-      if(orderCompare !== 0) return orderCompare;
-      // Сортуємо за номером від більшого до меншого (новіші заняття вище)
-      return (b.number || 1) - (a.number || 1);
+    
+    // Сортуємо заняття за датою (від новішої до старішої)
+    lessonsArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Групуємо за розділами
+    const groupedBySection = {};
+    lessonsArray.forEach(lesson => {
+      const sectionId = lesson.sectionId || 'without_section';
+      if(!groupedBySection[sectionId]) groupedBySection[sectionId] = [];
+      groupedBySection[sectionId].push(lesson);
     });
     
-    let html='<div class="data-list">'; 
-    lessonsArray.forEach(l => { 
-      const dateParts = l.date.split('-');
-      const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-      const displayType = formatLessonDisplay(l);
-      const subjectInfo = subMap[l.subjectId];
-      const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
-      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subjectDisplay} | ${displayType} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`; 
-    }); 
-    html+='</div>'; 
-    container.innerHTML=html; 
+    // Сортуємо заняття всередині кожного розділу за датою (від новішої до старішої)
+    for(const sectionId in groupedBySection) {
+      groupedBySection[sectionId].sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    
+    // Отримуємо розділи та сортуємо їх за датою найновішого заняття
+    const sectionsList = [];
+    for(const sectionId in groupedBySection) {
+      const lessons = groupedBySection[sectionId];
+      const latestDate = lessons[0]?.date;
+      sectionsList.push({
+        id: sectionId,
+        name: sectionMap[sectionId] || 'Без розділу',
+        lessons: lessons,
+        latestDate: latestDate
+      });
+    }
+    
+    // Сортуємо розділи від найновішого до найстарішого (за найновішою датою заняття)
+    sectionsList.sort((a, b) => new Date(b.latestDate) - new Date(a.latestDate));
+    
+    let html = '';
+    for(const section of sectionsList) {
+      // Заголовок розділу
+      if(section.name !== 'Без розділу') {
+        html += `<div class="section-header" style="margin-top: 20px; margin-bottom: 10px; padding: 8px 12px; background: #e0e7ff; border-radius: 8px; font-weight: 600; color: var(--accent);">📁 ${section.name}</div>`;
+      }
+      
+      html += '<div class="data-list">';
+      for(const l of section.lessons) {
+        const dateParts = l.date.split('-');
+        const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+        const displayType = formatLessonDisplay(l);
+        const subjectInfo = subMap[l.subjectId];
+        const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
+        html += `<div class="data-card" onclick="editLesson('${l.id}')"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subjectDisplay} | ${displayType} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`;
+      }
+      html += '</div>';
+    }
+    
+    container.innerHTML = html; 
   }
   
   window.editLesson = async(id)=>{ 
@@ -1357,9 +1420,20 @@
       const date = document.getElementById("lessonDate").value;
       const type = document.getElementById("lessonType").value;
       const subjectId = document.getElementById("lessonSubject").value;
+      const sectionSelect = document.getElementById("lessonSection");
+      let sectionId = sectionSelect.value;
+      const newSectionName = document.getElementById("newSectionName").value.trim();
       
       if(!subjectId || !date) {
         alert("Будь ласка, заповніть всі обов'язкові поля!");
+        return;
+      }
+      
+      // Якщо вибрано створення нового розділу
+      if(sectionId === "new" && newSectionName) {
+        sectionId = await createNewSection(subjectId, newSectionName);
+      } else if(sectionId === "new" && !newSectionName) {
+        alert("Будь ласка, введіть назву нового розділу!");
         return;
       }
       
@@ -1371,6 +1445,7 @@
         date: date, 
         topic: document.getElementById("lessonTopic").value,
         number: nextNumber,
+        sectionId: sectionId || null,
         teacherId: currentTeacherId
       }; 
       
@@ -1548,7 +1623,66 @@
       document.getElementById("lessonFilterSubject").innerHTML=filterOpts;
     }); 
     
+    // Додаємо обробник зміни предмета для завантаження розділів
+    document.getElementById("lessonSubject").addEventListener("change", async (e) => {
+      await updateSectionSelect(e.target.value);
+    });
+    
+    // Обробник для вибору "Створити новий розділ"
+    document.getElementById("lessonSection").addEventListener("change", (e) => {
+      const newSectionGroup = document.getElementById("newSectionGroup");
+      if(e.target.value === "new") {
+        newSectionGroup.style.display = "block";
+      } else {
+        newSectionGroup.style.display = "none";
+        document.getElementById("newSectionName").value = "";
+      }
+    });
+    
     populateJournalFilters();
+  }
+
+    // Завантаження розділів для предмета
+  async function loadSectionsForSubject(subjectId) {
+    if(!subjectId) return;
+    const q = query(collection(db,"sections"), where("subjectId","==",subjectId), where("teacherId","==",currentTeacherId));
+    const snap = await getDocs(q);
+    const sections = [];
+    snap.forEach(doc => sections.push({id: doc.id, ...doc.data()}));
+    // Сортуємо від найновішого до найстарішого
+    sections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return sections;
+  }
+  
+  // Оновлення випадаючого списку розділів
+  async function updateSectionSelect(subjectId) {
+    const sectionSelect = document.getElementById("lessonSection");
+    if(!subjectId) {
+      sectionSelect.innerHTML = '<option value="">Оберіть спочатку предмет</option>';
+      return;
+    }
+    
+    const sections = await loadSectionsForSubject(subjectId);
+    let options = '<option value="">Оберіть розділ</option>';
+    sections.forEach(s => {
+      options += `<option value="${s.id}">${s.name}</option>`;
+    });
+    options += '<option value="new">+ Створити новий розділ</option>';
+    sectionSelect.innerHTML = options;
+    document.getElementById("newSectionGroup").style.display = "none";
+    document.getElementById("newSectionName").value = "";
+  }
+  
+  // Створення нового розділу
+  async function createNewSection(subjectId, sectionName) {
+    const sectionData = {
+      name: sectionName,
+      subjectId: subjectId,
+      teacherId: currentTeacherId,
+      createdAt: new Date().toISOString()
+    };
+    const docRef = await addDoc(collection(db,"sections"), sectionData);
+    return docRef.id;
   }
   
   function validateGrade(grade, scale) {
