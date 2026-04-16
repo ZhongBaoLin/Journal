@@ -664,7 +664,15 @@
     const currentYear = document.getElementById("journalYearSelect").value;
     const currentGroup = document.getElementById("journalGroupSelect").value;
     const currentSubject = document.getElementById("journalSubjectSelect").value;
-    if(currentYear && currentYear !== "Оберіть рік" && currentGroup && currentGroup !== "Оберіть групу" && currentSubject && currentSubject !== "Оберіть предмет") {
+    
+    // Якщо є збережений рік, запускаємо завантаження груп
+    if(currentYear && currentYear !== "Оберіть рік") {
+      // Штучно викликаємо подію зміни року, щоб завантажити групи
+      setTimeout(() => {
+        const event = new Event('change');
+        document.getElementById("journalYearSelect").dispatchEvent(event);
+      }, 100);
+    } else if(currentGroup && currentGroup !== "Оберіть групу" && currentSubject && currentSubject !== "Оберіть предмет") {
       renderJournal();
     }
   }
@@ -1400,8 +1408,10 @@
     });
     document.getElementById("journalYearSelect").innerHTML = yearOptions;
     
+    // Зберігаємо поточний вибраний рік
     const currentYear = document.getElementById("journalYearSelect").value;
     
+    // Оновлюємо групи при зміні року
     document.getElementById("journalYearSelect").onchange = async () => {
       const selectedYear = document.getElementById("journalYearSelect").value;
       if(!selectedYear) {
@@ -1424,14 +1434,16 @@
       
       if(groupsArray.length === 1) {
         document.getElementById("journalGroupSelect").value = groupsArray[0].id;
-        const event = new Event('change');
-        document.getElementById("journalGroupSelect").dispatchEvent(event);
+        // Штучно викликаємо подію зміни групи, щоб завантажити предмети
+        const groupEvent = new Event('change');
+        document.getElementById("journalGroupSelect").dispatchEvent(groupEvent);
       } else {
         saveLastSelection();
         renderJournal();
       }
     };
     
+    // Оновлюємо предмети при зміні групи
     document.getElementById("journalGroupSelect").onchange = async () => {
       const selectedGroup = document.getElementById("journalGroupSelect").value;
       if(!selectedGroup) {
@@ -1469,6 +1481,7 @@
       renderJournal();
     };
     
+    // Якщо є збережений рік, запускаємо оновлення груп
     if(currentYear && currentYear !== "Оберіть рік") {
       const event = new Event('change');
       document.getElementById("journalYearSelect").dispatchEvent(event);
