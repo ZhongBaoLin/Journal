@@ -57,6 +57,8 @@
       padding: 24px 48px;
       background: var(--card-bg);
       border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 10;
     }
 
     .brand { display: flex; align-items: center; gap: 12px; }
@@ -77,7 +79,7 @@
     .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
     .logout-btn { background: none; border: none; color: var(--error); cursor: pointer; font-size: 14px; font-weight: 500; }
 
-    .container { max-width: 1400px; margin: 40px auto; padding: 0 24px; }
+    .container { max-width: 1400px; margin: 40px auto; padding: 0 24px; position: relative; z-index: 1; }
 
     .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
     .stat-card {
@@ -158,7 +160,17 @@
     .prefect-badge { background: var(--gold); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; font-weight: 700; }
 
     .journal-controls { display: flex; gap: 16px; margin-bottom: 24px; background: #fafafa; padding: 16px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }
-    .journal-info { font-size: 13px; color: var(--muted); margin-bottom: 16px; padding: 12px; background: #f8fafc; border-left: 4px solid var(--ink); border-radius: 4px; }
+    .journal-info { 
+      font-size: 13px; 
+      color: var(--muted); 
+      margin-bottom: 16px; 
+      padding: 16px; 
+      background: #f8fafc; 
+      border-left: 4px solid var(--ink); 
+      border-radius: 8px;
+      line-height: 1.6;
+    }
+    .journal-info strong { color: var(--ink); }
     
     /* Стилі для таблиці журналу з фіксованими колонками */
     .journal-table-wrapper {
@@ -166,6 +178,9 @@
       position: relative;
       border-radius: 12px;
       border: 1px solid var(--border);
+      background: var(--card-bg);
+      max-height: 70vh;
+      overflow-y: auto;
     }
     
     .journal-table {
@@ -227,21 +242,22 @@
       text-align: center;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 6px;
-      font-size: 14px;
+      padding: 4px;
+      font-size: 13px;
     }
     
-    .grade-5 { background: rgba(16, 185, 129, 0.2); color: #065f46; font-weight: 600; }
-    .grade-4 { background: rgba(59, 130, 246, 0.2); color: #1e40af; font-weight: 600; }
-    .grade-3 { background: rgba(245, 158, 11, 0.2); color: #92400e; font-weight: 600; }
-    .grade-2 { background: rgba(239, 68, 68, 0.2); color: #991b1b; font-weight: 600; }
-    .grade-1 { background: rgba(127, 29, 29, 0.2); color: #7f1d1d; font-weight: 600; }
-    .grade-n { background: rgba(107, 114, 128, 0.1); color: #6b7280; font-style: italic; }
+    .grade-5, .grade-5-bg { background: rgba(16, 185, 129, 0.2); color: #065f46; font-weight: 600; }
+    .grade-4, .grade-4-bg { background: rgba(59, 130, 246, 0.2); color: #1e40af; font-weight: 600; }
+    .grade-3, .grade-3-bg { background: rgba(245, 158, 11, 0.2); color: #92400e; font-weight: 600; }
+    .grade-2, .grade-2-bg { background: rgba(239, 68, 68, 0.2); color: #991b1b; font-weight: 600; }
+    .grade-1, .grade-1-bg { background: rgba(127, 29, 29, 0.2); color: #7f1d1d; font-weight: 600; }
+    .grade-n { background: rgba(239, 68, 68, 0.3); color: #dc2626; font-weight: 600; }
+    .grade-sv { background: rgba(245, 158, 11, 0.3); color: #d97706; font-weight: 600; }
     
     .lesson-special {
-      background: rgba(239, 68, 68, 0.15);
+      background: rgba(239, 68, 68, 0.2);
       color: #dc2626;
-      font-weight: 600;
+      font-weight: 700;
     }
     
     .date-cell {
@@ -379,11 +395,14 @@
     <div class="panel">
       <div class="panel-header"><h2 class="panel-title">Журнал оцінок</h2></div>
       <div class="journal-controls">
-        <div class="form-group"><label class="form-label">Група</label><select id="journalGroupSelect" class="form-input"><option>Оберіть групу</option></select></div>
-        <div class="form-group"><label class="form-label">Предмет</label><select id="journalSubjectSelect" class="form-input"><option>Оберіть предмет</option></select></div>
+        <div class="form-group"><label class="form-label">ГРУПА</label><select id="journalGroupSelect" class="form-input"><option>Оберіть групу</option></select></div>
+        <div class="form-group"><label class="form-label">ПРЕДМЕТ</label><select id="journalSubjectSelect" class="form-input"><option>Оберіть предмет</option></select></div>
       </div>
       <div class="journal-info">
-        💡 Як користуватися: Натисніть на оцінку, щоб змінити. Введіть число (1-12) або "н" - пропуск. Наведіть на дату, щоб побачити тему заняття.
+        💡 <strong>Як користуватися:</strong><br>
+        Виберіть групу та предмет. Оцінки зберігаються автоматично.<br>
+        <strong>н</strong> — пропуск, <strong>св</strong> — відсутність світла.<br>
+        Наведіть на дату в таблиці, щоб побачити тему заняття.
       </div>
       <div class="journal-table-wrapper" id="journalTableContainer">
         <div class="empty-state">Оберіть групу та предмет</div>
@@ -499,6 +518,7 @@
   let currentEditId = null;
   let currentTeacherId = null;
   let currentTooltip = null;
+  let currentEditingCell = null;
 
   onAuthStateChanged(auth, async (user) => { 
     if(user){ 
@@ -518,6 +538,7 @@
     document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active')); 
     document.getElementById(tabId).classList.add('active'); 
     if(event && event.target) event.target.classList.add('active'); 
+    if(tabId === 'tab-journal') renderJournal();
   };
   window.toggleForm = (formId)=>{ 
     const f = document.getElementById(formId); 
@@ -561,20 +582,17 @@
     const students = [];
     studentsSnap.forEach(s => students.push({id: s.id, ...s.data()}));
     
-    // Отримуємо всі заняття з предметів викладача
     const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId)));
     const subjects = [];
     subjectsSnap.forEach(s => subjects.push({id: s.id, name: s.data().name, scale: s.data().scale}));
     
     const statsHtml = await Promise.all(subjects.map(async (subject) => {
-      // Отримуємо заняття з цього предмета
       const lessonsSnap = await getDocs(query(collection(db,"lessons"), where("subjectId","==",subject.id), where("teacherId","==",currentTeacherId)));
       const lessons = [];
       lessonsSnap.forEach(l => lessons.push({id: l.id, ...l.data()}));
       
       if(lessons.length === 0 || students.length === 0) return null;
       
-      // Збираємо всі оцінки
       let gradeCounts = {5:0,4:0,3:0,2:0,1:0};
       let totalPoints = 0;
       let totalGrades = 0;
@@ -835,6 +853,7 @@
       }
       resetLessonForm(); 
       loadMyLessons(); 
+      if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
     } 
   };
   
@@ -886,6 +905,16 @@
   document.getElementById("journalGroupSelect").addEventListener("change", () => renderJournal());
   document.getElementById("journalSubjectSelect").addEventListener("change", () => renderJournal());
   
+  // Функція для валідації оцінки
+  function validateGrade(grade, scale) {
+    if(grade === 'н' || grade === 'св') return grade;
+    const num = parseFloat(grade);
+    if(isNaN(num)) return null;
+    if(scale === '12' && num >= 1 && num <= 12 && Number.isInteger(num)) return num.toString();
+    if(scale === '5' && num >= 1 && num <= 5 && Number.isInteger(num)) return num.toString();
+    return null;
+  }
+  
   // ГОЛОВНА ФУНКЦІЯ РЕНДЕРУ ЖУРНАЛУ
   async function renderJournal(){ 
     const groupId = document.getElementById("journalGroupSelect").value; 
@@ -895,6 +924,10 @@
       document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть групу та предмет</div>'; 
       return; 
     } 
+    
+    // Отримуємо інформацію про предмет (шкалу оцінювання)
+    const subjectDoc = await getDoc(doc(db,"subjects",subjectId));
+    const subjectScale = subjectDoc.exists() ? subjectDoc.data().scale : '12';
     
     // Отримуємо студентів групи
     const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId))); 
@@ -963,9 +996,10 @@
     // Будуємо HTML таблиці
     let html = '<table class="journal-table"><thead><tr><th>Студент</th>';
     
-    // Заголовки з датами
+    // Заголовки з датами (формат ДД.ММ.РР)
     lessons.forEach(lesson => {
-      const dateStr = lesson.date.split('-').reverse().slice(0,2).join('.');
+      const dateParts = lesson.date.split('-');
+      const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
       const typeShort = lesson.type === 'Лекція' ? 'Лек.' : 
                        lesson.type === 'Практичне' ? 'Прак.' :
                        lesson.type === 'Лабораторне' ? 'Лаб.' :
@@ -986,7 +1020,7 @@
         const grade = allGrades[lesson.id]?.[student.id] || '';
         let gradeClass = '';
         if(grade === 'н') gradeClass = 'grade-n';
-        else if(grade === 'св') gradeClass = 'grade-n';
+        else if(grade === 'св') gradeClass = 'grade-sv';
         else {
           const num = parseFloat(grade);
           if(num === 5) gradeClass = 'grade-5';
@@ -996,12 +1030,20 @@
           else if(num === 1) gradeClass = 'grade-1';
         }
         
-        html += `<td class="grade-cell ${gradeClass}" onclick="editGrade('${lesson.id}','${student.id}','${grade}')">${grade || '—'}</td>`;
+        html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${grade || '—'}</td>`;
       });
       
-      html += `<td class="grade-${stats.avg !== '-' ? Math.floor(parseFloat(stats.avg)) : ''}">${stats.avg}</td>
-               <td>${stats.n}</td>
-               <td>${stats.sv}</td></tr>`;
+      const avgNum = parseFloat(stats.avg);
+      let avgClass = '';
+      if(avgNum === 5) avgClass = 'grade-5';
+      else if(avgNum === 4) avgClass = 'grade-4';
+      else if(avgNum === 3) avgClass = 'grade-3';
+      else if(avgNum === 2) avgClass = 'grade-2';
+      else if(avgNum === 1) avgClass = 'grade-1';
+      
+      html += `<td class="${avgClass}">${stats.avg}</td>
+               <td class="grade-n">${stats.n}</td>
+               <td class="grade-sv">${stats.sv}</td></tr>`;
     });
     
     html += '</tbody></table>';
@@ -1014,34 +1056,88 @@
     });
   }
   
-  window.editGrade = async (lessonId, studentId, currentGrade) => {
-    const newGrade = prompt(`Введіть оцінку (1-12), "н" - пропуск, "св" - відсутність світла, або залиште порожнім для видалення:`, currentGrade);
-    if(newGrade === null) return;
+  // Функція для редагування оцінки прямо в таблиці
+  window.startEditGrade = function(cell) {
+    if(currentEditingCell) return;
+    
+    const currentGrade = cell.dataset.currentGrade || '';
+    const lessonId = cell.dataset.lessonId;
+    const studentId = cell.dataset.studentId;
+    const scale = cell.dataset.scale;
+    
+    currentEditingCell = cell;
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentGrade;
+    input.className = 'grade-input';
+    input.style.width = '60px';
+    
+    input.addEventListener('blur', async () => {
+      const newGrade = input.value.trim();
+      await saveGradeDirect(lessonId, studentId, newGrade, scale, cell);
+      cell.removeChild(input);
+      cell.style.padding = '12px';
+      currentEditingCell = null;
+      renderJournal();
+    });
+    
+    input.addEventListener('keypress', async (e) => {
+      if(e.key === 'Enter') {
+        const newGrade = input.value.trim();
+        await saveGradeDirect(lessonId, studentId, newGrade, scale, cell);
+        cell.removeChild(input);
+        cell.style.padding = '12px';
+        currentEditingCell = null;
+        renderJournal();
+      }
+      if(e.key === 'Escape') {
+        cell.removeChild(input);
+        cell.style.padding = '12px';
+        currentEditingCell = null;
+      }
+    });
+    
+    cell.innerHTML = '';
+    cell.style.padding = '4px';
+    cell.appendChild(input);
+    input.focus();
+  };
+  
+  async function saveGradeDirect(lessonId, studentId, newGrade, scale, cell) {
+    // Валідація
+    if(newGrade === '') {
+      // Видаляємо оцінку
+      const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
+      const existing = await getDocs(q);
+      if(!existing.empty){
+        await deleteDoc(doc(db,"grades",existing.docs[0].id));
+      }
+      return;
+    }
+    
+    const validatedGrade = validateGrade(newGrade, scale);
+    if(validatedGrade === null) {
+      alert(`Невірна оцінка! Для цього предмета дозволені оцінки: 1-${scale} або "н", "св"`);
+      return;
+    }
     
     const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
     const existing = await getDocs(q);
     
-    if(newGrade === ""){
-      if(!existing.empty){
-        await deleteDoc(doc(db,"grades",existing.docs[0].id));
-      }
-    } else {
-      const gradeData = {
-        lessonId,
-        studentId,
-        grade: newGrade,
-        updatedAt: new Date().toISOString()
-      };
-      
-      if(existing.empty){
-        await addDoc(collection(db,"grades"), gradeData);
-      } else {
-        await updateDoc(doc(db,"grades",existing.docs[0].id), gradeData);
-      }
-    }
+    const gradeData = {
+      lessonId,
+      studentId,
+      grade: validatedGrade,
+      updatedAt: new Date().toISOString()
+    };
     
-    renderJournal();
-  };
+    if(existing.empty){
+      await addDoc(collection(db,"grades"), gradeData);
+    } else {
+      await updateDoc(doc(db,"grades",existing.docs[0].id), gradeData);
+    }
+  }
   
   function showTooltip(e) {
     const cell = e.target.closest('.date-cell');
@@ -1051,9 +1147,12 @@
     const lessonTopic = cell.dataset.lessonTopic;
     const lessonDate = cell.dataset.lessonDate;
     
+    const dateParts = lessonDate.split('-');
+    const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+    
     const tooltip = document.createElement('div');
     tooltip.className = 'tooltip';
-    tooltip.innerHTML = `<strong>${lessonDate}</strong><br>${lessonType}<br>${lessonTopic || 'Без теми'}`;
+    tooltip.innerHTML = `<strong>${formattedDate}</strong><br>${lessonType}<br>${lessonTopic || 'Без теми'}`;
     document.body.appendChild(tooltip);
     
     const rect = cell.getBoundingClientRect();
