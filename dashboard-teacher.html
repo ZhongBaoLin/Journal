@@ -1340,12 +1340,11 @@ async function deleteAllLessonsForSubject() {
 }
 
 // Функція для видалення розділу
-async function deleteSection(sectionId, sectionName) {
+window.deleteSection = async function(sectionId, sectionName) {
     if (!confirm(`Видалити розділ "${sectionName}"? Всі заняття в цьому розділі будуть переміщені в "Без розділу"!`)) {
         return;
     }
     
-    // Оновлюємо всі заняття, прибираючи посилання на цей розділ
     const lessonsQ = query(collection(db, "lessons"), where("sectionId", "==", sectionId), where("teacherId", "==", currentTeacherId));
     const lessonsSnap = await getDocs(lessonsQ);
     
@@ -1353,19 +1352,21 @@ async function deleteSection(sectionId, sectionName) {
         await updateDoc(doc(db, "lessons", lessonDoc.id), { sectionId: null });
     }
     
-    // Видаляємо розділ
     await deleteDoc(doc(db, "sections", sectionId));
-    
     loadMyLessons();
-}
+};
 
 // Функція для перемикання видимості розділу
-function toggleSection(sectionId) {
+window.toggleSection = function(sectionId) {
     const sectionElement = document.getElementById(`section-${sectionId}`);
     if (sectionElement) {
         sectionElement.classList.toggle('section-collapsed');
+        const toggleBtn = sectionElement.querySelector('.section-toggle-btn');
+        if (toggleBtn) {
+            toggleBtn.textContent = sectionElement.classList.contains('section-collapsed') ? '▶' : '▼';
+        }
     }
-}
+};
 
 // Показати/приховати кнопку видалення всіх занять
 function updateDeleteAllButton() {
