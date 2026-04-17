@@ -707,6 +707,9 @@
   let currentTooltip = null;
   let currentEditingCell = null;
 
+  let currentActiveInput = null;  // для відстеження активного поля введення
+let pendingSavePromise = null;   // для запобігання конфліктів збереження
+
   const STORAGE_KEYS = { lastYear: 'journal_last_year', lastGroup: 'journal_last_group', lastSubject: 'journal_last_subject', lastStudentGroup: 'student_last_group' };
   const TAB_KEY = 'active_tab';
 
@@ -1302,88 +1305,143 @@
     else { await updateDoc(doc(db,"finalGrades",existing.docs[0].id), gradeData); }
   }
   
-  window.startEditGrade = function(cell) {
-    if(currentEditingCell) return;
+window.startEditGrade = function(cell) {
+    // Якщо вже редагуємо цю саму комірку - нічого не робимо
+    if (currentEditingCell === cell) return;
+    
+    // Якщо є активне редагування - спочатку завершуємо його миттєво
+    if (currentEditingCell && currentActiveInput) {
+        const newGrade = currentActiveInput.value.trim();
+        const lessonId = currentEditingCell.dataset.lessonId;
+        const studentId = currentEditingCell.dataset.studentId;
+        const scale = currentEditingCell.dataset.scale;
+        
+        // Зберігаємо асинхронно, але не чекаємо
+        saveGradeDirect(lessonId, studentId, newGrade, scale).then(() => {
+            // Оновлюємо відображення комірки після збереження
+            updateGradeCellDisplay(currentEditingCell, newGrade, scale);
+        });
+        
+        // Видаляємо інпут миттєво
+        currentActiveInput.remove();
+        currentEditingCell.style.padding = '10px 12px';
+        currentEditingCell = null;
+        currentActiveInput = null;
+    }
+    
     const currentGrade = cell.dataset.currentGrade || '';
     const lessonId = cell.dataset.lessonId;
     const studentId = cell.dataset.studentId;
     const scale = cell.dataset.scale;
+    
     currentEditingCell = cell;
+    
     const input = document.createElement('input');
     input.type = 'text';
     input.value = '';
     input.placeholder = '';
     input.className = 'grade-input';
     input.style.width = '60px';
+    
+    // Зберігаємо при втраті фокусу
     input.addEventListener('blur', async () => {
-      const newGrade = input.value.trim();
-      await saveGradeDirect(lessonId, studentId, newGrade, scale);
-      cell.removeChild(input);
-      cell.style.padding = '10px 12px';
-      currentEditingCell = null;
-      renderJournal();
-    });
-    input.addEventListener('keypress', async (e) => {
-      if(e.key === 'Enter') {
+        if (currentActiveInput !== input) return;
         const newGrade = input.value.trim();
         await saveGradeDirect(lessonId, studentId, newGrade, scale);
+        updateGradeCellDisplay(cell, newGrade, scale);
         cell.removeChild(input);
         cell.style.padding = '10px 12px';
         currentEditingCell = null;
-        renderJournal();
-      }
-      if(e.key === 'Escape') {
-        cell.removeChild(input);
-        cell.style.padding = '10px 12px';
-        currentEditingCell = null;
-      }
+        currentActiveInput = null;
     });
-    cell.innerHTML = '';
-    cell.style.padding = '4px';
-    cell.appendChild(input);
-    input.focus();
-  };
-  
-  window.startEditFinalGrade = function(cell) {
-    if(currentEditingCell) return;
-    const studentId = cell.dataset.studentId;
-    const subjectId = cell.dataset.subjectId;
-    const scale = cell.dataset.scale;
-    currentEditingCell = cell;
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = '';
-    input.placeholder = '';
-    input.className = 'grade-input';
-    input.style.width = '60px';
-    input.addEventListener('blur', async () => {
-      const newGrade = input.value.trim();
-      await saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
-      cell.removeChild(input);
-      cell.style.padding = '10px 12px';
-      currentEditingCell = null;
-      renderJournal();
-    });
+    
     input.addEventListener('keypress', async (e) => {
-      if(e.key === 'Enter') {
-        const newGrade = input.value.trim();
-        await saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
-        cell.removeChild(input);
-        cell.style.padding = '10px 12px';
-        currentEditingCell = null;
-        renderJournal();
-      }
-      if(e.key === 'Escape') {
-        cell.removeChild(input);
-        cell.style.padding = '10px 12px';
-        currentEditingCell = null;
-      }
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const newGrade = input.value.trim();
+            await saveGradeDirect(lessonId, studentId, newGrade, scale);
+            updateGradeCellDisplay(cell, newGrade, scale);
+            cell.removeChild(input);
+            cell.style.padding = '10px 12px';
+            currentEditingCell = null;
+            currentActiveInput = null;
+            // Після Enter переміщуємось на наступну комірку вниз
+            moveToNextGradeCell(cell);
+        }
+        if (e.key === 'Escape') {
+            cell.removeChild(input);
+            cell.style.padding = '10px 12px';
+            currentEditingCell = null;
+            currentActiveInput = null;
+        }
+        e.stopPropagation();
     });
+    
     cell.innerHTML = '';
     cell.style.padding = '4px';
     cell.appendChild(input);
+    currentActiveInput = input;
     input.focus();
-  };
+};
+
+  function updateGradeCellDisplay(cell, grade, scale) {
+    // Оновлюємо data-current-grade
+    cell.dataset.currentGrade = grade;
+    
+    // Оновлюємо відображення
+    let displayGrade = grade || '—';
+    let gradeClass = '';
+    
+    if (grade === 'н') gradeClass = 'grade-n';
+    else if (grade === 'св') gradeClass = 'grade-sv';
+    else {
+        const num = parseFloat(grade);
+        if (num === 5) gradeClass = 'grade-5';
+        else if (num === 4) gradeClass = 'grade-4';
+        else if (num === 3) gradeClass = 'grade-3';
+        else if (num === 2) gradeClass = 'grade-2';
+        else if (num === 1) gradeClass = 'grade-1';
+        displayGrade = grade || '—';
+    }
+    
+    // Оновлюємо класи та текст
+    cell.className = `grade-cell ${gradeClass}`;
+    cell.textContent = displayGrade;
+    
+    // Відновлюємо data-атрибути
+    cell.setAttribute('data-current-grade', grade || '');
+    cell.setAttribute('data-lesson-id', cell.dataset.lessonId);
+    cell.setAttribute('data-student-id', cell.dataset.studentId);
+    cell.setAttribute('data-scale', cell.dataset.scale);
+    
+    // Повертаємо обробник кліку
+    cell.onclick = () => startEditGrade(cell);
+}
+
+  function moveToNextGradeCell(currentCell) {
+    // Знаходимо поточний рядок
+    const row = currentCell.closest('tr');
+    if (!row) return;
+    
+    // Знаходимо всі комірки з оцінками в цьому рядку
+    const gradeCells = Array.from(row.querySelectorAll('.grade-cell, .final-grade-cell'));
+    const currentIndex = gradeCells.indexOf(currentCell);
+    
+    // Переходимо до наступної комірки, якщо вона є
+    if (currentIndex < gradeCells.length - 1) {
+        const nextCell = gradeCells[currentIndex + 1];
+        startEditGrade(nextCell);
+    } else {
+        // Якщо це остання комірка в рядку, переходимо на першу комірку наступного рядка
+        const nextRow = row.nextElementSibling;
+        if (nextRow) {
+            const firstGradeCell = nextRow.querySelector('.grade-cell');
+            if (firstGradeCell) {
+                startEditGrade(firstGradeCell);
+            }
+        }
+    }
+}
   
   async function renderJournal(){ 
     const groupId = document.getElementById("journalGroupSelect").value; 
@@ -1514,8 +1572,134 @@
     tooltip.style.top = top + 'px';
     currentTooltip = tooltip;
   }
+
+  window.startEditFinalGrade = function(cell) {
+    if (currentEditingCell === cell) return;
+    
+    // Завершуємо попереднє редагування
+    if (currentEditingCell && currentActiveInput) {
+        const newGrade = currentActiveInput.value.trim();
+        const studentId = currentEditingCell.dataset.studentId;
+        const subjectId = currentEditingCell.dataset.subjectId;
+        const scale = currentEditingCell.dataset.scale;
+        
+        saveFinalGradeDirect(studentId, subjectId, newGrade, scale).then(() => {
+            updateFinalGradeCellDisplay(currentEditingCell, newGrade, scale);
+        });
+        
+        currentActiveInput.remove();
+        currentEditingCell.style.padding = '10px 12px';
+        currentEditingCell = null;
+        currentActiveInput = null;
+    }
+    
+    const studentId = cell.dataset.studentId;
+    const subjectId = cell.dataset.subjectId;
+    const scale = cell.dataset.scale;
+    const currentGrade = cell.dataset.currentGrade || '';
+    
+    currentEditingCell = cell;
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = '';
+    input.placeholder = '';
+    input.className = 'grade-input';
+    input.style.width = '60px';
+    
+    input.addEventListener('blur', async () => {
+        if (currentActiveInput !== input) return;
+        const newGrade = input.value.trim();
+        await saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
+        updateFinalGradeCellDisplay(cell, newGrade, scale);
+        cell.removeChild(input);
+        cell.style.padding = '10px 12px';
+        currentEditingCell = null;
+        currentActiveInput = null;
+    });
+    
+    input.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const newGrade = input.value.trim();
+            await saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
+            updateFinalGradeCellDisplay(cell, newGrade, scale);
+            cell.removeChild(input);
+            cell.style.padding = '10px 12px';
+            currentEditingCell = null;
+            currentActiveInput = null;
+            moveToNextGradeCell(cell);
+        }
+        if (e.key === 'Escape') {
+            cell.removeChild(input);
+            cell.style.padding = '10px 12px';
+            currentEditingCell = null;
+            currentActiveInput = null;
+        }
+        e.stopPropagation();
+    });
+    
+    cell.innerHTML = '';
+    cell.style.padding = '4px';
+    cell.appendChild(input);
+    currentActiveInput = input;
+    input.focus();
+};
+
+  function updateFinalGradeCellDisplay(cell, grade, scale) {
+    cell.dataset.currentGrade = grade;
+    
+    let displayGrade = grade || '—';
+    let gradeClass = '';
+    const num = parseFloat(grade);
+    if (num === 5) gradeClass = 'grade-5';
+    else if (num === 4) gradeClass = 'grade-4';
+    else if (num === 3) gradeClass = 'grade-3';
+    else if (num === 2) gradeClass = 'grade-2';
+    else if (num === 1) gradeClass = 'grade-1';
+    
+    cell.className = `final-grade-cell ${gradeClass}`;
+    cell.textContent = displayGrade;
+    cell.setAttribute('data-current-grade', grade || '');
+    cell.setAttribute('data-student-id', cell.dataset.studentId);
+    cell.setAttribute('data-subject-id', cell.dataset.subjectId);
+    cell.setAttribute('data-scale', cell.dataset.scale);
+    cell.onclick = () => startEditFinalGrade(cell);
+}
   
   function hideTooltip() { if(currentTooltip) { currentTooltip.remove(); currentTooltip = null; } }
+
+  // Додати в кінець скрипта, після оголошення всіх функцій
+document.addEventListener('click', function(e) {
+    // Якщо клік не по інпуту і не по комірці, завершуємо редагування
+    if (currentEditingCell && currentActiveInput) {
+        const isClickOnInput = currentActiveInput.contains(e.target);
+        const isClickOnCell = currentEditingCell === e.target || currentEditingCell.contains(e.target);
+        
+        if (!isClickOnInput && !isClickOnCell) {
+            const newGrade = currentActiveInput.value.trim();
+            const lessonId = currentEditingCell.dataset.lessonId;
+            const studentId = currentEditingCell.dataset.studentId;
+            const scale = currentEditingCell.dataset.scale;
+            
+            if (lessonId) {
+                saveGradeDirect(lessonId, studentId, newGrade, scale).then(() => {
+                    updateGradeCellDisplay(currentEditingCell, newGrade, scale);
+                });
+            } else {
+                const subjectId = currentEditingCell.dataset.subjectId;
+                saveFinalGradeDirect(studentId, subjectId, newGrade, scale).then(() => {
+                    updateFinalGradeCellDisplay(currentEditingCell, newGrade, scale);
+                });
+            }
+            
+            currentActiveInput.remove();
+            currentEditingCell.style.padding = '10px 12px';
+            currentEditingCell = null;
+            currentActiveInput = null;
+        }
+    }
+});
 </script>
 </body>
 </html>
