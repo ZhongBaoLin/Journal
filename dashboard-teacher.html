@@ -122,22 +122,25 @@
 
     /* Стилі для кнопки видалення всіх занять */
 .delete-all-btn {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 10px 20px;
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    padding: 8px 16px;
     border-radius: 8px;
     font-family: 'Manrope', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    margin-left: auto;
+    gap: 6px;
 }
-.delete-all-btn:hover { opacity: 0.9; }
+.delete-all-btn:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+    color: #dc2626;
+}
 
 /* Стилі для заголовка розділу з кнопками */
 .section-header-wrapper {
@@ -1281,7 +1284,8 @@ window.deleteItem = async (col, id) => {
         if (col === 'students') { loadStudents(); loadGroups(); }
         if (col === 'subjects') loadMySubjects();
         if (col === 'lessons') {
-            loadMyLessons();
+            await loadMyLessons();
+            await window.updateDeleteAllButton();
             if (typeof refreshSectionsList === 'function') refreshSectionsList();
         }
         updateStats();
@@ -1314,10 +1318,19 @@ window.deleteItem = async (col, id) => {
   });
 
   // Функція для видалення всіх занять з вибраного предмета
-async function deleteAllLessonsForSubject() {
+window.deleteAllLessonsForSubject = async function() {
     const filterSubject = document.getElementById("lessonFilterSubject").value;
     if (filterSubject === "all") {
         alert("Спочатку оберіть конкретний предмет у фільтрі!");
+        return;
+    }
+    
+    // Перевіряємо чи є заняття
+    const checkQ = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId), where("subjectId", "==", filterSubject));
+    const checkSnap = await getDocs(checkQ);
+    
+    if (checkSnap.empty) {
+        alert("Немає занять для видалення!");
         return;
     }
     
@@ -1325,19 +1338,22 @@ async function deleteAllLessonsForSubject() {
         return;
     }
     
-    const q = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId), where("subjectId", "==", filterSubject));
-    const snap = await getDocs(q);
-    
-    let count = 0;
-    for (const docSnap of snap.docs) {
-        await deleteDoc(doc(db, "lessons", docSnap.id));
-        count++;
+    try {
+        let count = 0;
+        for (const docSnap of checkSnap.docs) {
+            await deleteDoc(doc(db, "lessons", docSnap.id));
+            count++;
+        }
+        
+        alert(`Видалено ${count} занять`);
+        await loadMyLessons();
+        await window.updateDeleteAllButton();
+        if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
+    } catch (error) {
+        console.error("Помилка видалення занять:", error);
+        alert("Сталася помилка при видаленні занять");
     }
-    
-    alert(`Видалено ${count} занять`);
-    loadMyLessons();
-    if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-}
+};
 
 // Функція для видалення розділу
 window.deleteSection = async function(sectionId, sectionName) {
@@ -1369,13 +1385,33 @@ window.toggleSection = function(sectionId) {
 };
 
 // Показати/приховати кнопку видалення всіх занять
-function updateDeleteAllButton() {
+window.updateDeleteAllButton = async function() {
     const filterSubject = document.getElementById("lessonFilterSubject").value;
     const deleteBtn = document.getElementById("deleteAllLessonsBtn");
-    if (deleteBtn) {
-        deleteBtn.style.display = filterSubject !== "all" ? "inline-flex" : "none";
+    
+    if (!deleteBtn) return;
+    
+    // Якщо вибрано "Всі предмети" - ховаємо кнопку
+    if (filterSubject === "all") {
+        deleteBtn.style.display = "none";
+        return;
     }
-}
+    
+    // Перевіряємо, чи є заняття для вибраного предмета
+    try {
+        const q = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId), where("subjectId", "==", filterSubject));
+        const snap = await getDocs(q);
+        
+        if (snap.empty) {
+            deleteBtn.style.display = "none";
+        } else {
+            deleteBtn.style.display = "inline-flex";
+        }
+    } catch (error) {
+        console.error("Помилка перевірки занять:", error);
+        deleteBtn.style.display = "none";
+    }
+};
 
 // Оновлена функція loadMyLessons з кнопками для розділів
 async function loadMyLessons() { 
@@ -1494,6 +1530,9 @@ async function loadMyLessons() {
     }
     
     container.innerHTML = html;
+  if (typeof window.updateDeleteAllButton === 'function') {
+    await window.updateDeleteAllButton();
+}
     updateDeleteAllButton();
 }
 
@@ -1514,9 +1553,9 @@ document.getElementById("journalSubjectSelect").addEventListener('change', () =>
   // Додаємо обробник для фільтра
 const lessonFilter = document.getElementById("lessonFilterSubject");
 if (lessonFilter) {
-    lessonFilter.addEventListener("change", () => {
-        loadMyLessons();
-        updateDeleteAllButton();
+    lessonFilter.addEventListener("change", async () => {
+        await loadMyLessons();
+        await window.updateDeleteAllButton();
     });
 }
 
