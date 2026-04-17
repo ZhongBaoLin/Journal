@@ -1731,13 +1731,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-  function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Додаємо обробник для фільтра, щоб показувати/ховати кнопку видалення
 document.getElementById("lessonFilterSubject").addEventListener("change", () => {
     loadMyLessons();
