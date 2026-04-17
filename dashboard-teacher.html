@@ -805,56 +805,7 @@ window.startEditGrade = function(cell) {
     const typeShort = lesson.type === 'Лекція' ? 'Лек' : lesson.type === 'Практичне заняття' ? 'Прак' : lesson.type === 'Лабораторне заняття' ? 'Лаб' : lesson.type === 'Семінарське заняття' ? 'Сем' : lesson.type === 'Самостійне вивчення' ? 'С.в.' : lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
     return `${typeShort} №${lesson.number || '?'}`;
   }
-  async function loadMyLessons() {
-    let lessonsQuery = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId));
-    const filterSubject = document.getElementById("lessonFilterSubject").value;
-    if (filterSubject !== "all") lessonsQuery = query(lessonsQuery, where("subjectId", "==", filterSubject));
-    const snap = await getDocs(lessonsQuery);
-    const subjectsSnap = await getDocs(query(collection(db, "subjects"), where("teacherId", "==", currentTeacherId)));
-    const subMap = {};
-    for (const docSnap of subjectsSnap.docs) {
-      const s = docSnap.data();
-      const groupsSnap = await getDocs(query(collection(db, "groups"), where("id", "==", s.groupId)));
-      let groupName = '', academicYear = '';
-      if (!groupsSnap.empty) { groupName = groupsSnap.docs[0].data().name; academicYear = groupsSnap.docs[0].data().academicYear || ''; }
-      subMap[docSnap.id] = { name: s.name, group: groupName, year: academicYear || s.academicYear };
-    }
-    const sectionsSnap = await getDocs(query(collection(db, "sections"), where("teacherId", "==", currentTeacherId)));
-    const sectionMap = {};
-    sectionsSnap.forEach(doc => { sectionMap[doc.id] = doc.data().name; });
-    const container = document.getElementById("lessonsList");
-    if (snap.empty) { container.innerHTML = '<div class="empty-state">Занять не знайдено</div>'; return; }
-    const lessonsArray = [];
-    snap.forEach(docSnap => { lessonsArray.push({ id: docSnap.id, ...docSnap.data(), createdAt: docSnap.data().createdAt || new Date(0).toISOString() }); });
-    const groupedBySection = {};
-    lessonsArray.forEach(lesson => { const sectionId = lesson.sectionId || 'without_section'; if (!groupedBySection[sectionId]) groupedBySection[sectionId] = []; groupedBySection[sectionId].push(lesson); });
-    for (const sectionId in groupedBySection) groupedBySection[sectionId].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    const sectionsList = [];
-    for (const sectionId in groupedBySection) {
-      const lessons = groupedBySection[sectionId];
-      const latestLesson = lessons[0];
-      const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
-      const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db, "sections", sectionId)) : null;
-      const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
-      sectionsList.push({ id: sectionId, name: sectionMap[sectionId] || 'Без розділу', lessons: lessons, latestDate: latestDate, createdAt: createdAtSection });
-    }
-    sectionsList.sort((a, b) => { if (a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate; const aTime = a.createdAt ? a.createdAt.getTime() : 0; const bTime = b.createdAt ? b.createdAt.getTime() : 0; return bTime - aTime; });
-    let html = '';
-    for (const section of sectionsList) {
-      if (section.name !== 'Без розділу') html += `<div class="section-header">📁 ${section.name}</div>`;
-      html += '<div class="data-list">';
-      for (const l of section.lessons) {
-        const dateParts = l.date.split('-');
-        const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-        const displayType = formatLessonDisplay(l);
-        const subjectInfo = subMap[l.subjectId];
-        const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
-        html += `<div class="data-card" onclick="editLesson('${l.id}')"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic || "Без теми"}</div><div class="data-sub">${subjectDisplay} | ${displayType} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`;
-      }
-      html += '</div>';
-    }
-    container.innerHTML = html;
-  }
+
   window.editLesson = async (id) => {
     const snap = await getDoc(doc(db, "lessons", id));
     if (snap.exists() && snap.data().teacherId === currentTeacherId) {
@@ -1314,9 +1265,16 @@ async function createNewSection(subjectId, sectionName) {
   }
 
   window.logout = async () => { await signOut(auth); window.location.href = "index.html"; };
-  window.switchTab = (tabId) => { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active')); document.getElementById(tabId).classList.add('active'); if (event && event.target) event.target.classList.add('active'); saveActiveTab(tabId); if (tabId === 'tab-journal') renderJournal(); };
+  window.switchTab = (tabId) => {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (event && event.target) event.target.classList.add('active');
+    saveActiveTab(tabId);
+    if (tabId === 'tab-journal') renderJournal();
+};
   window.toggleForm = (formId) => { const f = document.getElementById(formId); if (f) f.style.display = f.style.display === "none" || f.style.display === "" ? "block" : "none"; if (currentEditId) currentEditId = null; };
-  window.deleteItem = async (col, id) => {
+window.deleteItem = async (col, id) => {
     if (confirm("Видалити?")) {
         await deleteDoc(doc(db, col, id));
         if (col === 'groups') loadGroups();
@@ -1324,13 +1282,12 @@ async function createNewSection(subjectId, sectionName) {
         if (col === 'subjects') loadMySubjects();
         if (col === 'lessons') {
             loadMyLessons();
-            refreshSectionsList(); // Оновлюємо список розділів
+            if (typeof refreshSectionsList === 'function') refreshSectionsList();
         }
         updateStats();
         if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
     }
 };
-
   document.addEventListener('click', function(e) {
     if (currentEditingCell && currentActiveInput) {
       const isClickOnInput = currentActiveInput === e.target || currentActiveInput.contains(e.target);
@@ -1552,6 +1509,21 @@ document.getElementById("deleteAllLessonsBtn").addEventListener("click", deleteA
 document.getElementById("journalYearSelect").addEventListener('change', () => renderJournal());
 document.getElementById("journalGroupSelect").addEventListener('change', () => renderJournal());
 document.getElementById("journalSubjectSelect").addEventListener('change', () => renderJournal());
+
+  // Додаємо обробник для фільтра
+const lessonFilter = document.getElementById("lessonFilterSubject");
+if (lessonFilter) {
+    lessonFilter.addEventListener("change", () => {
+        loadMyLessons();
+        updateDeleteAllButton();
+    });
+}
+
+// Додаємо обробник для кнопки видалення всіх занять
+const deleteAllBtn = document.getElementById("deleteAllLessonsBtn");
+if (deleteAllBtn) {
+    deleteAllBtn.addEventListener("click", deleteAllLessonsForSubject);
+}
 </script>
 </body>
 </html>
