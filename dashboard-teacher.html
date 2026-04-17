@@ -475,7 +475,16 @@
     const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("subjectId", "==", currentSubjectId), where("teacherId", "==", currentTeacherId)));
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
-    lessons.sort((a, b) => { const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0); const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0); return dateA - dateB; });
+   lessons.sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    
+    if (dateA !== dateB) {
+        return dateA - dateB;
+    }
+    // Якщо дати однакові, сортуємо за ID (щоб новіші документи були пізніше)
+    return (a.id || '').localeCompare(b.id || '');
+});
     
     let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
     for (const lesson of lessons) {
@@ -674,13 +683,14 @@
   };
 
   // ========== ФУНКЦІЯ ВІДОБРАЖЕННЯ ЖУРНАЛУ ==========
-  async function renderJournal() {
+async function renderJournal() {
     const groupId = document.getElementById("journalGroupSelect").value;
     const subjectId = document.getElementById("journalSubjectSelect").value;
     const year = document.getElementById("journalYearSelect").value;
+    
     if (!year || !groupId || !subjectId || groupId === "Оберіть групу" || subjectId === "Оберіть предмет") {
-      document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div>';
-      return;
+        document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div>';
+        return;
     }
 
     currentGroupId = groupId;
@@ -688,89 +698,177 @@
     
     const subjectDoc = await getDoc(doc(db, "subjects", subjectId));
     const subjectScale = subjectDoc.exists() ? subjectDoc.data().scale : '12';
+    
     const studentsSnap = await getDocs(query(collection(db, "students"), where("groupId", "==", groupId)));
-    const students = []; studentsSnap.forEach(d => students.push({ id: d.id, ...d.data() }));
+    const students = [];
+    studentsSnap.forEach(d => students.push({ id: d.id, ...d.data() }));
     students.sort((a, b) => a.name.localeCompare(b.name));
-    if (students.length === 0) { document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає студентів у групі</div>'; return; }
+    
+    if (students.length === 0) {
+        document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає студентів у групі</div>';
+        return;
+    }
+    
     const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("subjectId", "==", subjectId), where("teacherId", "==", currentTeacherId)));
-    const lessons = []; lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
-    lessons.sort((a, b) => { const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0); const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0); return dateA - dateB; });
-    if (lessons.length === 0) { document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>'; return; }
+    const lessons = [];
+    lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
+    
+    // ========== ДІАГНОСТИКА В КОНСОЛІ ==========
+    console.log('=== ЖУРНАЛ: ОТРИМАНІ ЗАНЯТТЯ ===');
+    console.log('Всього занять:', lessons.length);
+    console.log('Заняття ДО сортування:', lessons.map(l => ({ 
+        id: l.id, 
+        createdAt: l.createdAt, 
+        type: l.type,
+        number: l.number,
+        topic: l.topic?.substring(0, 30)
+    })));
+    
+    // Сортування занять за датою створення (від найстарішого до найновішого)
+    lessons.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        
+        if (dateA !== dateB) {
+            return dateA - dateB;
+        }
+        // Якщо дати однакові, сортуємо за ID
+        return (a.id || '').localeCompare(b.id || '');
+    });
+    
+    console.log('Заняття ПІСЛЯ сортування (від старіших до новіших):', lessons.map(l => ({ 
+        id: l.id, 
+        createdAt: l.createdAt, 
+        type: l.type,
+        number: l.number
+    })));
+    console.log('===================================');
+    // ===============================================
+    
+    if (lessons.length === 0) {
+        document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
+        return;
+    }
     
     const allGrades = {};
     for (const lesson of lessons) {
-      const gradesSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id)));
-      gradesSnap.forEach(g => { const gradeData = g.data(); if (!allGrades[lesson.id]) allGrades[lesson.id] = {}; allGrades[lesson.id][gradeData.studentId] = gradeData.grade; });
+        const gradesSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id)));
+        gradesSnap.forEach(g => {
+            const gradeData = g.data();
+            if (!allGrades[lesson.id]) allGrades[lesson.id] = {};
+            allGrades[lesson.id][gradeData.studentId] = gradeData.grade;
+        });
     }
+    
     const finalGrades = {};
     const finalGradesSnap = await getDocs(query(collection(db, "finalGrades"), where("subjectId", "==", subjectId)));
-    finalGradesSnap.forEach(g => { finalGrades[g.data().studentId] = g.data().grade; });
+    finalGradesSnap.forEach(g => {
+        finalGrades[g.data().studentId] = g.data().grade;
+    });
     
     const studentStats = {};
     students.forEach(student => {
-      let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
-      lessons.forEach(lesson => {
-        const grade = allGrades[lesson.id]?.[student.id];
-        if (grade) { if (grade === 'н') nCount++; else if (grade === 'св') svCount++; else { const num = parseFloat(grade); if (!isNaN(num)) { totalPoints += num; gradeCount++; } } }
-      });
-      studentStats[student.id] = { avg: gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-', n: nCount, sv: svCount };
+        let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
+        lessons.forEach(lesson => {
+            const grade = allGrades[lesson.id]?.[student.id];
+            if (grade) {
+                if (grade === 'н') nCount++;
+                else if (grade === 'св') svCount++;
+                else {
+                    const num = parseFloat(grade);
+                    if (!isNaN(num)) {
+                        totalPoints += num;
+                        gradeCount++;
+                    }
+                }
+            }
+        });
+        studentStats[student.id] = {
+            avg: gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-',
+            n: nCount,
+            sv: svCount
+        };
     });
     
     let html = '<table class="journal-table"><thead><tr><th>№</th><th>Студент</th>';
+    
     lessons.forEach(lesson => {
-      const dateParts = lesson.date.split('-');
-      const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
-      let typeShort = '';
-      switch (lesson.type) {
-        case 'Лекція': typeShort = 'Лек.'; break;
-        case 'Практичне заняття': typeShort = 'Прак.'; break;
-        case 'Лабораторне заняття': typeShort = 'Лаб.'; break;
-        case 'Семінарське заняття': typeShort = 'Сем.'; break;
-        case 'Самостійне вивчення': typeShort = 'С.в.'; break;
-        case 'Залік з модуля': typeShort = 'Залік'; break;
-        case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
-        default: typeShort = lesson.type;
-      }
-      const isSpecial = (lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання');
-      const specialClass = isSpecial ? 'lesson-special' : '';
-      html += `<th class="date-cell ${specialClass}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
+        const dateParts = lesson.date.split('-');
+        const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
+        let typeShort = '';
+        switch (lesson.type) {
+            case 'Лекція': typeShort = 'Лек.'; break;
+            case 'Практичне заняття': typeShort = 'Прак.'; break;
+            case 'Лабораторне заняття': typeShort = 'Лаб.'; break;
+            case 'Семінарське заняття': typeShort = 'Сем.'; break;
+            case 'Самостійне вивчення': typeShort = 'С.в.'; break;
+            case 'Залік з модуля': typeShort = 'Залік'; break;
+            case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
+            default: typeShort = lesson.type;
+        }
+        const isSpecial = (lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання');
+        const specialClass = isSpecial ? 'lesson-special' : '';
+        html += `<th class="date-cell ${specialClass}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
     });
+    
     html += `<th class="stat-cell">Сер.</th><th class="stat-header-red">Н</th><th class="stat-header-red">СВ</th><th class="stat-cell">Підсумкова</th></tr></thead><tbody>`;
+    
     let studentCounter = 1;
     for (const student of students) {
-      const stats = studentStats[student.id];
-      const finalGrade = finalGrades[student.id] || '';
-      let finalGradeClass = '';
-      const finalNum = parseFloat(finalGrade);
-      if (finalNum === 5) finalGradeClass = 'grade-5';
-      else if (finalNum === 4) finalGradeClass = 'grade-4';
-      else if (finalNum === 3) finalGradeClass = 'grade-3';
-      else if (finalNum === 2) finalGradeClass = 'grade-2';
-      else if (finalNum === 1) finalGradeClass = 'grade-1';
-      html += `<tr><td style="text-align:center; width:40px;">${studentCounter}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
-      for (const lesson of lessons) {
-        const grade = allGrades[lesson.id]?.[student.id] || '';
-        let gradeClass = '';
-        let displayGrade = grade;
-        if (grade === 'н') gradeClass = 'grade-n';
-        else if (grade === 'св') gradeClass = 'grade-sv';
-        else { const num = parseFloat(grade); if (num === 5) gradeClass = 'grade-5'; else if (num === 4) gradeClass = 'grade-4'; else if (num === 3) gradeClass = 'grade-3'; else if (num === 2) gradeClass = 'grade-2'; else if (num === 1) gradeClass = 'grade-1'; displayGrade = grade; }
-        html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade || '—'}</td>`;
-      }
-      const avgNum = parseFloat(stats.avg);
-      let avgClass = '';
-      if (avgNum === 5) avgClass = 'grade-5';
-      else if (avgNum === 4) avgClass = 'grade-4';
-      else if (avgNum === 3) avgClass = 'grade-3';
-      else if (avgNum === 2) avgClass = 'grade-2';
-      else if (avgNum === 1) avgClass = 'grade-1';
-      html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${stats.avg}</td><td class="stat-cell-red-text">${stats.n}</td><td class="stat-cell-red-text">${stats.sv}</td><td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td></tr>`;
-      studentCounter++;
+        const stats = studentStats[student.id];
+        const finalGrade = finalGrades[student.id] || '';
+        let finalGradeClass = '';
+        const finalNum = parseFloat(finalGrade);
+        if (finalNum === 5) finalGradeClass = 'grade-5';
+        else if (finalNum === 4) finalGradeClass = 'grade-4';
+        else if (finalNum === 3) finalGradeClass = 'grade-3';
+        else if (finalNum === 2) finalGradeClass = 'grade-2';
+        else if (finalNum === 1) finalGradeClass = 'grade-1';
+        
+        html += `<tr><td style="text-align:center; width:40px;">${studentCounter}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
+        
+        for (const lesson of lessons) {
+            const grade = allGrades[lesson.id]?.[student.id] || '';
+            let gradeClass = '';
+            let displayGrade = grade;
+            if (grade === 'н') gradeClass = 'grade-n';
+            else if (grade === 'св') gradeClass = 'grade-sv';
+            else {
+                const num = parseFloat(grade);
+                if (num === 5) gradeClass = 'grade-5';
+                else if (num === 4) gradeClass = 'grade-4';
+                else if (num === 3) gradeClass = 'grade-3';
+                else if (num === 2) gradeClass = 'grade-2';
+                else if (num === 1) gradeClass = 'grade-1';
+                displayGrade = grade;
+            }
+            html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade || '—'}</td>`;
+        }
+        
+        const avgNum = parseFloat(stats.avg);
+        let avgClass = '';
+        if (avgNum === 5) avgClass = 'grade-5';
+        else if (avgNum === 4) avgClass = 'grade-4';
+        else if (avgNum === 3) avgClass = 'grade-3';
+        else if (avgNum === 2) avgClass = 'grade-2';
+        else if (avgNum === 1) avgClass = 'grade-1';
+        
+        html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${stats.avg}</td>
+                 <td class="stat-cell-red-text">${stats.n}</td>
+                 <td class="stat-cell-red-text">${stats.sv}</td>
+                 <td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>
+                </tr>`;
+        studentCounter++;
     }
+    
     html += '</tbody></table>';
     document.getElementById("journalTableContainer").innerHTML = html;
-    document.querySelectorAll('.date-cell').forEach(cell => { cell.addEventListener('mouseenter', showTooltip); cell.addEventListener('mouseleave', hideTooltip); });
-  }
+    
+    document.querySelectorAll('.date-cell').forEach(cell => {
+        cell.addEventListener('mouseenter', showTooltip);
+        cell.addEventListener('mouseleave', hideTooltip);
+    });
+}
 
   // ========== ФУНКЦІЇ ПІДКАЗОК ==========
   function showTooltip(e) {
@@ -862,15 +960,16 @@ async function getNextLessonNumberForType(type, subjectId) {
     if (sectionId === "new" && newSectionName) sectionId = await createNewSection(subjectId, newSectionName);
     else if (sectionId === "new" && !newSectionName) { alert("Будь ласка, введіть назву нового розділу!"); return; }
     const currentLesson = await getDoc(doc(db, "lessons", id));
-    const currentNumber = currentLesson.data().number;
-    const data = {
-      subjectId: subjectId,
-      type: document.getElementById("lessonType").value,
-      date: document.getElementById("lessonDate").value,
-      topic: document.getElementById("lessonTopic").value,
-      sectionId: sectionId || null,
-      teacherId: currentTeacherId
-    };
+const data = {
+    subjectId: subjectId,
+    type: type,
+    date: date,
+    topic: document.getElementById("lessonTopic").value,
+    number: nextNumber,
+    sectionId: sectionId || null,
+    teacherId: currentTeacherId,
+    createdAt: new Date().toISOString()  // Переконайтеся, що це тут є
+};
     if (currentNumber) data.number = currentNumber;
     await updateDoc(doc(db, "lessons", id), data);
     resetLessonForm();
