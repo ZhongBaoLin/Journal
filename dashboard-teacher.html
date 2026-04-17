@@ -1,3 +1,5 @@
+Ось повний HTML-код із зміненою системою сортування занять (без скорочень). Заняття всередині кожного розділу тепер відображаються від найновіших до найстаріших за часом створення (`createdAt`), групування за розділами збережено.
+```html
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -189,7 +191,7 @@
     }
 
     .journal-table tr {
-      display: table-row;  /* Додайте */
+      display: table-row;
     }
     
     .journal-table td {
@@ -197,7 +199,7 @@
       text-align: center;
       border-bottom: 1px solid var(--border);
       border-right: 1px solid var(--border);
-      border-top: 1px solid var(--border);  /* Додайте верхню межу */
+      border-top: 1px solid var(--border);
       font-size: 13px;
     }
     
@@ -222,7 +224,7 @@
       width: 50px;
     }
 
-        .journal-table th:nth-child(2),
+    .journal-table th:nth-child(2),
     .journal-table td:nth-child(2) {
       position: sticky;
       left: 50px;
@@ -1303,58 +1305,25 @@ document.getElementById("saveStudentBtn").onclick = async () => {
   document.getElementById("studentYearFilter").addEventListener("change", () => loadStudents());
   document.getElementById("studentGroupFilter").addEventListener("change", () => loadStudents());
 
-  // Функції для занять
-  function getCategoryOrder(type) {
-    const order = {
-      'Залік з модуля': 1,
-      'Тематичне оцінювання': 1,
-      'Лекція': 3,
-      'Самостійне вивчення': 4,
-      'Практичне заняття': 2,
-      'Лабораторне заняття': 2,
-      'Семінарське заняття': 4
-    };
-    return order[type] || 99;
-  }
-  
-  async function getNextLessonNumber(type, subjectId) {
-    const q = query(
-      collection(db,"lessons"), 
-      where("subjectId","==",subjectId),
-      where("type","==",type),
-      where("teacherId","==",currentTeacherId)
-    );
-    const snap = await getDocs(q);
+  // ========== ОНОВЛЕНА ЛОГІКА ЗАНЯТЬ: БЕЗ ПРІОРИТЕТІВ, ТІЛЬКИ createdAt ==========
+  function formatLessonDisplay(lesson, allLessons) {
+    const typeShort = lesson.type === 'Лекція' ? 'Лек' : 
+                     lesson.type === 'Практичне заняття' ? 'Прак' :
+                     lesson.type === 'Лабораторне заняття' ? 'Лаб' :
+                     lesson.type === 'Семінарське заняття' ? 'Сем' :
+                     lesson.type === 'Самостійне вивчення' ? 'С.в.' :
+                     lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
     
-    let maxNumber = 0;
-    snap.forEach(doc => {
-      const lesson = doc.data();
-      if(lesson.number && lesson.number > maxNumber) {
-        maxNumber = lesson.number;
-      }
-    });
+    // Динамічна нумерація: серед усіх занять того ж типу, відсортованих за датою
+    const sameType = (allLessons || [])
+      .filter(l => l.type === lesson.type)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const num = sameType.findIndex(l => l.id === lesson.id) + 1;
     
-    return maxNumber + 1;
+    return `${typeShort} №${num}`;
   }
-  
-function formatLessonDisplay(lesson, allLessons) {
-  const typeShort = lesson.type === 'Лекція' ? 'Лек' : 
-                   lesson.type === 'Практичне заняття' ? 'Прак' :
-                   lesson.type === 'Лабораторне заняття' ? 'Лаб' :
-                   lesson.type === 'Семінарське заняття' ? 'Сем' :
-                   lesson.type === 'Самостійне вивчення' ? 'С.в.' :
-                   lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
-  
-  // Динамічна нумерація: серед усіх занять того ж типу, відсортованих за датою
-  const sameType = (allLessons || [])
-    .filter(l => l.type === lesson.type)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-  const num = sameType.findIndex(l => l.id === lesson.id) + 1;
-  
-  return `${typeShort} №${num}`;
-}
 
-  // LESSONS
+  // LESSONS — нове сортування: всередині розділу за createdAt (новіші першими)
   async function loadMyLessons(){ 
     let lessonsQuery = query(collection(db,"lessons"), where("teacherId","==",currentTeacherId));
     const filterSubject = document.getElementById("lessonFilterSubject").value;
@@ -1388,25 +1357,14 @@ function formatLessonDisplay(lesson, allLessons) {
     
     const lessonsArray = [];
     snap.forEach(docSnap => {
-      lessonsArray.push({id: docSnap.id, ...docSnap.data()});
+      lessonsArray.push({
+        id: docSnap.id, 
+        ...docSnap.data(),
+        createdAt: docSnap.data().createdAt || new Date(0).toISOString()
+      });
     });
     
-    lessonsArray.sort((a, b) => {
-      const dateCompare = new Date(b.date) - new Date(a.date);
-      if(dateCompare !== 0) return dateCompare;
-      
-      const getPriority = (type) => {
-        if(type === 'Залік з модуля' || type === 'Тематичне оцінювання') return 1;
-        return 2;
-      };
-      const priorityCompare = getPriority(a.type) - getPriority(b.type);
-      if(priorityCompare !== 0) return priorityCompare;
-      
-      const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
-      if(orderCompare !== 0) return orderCompare;
-      return (b.number || 1) - (a.number || 1);
-    });
-    
+    // Групуємо за розділами
     const groupedBySection = {};
     lessonsArray.forEach(lesson => {
       const sectionId = lesson.sectionId || 'without_section';
@@ -1414,31 +1372,37 @@ function formatLessonDisplay(lesson, allLessons) {
       groupedBySection[sectionId].push(lesson);
     });
     
+    // Сортуємо всередині кожного розділу: новіші за createdAt зверху
     for(const sectionId in groupedBySection) {
-      groupedBySection[sectionId].sort((a, b) => new Date(b.date) - new Date(a.date));
+      groupedBySection[sectionId].sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return dateB - dateA; // новіші першими
+      });
     }
     
+    // Сортуємо розділи за найновішим заняттям у розділі (або за датою створення розділу)
     const sectionsList = [];
     for(const sectionId in groupedBySection) {
       const lessons = groupedBySection[sectionId];
-      const latestDate = lessons[0]?.date;
+      const latestLesson = lessons[0];
+      const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
       const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db,"sections",sectionId)) : null;
-      const createdAt = sectionDoc?.data()?.createdAt || null;
-      
+      const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
       sectionsList.push({
         id: sectionId,
         name: sectionMap[sectionId] || 'Без розділу',
         lessons: lessons,
         latestDate: latestDate,
-        createdAt: createdAt
+        createdAt: createdAtSection
       });
     }
     
+    // Сортуємо розділи: спочатку ті, де є нові заняття, потім за датою створення розділу
     sectionsList.sort((a, b) => {
-      const dateCompare = new Date(b.latestDate) - new Date(a.latestDate);
-      if(dateCompare !== 0) return dateCompare;
-      const aTime = a.createdAt ? new Date(a.createdAt) : 0;
-      const bTime = b.createdAt ? new Date(b.createdAt) : 0;
+      if(a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate;
+      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
       return bTime - aTime;
     });
     
@@ -1447,7 +1411,6 @@ function formatLessonDisplay(lesson, allLessons) {
       if(section.name !== 'Без розділу') {
         html += `<div class="section-header" style="margin-top: 20px; margin-bottom: 10px; padding: 8px 12px; background: #e0e7ff; border-radius: 8px; font-weight: 600; color: var(--accent);">📁 ${section.name}</div>`;
       }
-      
       html += '<div class="data-list">';
       for(const l of section.lessons) {
         const dateParts = l.date.split('-');
@@ -1550,16 +1513,14 @@ function formatLessonDisplay(lesson, allLessons) {
       return;
     }
     
-    const nextNumber = await getNextLessonNumber(type, subjectId);
-    
     const data = { 
       subjectId: subjectId, 
       type: type, 
       date: date, 
       topic: document.getElementById("lessonTopic").value,
-      number: nextNumber,
       sectionId: sectionId || null,
-      teacherId: currentTeacherId
+      teacherId: currentTeacherId,
+      createdAt: new Date().toISOString()
     }; 
     
     await addDoc(collection(db,"lessons"), data);
@@ -1597,16 +1558,14 @@ function formatLessonDisplay(lesson, allLessons) {
         return;
       }
       
-      const nextNumber = await getNextLessonNumber(type, subjectId);
-      
       const data = { 
         subjectId: subjectId, 
         type: type, 
         date: date, 
         topic: document.getElementById("lessonTopic").value,
-        number: nextNumber,
         sectionId: sectionId || null,
-        teacherId: currentTeacherId
+        teacherId: currentTeacherId,
+        createdAt: new Date().toISOString()
       }; 
       
       await addDoc(collection(db,"lessons"), data);
@@ -1735,7 +1694,6 @@ function formatLessonDisplay(lesson, allLessons) {
       let opts='<option value="">Оберіть групу</option>'; 
       snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
       document.getElementById("studentGroup").innerHTML=opts;
-      // Відновлюємо останню обрану групу
       const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastStudentGroup);
       if(lastGroup && document.querySelector(`#studentGroup option[value="${lastGroup}"]`)) {
         document.getElementById("studentGroup").value = lastGroup;
@@ -1952,8 +1910,6 @@ function formatLessonDisplay(lesson, allLessons) {
     lessons.sort((a, b) => {
       const dateCompare = new Date(a.date) - new Date(b.date);
       if(dateCompare !== 0) return dateCompare;
-      const orderCompare = getCategoryOrder(a.type) - getCategoryOrder(b.type);
-      if(orderCompare !== 0) return orderCompare;
       return (a.number || 1) - (b.number || 1);
     });
     
@@ -2033,7 +1989,7 @@ function formatLessonDisplay(lesson, allLessons) {
       const isSpecial = lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання';
       const lessonNum = getLessonNumber(lesson, lessons);
       const typeShortWithNum = `${typeShort} №${lessonNum}`;
-      html += `<th class="date-cell ..." ...>${dateStr}<br><small>${typeShortWithNum}</small></th>`;
+      html += `<th class="date-cell" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShortWithNum}</small></th>`;
     });
     
     html += `<th>Сер.</th><th>Н</th><th>СВ</th><th>Підсумкова</th></tr></thead><tbody>`;
@@ -2085,7 +2041,7 @@ function formatLessonDisplay(lesson, allLessons) {
                <td class="stat-cell">${stats.n}</td>
                <td class="stat-cell">${stats.sv}</td>
                <td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>
-             </tr>`;
+              </tr>`;
       studentCounter++;
     });
     
@@ -2231,3 +2187,4 @@ function formatLessonDisplay(lesson, allLessons) {
 </script>
 </body>
 </html>
+```
