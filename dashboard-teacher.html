@@ -397,19 +397,7 @@ document.getElementById("journalSubjectSelect").addEventListener('change', () =>
     saveLastSelection();
     renderJournal();
 });
-  function restoreActiveTab() {
-    const savedTab = sessionStorage.getItem(TAB_KEY);
-    if (savedTab && document.getElementById(savedTab)) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(savedTab).classList.add('active');
-      const buttons = document.querySelectorAll('.tab-btn');
-      const tabMap = { 'tab-journal': 0, 'tab-lessons': 1, 'tab-groups': 2, 'tab-students': 3, 'tab-subjects': 4 };
-      if (tabMap[savedTab] !== undefined) buttons[tabMap[savedTab]]?.classList.add('active');
-      if (savedTab === 'tab-journal') renderJournal();
-    }
-    return savedTab;
-  }
+
 function restoreLastSelection() {
     const lastYear = sessionStorage.getItem(STORAGE_KEYS.lastYear);
     const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastGroup);
