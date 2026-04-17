@@ -255,6 +255,8 @@
   let currentTooltip = null;
   let currentEditingCell = null;
   let currentActiveInput = null;
+  let currentGroupId = null;
+let currentSubjectId = null;
 
   const STORAGE_KEYS = { lastYear: 'journal_last_year', lastGroup: 'journal_last_group', lastSubject: 'journal_last_subject', lastStudentGroup: 'student_last_group' };
   const TAB_KEY = 'active_tab';
@@ -337,7 +339,7 @@
     else await updateDoc(doc(db, "finalGrades", existing.docs[0].id), gradeData);
   }
 
-  function updateGradeCellDisplay(cell, grade, scale) {
+function updateGradeCellDisplay(cell, grade, scale) {
     if (!cell) return;
     cell.dataset.currentGrade = grade || '';
     let displayGrade = grade || '—';
@@ -353,7 +355,59 @@
     if (studentId) cell.setAttribute('data-student-id', studentId);
     if (currentScale) cell.setAttribute('data-scale', currentScale);
     cell.onclick = function() { startEditGrade(cell); };
-  }
+    
+    // ОНОВЛЕННЯ: перераховуємо статистику для цього студента
+    updateStudentStats(cell.dataset.studentId);
+}
+
+  async function updateStudentStats(studentId) {
+    if (!currentGroupId || !currentSubjectId) return;
+    
+    // Отримуємо всі заняття
+    const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("subjectId", "==", currentSubjectId), where("teacherId", "==", currentTeacherId)));
+    const lessons = [];
+    lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
+    lessons.sort((a, b) => { const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0); const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0); return dateA - dateB; });
+    
+    // Збираємо оцінки студента
+    let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
+    for (const lesson of lessons) {
+        const gradeSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id), where("studentId", "==", studentId)));
+        if (!gradeSnap.empty) {
+            const grade = gradeSnap.docs[0].data().grade;
+            if (grade === 'н') nCount++;
+            else if (grade === 'св') svCount++;
+            else { const num = parseFloat(grade); if (!isNaN(num)) { totalPoints += num; gradeCount++; } }
+        }
+    }
+    
+    const avg = gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-';
+    const avgNum = parseFloat(avg);
+    
+    // Знаходимо рядок студента в таблиці
+    const row = document.querySelector(`.journal-table td[data-student-id="${studentId}"]`)?.closest('tr');
+    if (row) {
+        // Оновлюємо середню оцінку
+        const avgCell = row.querySelector('td:nth-last-child(4)');
+        if (avgCell) {
+            let avgClass = '';
+            if (avgNum === 5) avgClass = 'grade-5';
+            else if (avgNum === 4) avgClass = 'grade-4';
+            else if (avgNum === 3) avgClass = 'grade-3';
+            else if (avgNum === 2) avgClass = 'grade-2';
+            else if (avgNum === 1) avgClass = 'grade-1';
+            avgCell.className = `stat-cell ${avgClass}`;
+            avgCell.style.fontWeight = '700';
+            avgCell.textContent = avg;
+        }
+        // Оновлюємо кількість пропусків
+        const nCell = row.querySelector('td:nth-last-child(3)');
+        if (nCell) { nCell.className = 'stat-cell-red-text'; nCell.textContent = nCount; }
+        // Оновлюємо кількість СВ
+        const svCell = row.querySelector('td:nth-last-child(2)');
+        if (svCell) { svCell.className = 'stat-cell-red-text'; svCell.textContent = svCount; }
+    }
+}
 
   function updateFinalGradeCellDisplay(cell, grade, scale) {
     if (!cell) return;
@@ -376,16 +430,38 @@
     cell.onclick = function() { startEditFinalGrade(cell); };
   }
 
-  function saveAndCloseInput(input, cell) {
+function saveAndCloseInput(input, cell) {
     if (!input || !cell || currentEditingCell !== cell) return;
     const newGrade = input.value.trim();
     const lessonId = input.dataset.lessonId, studentId = input.dataset.studentId, subjectId = input.dataset.subjectId, scale = input.dataset.scale, cellType = input.dataset.cellType;
-    if (cellType === 'grade' && lessonId) { saveGradeDirect(lessonId, studentId, newGrade, scale); updateGradeCellDisplay(cell, newGrade, scale); }
-    else if (cellType === 'final' && subjectId) { saveFinalGradeDirect(studentId, subjectId, newGrade, scale); updateFinalGradeCellDisplay(cell, newGrade, scale); }
+    if (cellType === 'grade' && lessonId) {
+        saveGradeDirect(lessonId, studentId, newGrade, scale);
+        updateGradeCellDisplay(cell, newGrade, scale);
+        // ОНОВЛЕННЯ: перераховуємо підсумкову оцінку
+        updateFinalGradeForStudent(studentId, subjectId || currentSubjectId, scale);
+    } else if (cellType === 'final' && subjectId) {
+        saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
+        updateFinalGradeCellDisplay(cell, newGrade, scale);
+    }
     if (input.parentNode === cell) { try { cell.removeChild(input); } catch(e) {} }
     cell.style.padding = '10px 12px';
     if (currentEditingCell === cell) { currentEditingCell = null; currentActiveInput = null; }
-  }
+}
+
+  async function updateFinalGradeForStudent(studentId, subjectId, scale) {
+    if (!studentId || !subjectId) return;
+    const finalSnap = await getDocs(query(collection(db, "finalGrades"), where("studentId", "==", studentId), where("subjectId", "==", subjectId)));
+    const finalGrade = !finalSnap.empty ? finalSnap.docs[0].data().grade : '';
+    
+    // Знаходимо рядок студента
+    const row = document.querySelector(`.journal-table td[data-student-id="${studentId}"]`)?.closest('tr');
+    if (row) {
+        const finalCell = row.querySelector('.final-grade-cell');
+        if (finalCell) {
+            updateFinalGradeCellDisplay(finalCell, finalGrade, scale);
+        }
+    }
+}
 
   function cancelEdit(input, cell) {
     if (!input || !cell) return;
@@ -413,28 +489,91 @@
     }
   }
 
-  window.startEditGrade = function(cell) {
+window.startEditGrade = function(cell) {
     if (currentEditingCell === cell) return;
+    
+    // Завершуємо попереднє редагування миттєво
     if (currentEditingCell && currentActiveInput) {
-      const oldCell = currentEditingCell, oldInput = currentActiveInput, newGrade = oldInput.value.trim(), lessonId = oldCell.dataset.lessonId, studentId = oldCell.dataset.studentId, scale = oldCell.dataset.scale;
-      if (lessonId) { saveGradeDirect(lessonId, studentId, newGrade, scale); updateGradeCellDisplay(oldCell, newGrade, scale); }
-      else { const subjectId = oldCell.dataset.subjectId; if (subjectId) { saveFinalGradeDirect(studentId, subjectId, newGrade, scale); updateFinalGradeCellDisplay(oldCell, newGrade, scale); } }
-      safeRemoveInput(oldInput, oldCell); oldCell.style.padding = '10px 12px'; currentEditingCell = null; currentActiveInput = null;
+        const oldCell = currentEditingCell;
+        const oldInput = currentActiveInput;
+        const newGrade = oldInput.value.trim();
+        const lessonId = oldCell.dataset.lessonId;
+        const studentId = oldCell.dataset.studentId;
+        const scale = oldCell.dataset.scale;
+        
+        if (lessonId) {
+            saveGradeDirect(lessonId, studentId, newGrade, scale);
+            updateGradeCellDisplay(oldCell, newGrade, scale);
+        } else {
+            const subjectId = oldCell.dataset.subjectId;
+            if (subjectId) {
+                saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
+                updateFinalGradeCellDisplay(oldCell, newGrade, scale);
+            }
+        }
+        
+        safeRemoveInput(oldInput, oldCell);
+        oldCell.style.padding = '10px 12px';
+        currentEditingCell = null;
+        currentActiveInput = null;
     }
-    const lessonId = cell.dataset.lessonId, studentId = cell.dataset.studentId, subjectId = cell.dataset.subjectId, scale = cell.dataset.scale;
+    
+    const lessonId = cell.dataset.lessonId;
+    const studentId = cell.dataset.studentId;
+    const subjectId = cell.dataset.subjectId;
+    const scale = cell.dataset.scale;
+    
     currentEditingCell = cell;
+    
     const input = document.createElement('input');
-    input.type = 'text'; input.value = ''; input.placeholder = ''; input.className = 'grade-input';
+    input.type = 'text';
+    input.value = '';
+    input.placeholder = '';
+    input.className = 'grade-input';
     input.style.cssText = 'width:60px;font-size:13px;font-family:inherit;text-align:center';
-    input.dataset.lessonId = lessonId || ''; input.dataset.studentId = studentId || ''; input.dataset.subjectId = subjectId || ''; input.dataset.scale = scale || ''; input.dataset.cellType = lessonId ? 'grade' : 'final';
-    input.addEventListener('blur', function(e) { setTimeout(() => { if (currentEditingCell === cell && currentActiveInput === input && document.activeElement !== input) saveAndCloseInput(input, cell); }, 100); });
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); saveAndCloseInput(input, cell); setTimeout(() => moveToNextGradeCell(cell), 10); }
-      else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(input, cell); }
-      e.stopPropagation();
+    
+    input.dataset.lessonId = lessonId || '';
+    input.dataset.studentId = studentId || '';
+    input.dataset.subjectId = subjectId || '';
+    input.dataset.scale = scale || '';
+    input.dataset.cellType = lessonId ? 'grade' : 'final';
+    
+    input.addEventListener('blur', function(e) {
+        setTimeout(() => {
+            if (currentEditingCell === cell && currentActiveInput === input && document.activeElement !== input) {
+                saveAndCloseInput(input, cell);
+            }
+        }, 100);
     });
-    cell.innerHTML = ''; cell.style.padding = '4px'; cell.appendChild(input); currentActiveInput = input; input.focus();
-  };
+    
+    // НОВИЙ ОБРОБНИК focusout - додати після blur або замість нього
+    input.addEventListener('focusout', function(e) {
+        setTimeout(() => {
+            if (currentEditingCell === cell && currentActiveInput === input && document.activeElement !== input) {
+                saveAndCloseInput(input, cell);
+            }
+        }, 150);
+    });
+    
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            saveAndCloseInput(input, cell);
+            setTimeout(() => moveToNextGradeCell(cell), 10);
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            cancelEdit(input, cell);
+        }
+        e.stopPropagation();
+    });
+    
+    cell.innerHTML = '';
+    cell.style.padding = '4px';
+    cell.appendChild(input);
+    currentActiveInput = input;
+    input.focus();
+};
 
   window.startEditFinalGrade = function(cell) {
     if (currentEditingCell === cell) return;
@@ -467,6 +606,10 @@
       document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div>';
       return;
     }
+
+    currentGroupId = groupId;
+    currentSubjectId = subjectId;
+    
     const subjectDoc = await getDoc(doc(db, "subjects", subjectId));
     const subjectScale = subjectDoc.exists() ? subjectDoc.data().scale : '12';
     const studentsSnap = await getDocs(query(collection(db, "students"), where("groupId", "==", groupId)));
@@ -673,22 +816,59 @@
     loadMyLessons();
     if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
   }
-  document.getElementById("saveLessonBtn").onclick = async () => {
-    if (currentEditId) { await updateLesson(currentEditId); return; }
-    const date = document.getElementById("lessonDate").value, type = document.getElementById("lessonType").value, subjectId = document.getElementById("lessonSubject").value;
+document.getElementById("saveLessonBtn").onclick = async () => {
+    if (currentEditId) { 
+        await updateLesson(currentEditId); 
+        return; 
+    }
+    
+    const date = document.getElementById("lessonDate").value;
+    const type = document.getElementById("lessonType").value;
+    const subjectId = document.getElementById("lessonSubject").value;
     const sectionSelect = document.getElementById("lessonSection");
     let sectionId = sectionSelect.value;
     const newSectionName = document.getElementById("newSectionName").value.trim();
-    if (!subjectId || !date) { alert("Будь ласка, заповніть всі обов'язкові поля!"); return; }
-    if (sectionId === "new" && newSectionName) sectionId = await createNewSection(subjectId, newSectionName);
-    else if (sectionId === "new" && !newSectionName) { alert("Будь ласка, введіть назву нового розділу!"); return; }
+    
+    if (!subjectId || !date) { 
+        alert("Будь ласка, заповніть всі обов'язкові поля!"); 
+        return; 
+    }
+    
+    if (sectionId === "new" && newSectionName) {
+        sectionId = await createNewSection(subjectId, newSectionName);
+    } else if (sectionId === "new" && !newSectionName) { 
+        alert("Будь ласка, введіть назву нового розділу!"); 
+        return; 
+    }
+    
     const nextNumber = await getNextLessonNumberForType(type, subjectId);
-    const data = { subjectId, type, date, topic: document.getElementById("lessonTopic").value, number: nextNumber, sectionId: sectionId || null, teacherId: currentTeacherId, createdAt: new Date().toISOString() };
+    const data = { 
+        subjectId: subjectId, 
+        type: type, 
+        date: date, 
+        topic: document.getElementById("lessonTopic").value, 
+        number: nextNumber, 
+        sectionId: sectionId || null, 
+        teacherId: currentTeacherId, 
+        createdAt: new Date().toISOString() 
+    };
+    
     await addDoc(collection(db, "lessons"), data);
+    
+    // ОНОВЛЕННЯ: автоматично оновлюємо журнал, якщо він відкритий
+    if (document.getElementById("tab-journal").classList.contains("active")) {
+        // Оновлюємо список розділів у формі
+        const currentSubject = document.getElementById("lessonSubject").value;
+        if (currentSubject) await updateSectionSelect(currentSubject);
+        // Оновлюємо журнал
+        await renderJournal();
+    }
+    
     resetLessonForm();
     loadMyLessons();
     if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-  };
+};
+  
   function resetLessonForm() {
     document.getElementById("lessonTopic").value = ""; document.getElementById("lessonDate").value = ""; document.getElementById("lessonSection").value = "";
     document.getElementById("newSectionGroup").style.display = "none"; document.getElementById("newSectionName").value = ""; currentEditId = null;
@@ -733,11 +913,13 @@
     document.getElementById("newSectionGroup").style.display = "none";
     document.getElementById("newSectionName").value = "";
   }
-  async function createNewSection(subjectId, sectionName) {
+async function createNewSection(subjectId, sectionName) {
     const sectionData = { name: sectionName, subjectId: subjectId, teacherId: currentTeacherId, createdAt: new Date().toISOString() };
     const docRef = await addDoc(collection(db, "sections"), sectionData);
+    // ОНОВЛЕННЯ: автоматично оновлюємо список розділів у формі
+    if (subjectId) await updateSectionSelect(subjectId);
     return docRef.id;
-  }
+}
 
   // ФУНКЦІЇ ДЛЯ ГРУП
   async function loadGroups() {
@@ -1073,6 +1255,11 @@
       } else window.location.href = "index.html";
     } else window.location.href = "index.html";
   });
+
+  // Автоматичне оновлення журналу при зміні фільтрів
+document.getElementById("journalYearSelect").addEventListener('change', () => renderJournal());
+document.getElementById("journalGroupSelect").addEventListener('change', () => renderJournal());
+document.getElementById("journalSubjectSelect").addEventListener('change', () => renderJournal());
 </script>
 </body>
 </html>
