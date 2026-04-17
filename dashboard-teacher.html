@@ -805,13 +805,31 @@
   }
 
   // ========== ФУНКЦІЇ ДЛЯ РОБОТИ З ЗАНЯТТЯМИ ==========
-  async function getNextLessonNumberForType(type, subjectId) {
-    const q = query(collection(db, "lessons"), where("subjectId", "==", subjectId), where("type", "==", type), where("teacherId", "==", currentTeacherId));
+async function getNextLessonNumberForType(type, subjectId) {
+    // Отримуємо ВСІ заняття для цього предмета і типу
+    const q = query(
+        collection(db, "lessons"), 
+        where("subjectId", "==", subjectId), 
+        where("type", "==", type), 
+        where("teacherId", "==", currentTeacherId)
+    );
     const snap = await getDocs(q);
+    
+    // Знаходимо максимальний номер
     let maxNumber = 0;
-    snap.forEach(doc => { const num = doc.data().number; if (num && num > maxNumber) maxNumber = num; });
-    return maxNumber + 1;
-  }
+    snap.forEach(doc => {
+        const lesson = doc.data();
+        const num = lesson.number;
+        if (num && !isNaN(parseInt(num)) && parseInt(num) > maxNumber) {
+            maxNumber = parseInt(num);
+        }
+    });
+    
+    // Повертаємо наступний номер
+    const nextNumber = maxNumber + 1;
+    console.log(`Next number for type ${type}: ${nextNumber} (max was ${maxNumber})`); // Для налагодження
+    return nextNumber;
+}
 
   window.editLesson = async (id) => {
     const snap = await getDoc(doc(db, "lessons", id));
@@ -860,10 +878,10 @@
     if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
   }
 
-  document.getElementById("saveLessonBtn").onclick = async () => {
+document.getElementById("saveLessonBtn").onclick = async () => {
     if (currentEditId) {
-      await updateLesson(currentEditId);
-      return;
+        await updateLesson(currentEditId);
+        return;
     }
     
     const date = document.getElementById("lessonDate").value;
@@ -874,41 +892,76 @@
     const newSectionName = document.getElementById("newSectionName").value.trim();
     
     if (!subjectId || !date) {
-      alert("Будь ласка, заповніть всі обов'язкові поля!");
-      return;
+        alert("Будь ласка, заповніть всі обов'язкові поля!");
+        return;
     }
     
     if (sectionId === "new" && newSectionName) {
-      sectionId = await createNewSection(subjectId, newSectionName);
+        sectionId = await createNewSection(subjectId, newSectionName);
     } else if (sectionId === "new" && !newSectionName) {
-      alert("Будь ласка, введіть назву нового розділу!");
-      return;
+        alert("Будь ласка, введіть назву нового розділу!");
+        return;
     }
     
+    // Отримуємо наступний номер для цього типу заняття
     const nextNumber = await getNextLessonNumberForType(type, subjectId);
+    
+    // Перевіряємо, чи заняття з таким номером вже існує (на випадок гонки)
+    const checkQ = query(
+        collection(db, "lessons"), 
+        where("subjectId", "==", subjectId), 
+        where("type", "==", type), 
+        where("number", "==", nextNumber),
+        where("teacherId", "==", currentTeacherId)
+    );
+    const checkSnap = await getDocs(checkQ);
+    
+    let finalNumber = nextNumber;
+    if (!checkSnap.empty) {
+        // Якщо такий номер вже є, шукаємо вільний
+        const allQ = query(
+            collection(db, "lessons"), 
+            where("subjectId", "==", subjectId), 
+            where("type", "==", type), 
+            where("teacherId", "==", currentTeacherId)
+        );
+        const allSnap = await getDocs(allQ);
+        const existingNumbers = new Set();
+        allSnap.forEach(doc => {
+            const num = doc.data().number;
+            if (num) existingNumbers.add(parseInt(num));
+        });
+        
+        let candidate = 1;
+        while (existingNumbers.has(candidate)) {
+            candidate++;
+        }
+        finalNumber = candidate;
+    }
+    
     const data = {
-      subjectId: subjectId,
-      type: type,
-      date: date,
-      topic: document.getElementById("lessonTopic").value,
-      number: nextNumber,
-      sectionId: sectionId || null,
-      teacherId: currentTeacherId,
-      createdAt: new Date().toISOString()
+        subjectId: subjectId,
+        type: type,
+        date: date,
+        topic: document.getElementById("lessonTopic").value,
+        number: finalNumber,
+        sectionId: sectionId || null,
+        teacherId: currentTeacherId,
+        createdAt: new Date().toISOString()
     };
     
     await addDoc(collection(db, "lessons"), data);
     
     if (document.getElementById("tab-journal").classList.contains("active")) {
-      const currentSubject = document.getElementById("lessonSubject").value;
-      if (currentSubject) await updateSectionSelect(currentSubject);
-      await renderJournal();
+        const currentSubject = document.getElementById("lessonSubject").value;
+        if (currentSubject) await updateSectionSelect(currentSubject);
+        await renderJournal();
     }
     
     resetLessonForm();
     loadMyLessons();
     if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-  };
+};
 
   function resetLessonForm() {
     document.getElementById("lessonTopic").value = "";
