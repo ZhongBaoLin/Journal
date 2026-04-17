@@ -339,8 +339,8 @@ const STORAGE_KEYS = {
     lastGroup: 'journal_last_group',
     lastSubject: 'journal_last_subject',
     lastStudentGroup: 'student_last_group',
-    lastLessonFilter: 'lesson_filter_subject',  // НОВИЙ КЛЮЧ
-    activeTab: 'active_tab'                     // НОВИЙ КЛЮЧ
+    lastLessonFilter: 'lesson_filter_subject',
+    activeTab: 'active_tab'
 };
   const TAB_KEY = 'active_tab';
 
@@ -1347,14 +1347,22 @@ async function createNewSection(subjectId, sectionName) {
   }
 
   window.logout = async () => { await signOut(auth); window.location.href = "index.html"; };
-window.switchTab = (tabId) => {
+window.switchTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-    if (event && event.target) event.target.classList.add('active');
+    
+    // Знаходимо кнопку, яка викликала подію
+    const buttons = document.querySelectorAll('.tab-btn');
+    const tabMap = {
+        'tab-journal': 0, 'tab-lessons': 1, 'tab-groups': 2, 'tab-students': 3, 'tab-subjects': 4
+    };
+    if (tabMap[tabId] !== undefined && buttons[tabMap[tabId]]) {
+        buttons[tabMap[tabId]].classList.add('active');
+    }
     
     saveActiveTab(tabId);
-    saveLastSelection();  // Зберігаємо стан при перемиканні вкладок
+    saveLastSelection();
     
     if (tabId === 'tab-journal') {
         renderJournal();
