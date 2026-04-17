@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    /* Всі стилі залишаються без змін */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --ink: #0d0f14; --paper: #f5f3ee; --accent: #2563eb;
@@ -119,73 +118,17 @@
     .year-group { margin-bottom: 24px; }
     .year-title { font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
     .group-count { font-size: 12px; color: var(--muted); margin-left: 8px; font-weight: normal; }
-
-    /* Стилі для кнопки видалення всіх занять */
-.delete-all-btn {
-    background: transparent;
-    color: #ef4444;
-    border: 1px solid #ef4444;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-.delete-all-btn:hover {
-    background: #fee2e2;
-    border-color: #dc2626;
-    color: #dc2626;
-}
-
-/* Стилі для заголовка розділу з кнопками */
-.section-header-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    background: #e0e7ff;
-    border-radius: 8px;
-}
-.section-header-title {
-    font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.section-header-title:hover { opacity: 0.7; }
-.section-header-actions { display: flex; gap: 8px; }
-.section-delete-btn {
-    background: none;
-    border: none;
-    color: #ef4444;
-    cursor: pointer;
-    font-size: 18px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-.section-delete-btn:hover { background: #fee2e2; }
-.section-toggle-btn {
-    background: none;
-    border: none;
-    color: var(--accent);
-    cursor: pointer;
-    font-size: 16px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-.section-toggle-btn:hover { background: #c7d2fe; }
-.section-collapsed .data-list { display: none; }
+    .delete-all-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 8px; font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .delete-all-btn:hover { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+    .section-header-wrapper { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 10px; padding: 8px 12px; background: #e0e7ff; border-radius: 8px; }
+    .section-header-title { font-weight: 600; color: var(--accent); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .section-header-title:hover { opacity: 0.7; }
+    .section-header-actions { display: flex; gap: 8px; }
+    .section-delete-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
+    .section-delete-btn:hover { background: #fee2e2; }
+    .section-toggle-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
+    .section-toggle-btn:hover { background: #c7d2fe; }
+    .section-collapsed .data-list { display: none; }
   </style>
 </head>
 <body>
@@ -202,7 +145,7 @@
     <div class="user-info">
       <div class="user-name" id="userName">Завантаження...</div>
       <div class="user-role" id="userRole">Викладач</div>
-      <button class="logout-btn" onclick="logout()">Вийти</button>
+      <button class="logout-btn" onclick="window.logout()">Вийти</button>
     </div>
     <img src="" alt="Аватар" class="user-avatar" id="userAvatar">
   </div>
@@ -216,11 +159,11 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('tab-journal')">Журнал</button>
-    <button class="tab-btn" onclick="switchTab('tab-lessons')">Заняття</button>
-    <button class="tab-btn" onclick="switchTab('tab-groups')">Групи</button>
-    <button class="tab-btn" onclick="switchTab('tab-students')">Студенти</button>
-    <button class="tab-btn" onclick="switchTab('tab-subjects')">Мої предмети/дисципліни</button>
+    <button class="tab-btn active" onclick="window.switchTab('tab-journal')">Журнал</button>
+    <button class="tab-btn" onclick="window.switchTab('tab-lessons')">Заняття</button>
+    <button class="tab-btn" onclick="window.switchTab('tab-groups')">Групи</button>
+    <button class="tab-btn" onclick="window.switchTab('tab-students')">Студенти</button>
+    <button class="tab-btn" onclick="window.switchTab('tab-subjects')">Мої предмети/дисципліни</button>
   </div>
 
   <div id="tab-journal" class="tab-content active">
@@ -238,17 +181,17 @@
 
   <div id="tab-lessons" class="tab-content">
     <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Заняття</h2><button class="btn-primary" onclick="toggleForm('form-add-lesson')">+ Додати заняття</button></div>
+      <div class="panel-header"><h2 class="panel-title">Заняття</h2><button class="btn-primary" onclick="window.toggleForm('form-add-lesson')">+ Додати заняття</button></div>
       <div class="filter-bar">
-    <div class="form-group">
-        <label class="form-label">Фільтр за предметом/дисципліною</label>
-        <select id="lessonFilterSubject" class="form-input">
+        <div class="form-group">
+          <label class="form-label">Фільтр за предметом/дисципліною</label>
+          <select id="lessonFilterSubject" class="form-input">
             <option value="all">Всі предмети</option>
-        </select>
-    </div>
-    <button id="deleteAllLessonsBtn" class="delete-all-btn" style="display: none;">🗑️ Видалити всі заняття</button>
-</div>
-      <div id="form-add-lesson" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="toggleForm('form-add-lesson')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
+          </select>
+        </div>
+        <button id="deleteAllLessonsBtn" class="delete-all-btn" style="display: none;">🗑️ Видалити всі заняття</button>
+      </div>
+      <div id="form-add-lesson" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-lesson')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
         <div class="form-grid"><div class="form-group"><label class="form-label">Предмет/Дисципліна</label><select id="lessonSubject" class="form-input"></select></div>
         <div class="form-group"><label class="form-label">Розділ</label><select id="lessonSection" class="form-input"><option value="">Оберіть розділ</option></select></div>
         <div class="form-group"><label class="form-label">Вид заняття</label><select id="lessonType" class="form-input"><option>Лекція</option><option>Практичне заняття</option><option>Лабораторне заняття</option><option>Семінарське заняття</option><option>Самостійне вивчення</option><option>Залік з модуля</option><option>Тематичне оцінювання</option></select></div>
@@ -263,8 +206,8 @@
 
   <div id="tab-groups" class="tab-content">
     <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Групи</h2><button class="btn-primary" onclick="toggleForm('form-add-group')">+ Додати групу</button></div>
-      <div id="form-add-group" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="toggleForm('form-add-group')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
+      <div class="panel-header"><h2 class="panel-title">Групи</h2><button class="btn-primary" onclick="window.toggleForm('form-add-group')">+ Додати групу</button></div>
+      <div id="form-add-group" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-group')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
         <div class="form-grid"><div class="form-group"><label class="form-label">Назва групи</label><input type="text" id="groupName" class="form-input" placeholder="Наприклад: ПЗ-21"></div>
         <div class="form-group"><label class="form-label">Навчальний рік</label><select id="groupYear" class="form-input"><option value="2025/2026">2025/2026</option><option value="2024/2025">2024/2025</option><option value="2023/2024">2023/2024</option><option value="2022/2023">2022/2023</option></select></div></div>
         <button class="btn-primary" id="saveGroupBtn">Зберегти</button>
@@ -275,8 +218,8 @@
 
   <div id="tab-students" class="tab-content">
     <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Студенти</h2><div style="display: flex; gap: 12px; flex-wrap: wrap;"><select id="studentYearFilter" class="form-input"><option value="all">Всі роки</option></select><select id="studentGroupFilter" class="form-input"><option value="all">Всі групи</option></select><button class="btn-primary" onclick="toggleForm('form-add-student')">+ Додати студента</button></div></div>
-      <div id="form-add-student" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="toggleForm('form-add-student')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
+      <div class="panel-header"><h2 class="panel-title">Студенти</h2><div style="display: flex; gap: 12px; flex-wrap: wrap;"><select id="studentYearFilter" class="form-input"><option value="all">Всі роки</option></select><select id="studentGroupFilter" class="form-input"><option value="all">Всі групи</option></select><button class="btn-primary" onclick="window.toggleForm('form-add-student')">+ Додати студента</button></div></div>
+      <div id="form-add-student" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-student')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
         <div class="form-grid"><div class="form-group"><label class="form-label">ПІБ</label><input type="text" id="studentName" class="form-input" placeholder="Прізвище Ім'я По батькові"></div>
         <div class="form-group"><label class="form-label">Група</label><select id="studentGroup" class="form-input"></select></div>
         <div class="form-group"><label class="form-label">Навчальний рік</label><select id="studentYear" class="form-input"><option value="2025/2026">2025/2026</option><option value="2024/2025">2024/2025</option><option value="2023/2024">2023/2024</option><option value="2022/2023">2022/2023</option></select></div>
@@ -290,8 +233,8 @@
 
   <div id="tab-subjects" class="tab-content">
     <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Мої предмети/дисципліни</h2><button class="btn-primary" onclick="toggleForm('form-add-subject')">+ Додати предмет</button></div>
-      <div id="form-add-subject" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="toggleForm('form-add-subject')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
+      <div class="panel-header"><h2 class="panel-title">Мої предмети/дисципліни</h2><button class="btn-primary" onclick="window.toggleForm('form-add-subject')">+ Додати предмет</button></div>
+      <div id="form-add-subject" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-subject')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
         <div class="form-grid"><div class="form-group"><label class="form-label">Назва</label><input type="text" id="subjectName" class="form-input" placeholder="Назва предмета"></div>
         <div class="form-group"><label class="form-label">Система оцінювання</label><select id="subjectScale" class="form-input"><option value="12">12-бальна</option><option value="5">5-бальна</option></select></div>
         <div class="form-group"><label class="form-label">Вид</label><select id="subjectType" class="form-input"><option>Обов'язкова</option><option>Вибіркова</option></select></div>
@@ -312,146 +255,116 @@
   </div>
 </main>
 
-<div id="groupModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title" id="modalTitle">Статистика групи</h3><button class="modal-close" onclick="closeModal()">&times;</button></div><div id="modalBody"><div class="loading-spinner"></div> Завантаження...</div></div></div>
-<div id="subjectModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title" id="subjectModalTitle">Інформація про предмет/дисципліну</h3><button class="modal-close" onclick="closeSubjectModal()">&times;</button></div><div id="subjectModalBody"></div></div></div>
+<div id="groupModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title" id="modalTitle">Статистика групи</h3><button class="modal-close" onclick="window.closeModal()">&times;</button></div><div id="modalBody"><div class="loading-spinner"></div> Завантаження...</div></div></div>
+<div id="subjectModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title" id="subjectModalTitle">Інформація про предмет/дисципліну</h3><button class="modal-close" onclick="window.closeSubjectModal()">&times;</button></div><div id="subjectModalBody"></div></div></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = { apiKey: "AIzaSyCRMac4RetcPL2mvNXTJdUMcS9JZ-ZALiI", authDomain: "journal-tefc.firebaseapp.com", projectId: "journal-tefc", storageBucket: "journal-tefc.firebasestorage.app", messagingSenderId: "977017837694", appId: "1:977017837694:web:5f02e9ba69c384e607202f" };
+  // ========== FIREBASE КОНФІГУРАЦІЯ ==========
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRMac4RetcPL2mvNXTJdUMcS9JZ-ZALiI",
+    authDomain: "journal-tefc.firebaseapp.com",
+    projectId: "journal-tefc",
+    storageBucket: "journal-tefc.firebasestorage.app",
+    messagingSenderId: "977017837694",
+    appId: "1:977017837694:web:5f02e9ba69c384e607202f"
+  };
+  
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
   
+  // ========== ГЛОБАЛЬНІ ЗМІННІ ==========
   let currentEditId = null;
   let currentTeacherId = null;
   let currentTooltip = null;
   let currentEditingCell = null;
   let currentActiveInput = null;
   let currentGroupId = null;
-let currentSubjectId = null;
+  let currentSubjectId = null;
 
-// Ключі для збереження стану в sessionStorage
-const STORAGE_KEYS = {
+  // Ключі для збереження стану в sessionStorage
+  const STORAGE_KEYS = {
     lastYear: 'journal_last_year',
     lastGroup: 'journal_last_group',
     lastSubject: 'journal_last_subject',
     lastStudentGroup: 'student_last_group',
     lastLessonFilter: 'lesson_filter_subject',
     activeTab: 'active_tab'
-};
-  const TAB_KEY = 'active_tab';
+  };
 
-function saveActiveTab(tabId) {
+  // ========== ФУНКЦІЇ ДЛЯ РОБОТИ З СХОВИЩЕМ СТАНУ ==========
+  function saveActiveTab(tabId) {
     sessionStorage.setItem(STORAGE_KEYS.activeTab, tabId);
-}
+  }
 
-function restoreActiveTab() {
+  function restoreActiveTab() {
     const savedTab = sessionStorage.getItem(STORAGE_KEYS.activeTab);
     if (savedTab && document.getElementById(savedTab)) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(savedTab).classList.add('active');
-        
-        const buttons = document.querySelectorAll('.tab-btn');
-        const tabMap = {
-            'tab-journal': 0, 'tab-lessons': 1, 'tab-groups': 2, 'tab-students': 3, 'tab-subjects': 4
-        };
-        if (tabMap[savedTab] !== undefined) {
-            buttons[tabMap[savedTab]]?.classList.add('active');
-        }
-        
-        // Якщо відновлюємо вкладку занять, завантажуємо їх
-        if (savedTab === 'tab-lessons') {
-            setTimeout(() => loadMyLessons(), 100);
-        }
-        if (savedTab === 'tab-journal') {
-            setTimeout(() => renderJournal(), 100);
-        }
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(savedTab).classList.add('active');
+      
+      const buttons = document.querySelectorAll('.tab-btn');
+      const tabMap = {
+        'tab-journal': 0, 'tab-lessons': 1, 'tab-groups': 2, 'tab-students': 3, 'tab-subjects': 4
+      };
+      if (tabMap[savedTab] !== undefined && buttons[tabMap[savedTab]]) {
+        buttons[tabMap[savedTab]].classList.add('active');
+      }
+      
+      if (savedTab === 'tab-lessons') {
+        setTimeout(() => loadMyLessons(), 100);
+      }
+      if (savedTab === 'tab-journal') {
+        setTimeout(() => renderJournal(), 100);
+      }
     }
     return savedTab;
-}
+  }
 
-  // Додаємо обробник для фільтра занять
-const lessonFilter = document.getElementById("lessonFilterSubject");
-if (lessonFilter) {
-    lessonFilter.addEventListener("change", async () => {
-        saveLastSelection();  // Зберігаємо вибраний фільтр
-        await loadMyLessons();
-        await window.updateDeleteAllButton();
-    });
-}
-
-  // Додаємо обробники для фільтрів журналу
-document.getElementById("journalYearSelect").addEventListener('change', () => {
-    saveLastSelection();
-    renderJournal();
-});
-document.getElementById("journalGroupSelect").addEventListener('change', () => {
-    saveLastSelection();
-    renderJournal();
-});
-document.getElementById("journalSubjectSelect").addEventListener('change', () => {
-    saveLastSelection();
-    renderJournal();
-});
-
-function restoreLastSelection() {
-    const lastYear = sessionStorage.getItem(STORAGE_KEYS.lastYear);
-    const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastGroup);
-    const lastSubject = sessionStorage.getItem(STORAGE_KEYS.lastSubject);
-    const lastLessonFilter = sessionStorage.getItem(STORAGE_KEYS.lastLessonFilter);
-    
-    // Відновлюємо фільтри журналу
-    if (lastYear && document.querySelector(`#journalYearSelect option[value="${lastYear}"]`)) {
-        document.getElementById("journalYearSelect").value = lastYear;
-    }
-    if (lastGroup && document.querySelector(`#journalGroupSelect option[value="${lastGroup}"]`)) {
-        document.getElementById("journalGroupSelect").value = lastGroup;
-    }
-    if (lastSubject && document.querySelector(`#journalSubjectSelect option[value="${lastSubject}"]`)) {
-        document.getElementById("journalSubjectSelect").value = lastSubject;
-    }
-    
-    // Відновлюємо фільтр занять
-    if (lastLessonFilter && document.querySelector(`#lessonFilterSubject option[value="${lastLessonFilter}"]`)) {
-        document.getElementById("lessonFilterSubject").value = lastLessonFilter;
-    }
-    
-    // Автоматично завантажуємо дані після відновлення фільтрів
-    const currentYear = document.getElementById("journalYearSelect").value;
-    const currentGroup = document.getElementById("journalGroupSelect").value;
-    const currentSubject = document.getElementById("journalSubjectSelect").value;
-    
-    if (currentYear && currentYear !== "Оберіть рік") {
-        setTimeout(() => {
-            const event = new Event('change');
-            document.getElementById("journalYearSelect").dispatchEvent(event);
-        }, 100);
-    } else if (currentGroup && currentGroup !== "Оберіть групу" && currentSubject && currentSubject !== "Оберіть предмет") {
-        renderJournal();
-    }
-    
-    // Завантажуємо заняття з відновленим фільтром
-    if (lastLessonFilter) {
-        loadMyLessons();
-    }
-}
-function saveLastSelection() {
-    const year = document.getElementById("journalYearSelect").value;
-    const groupId = document.getElementById("journalGroupSelect").value;
-    const subjectId = document.getElementById("journalSubjectSelect").value;
-    const lessonFilter = document.getElementById("lessonFilterSubject").value;
+  function saveLastSelection() {
+    const year = document.getElementById("journalYearSelect")?.value;
+    const groupId = document.getElementById("journalGroupSelect")?.value;
+    const subjectId = document.getElementById("journalSubjectSelect")?.value;
+    const lessonFilter = document.getElementById("lessonFilterSubject")?.value;
     
     if (year && year !== "Оберіть рік") sessionStorage.setItem(STORAGE_KEYS.lastYear, year);
     if (groupId && groupId !== "Оберіть групу") sessionStorage.setItem(STORAGE_KEYS.lastGroup, groupId);
     if (subjectId && subjectId !== "Оберіть предмет") sessionStorage.setItem(STORAGE_KEYS.lastSubject, subjectId);
     if (lessonFilter) sessionStorage.setItem(STORAGE_KEYS.lastLessonFilter, lessonFilter);
-}
-  
-  function safeRemoveInput(input, cell) { if (input && input.parentNode === cell) { try { cell.removeChild(input); } catch(e) {} } }
+  }
+
+  function restoreLastSelection() {
+    const lastYear = sessionStorage.getItem(STORAGE_KEYS.lastYear);
+    const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastGroup);
+    const lastSubject = sessionStorage.getItem(STORAGE_KEYS.lastSubject);
+    const lastLessonFilter = sessionStorage.getItem(STORAGE_KEYS.lastLessonFilter);
+    
+    if (lastYear && document.querySelector(`#journalYearSelect option[value="${lastYear}"]`)) {
+      document.getElementById("journalYearSelect").value = lastYear;
+    }
+    if (lastGroup && document.querySelector(`#journalGroupSelect option[value="${lastGroup}"]`)) {
+      document.getElementById("journalGroupSelect").value = lastGroup;
+    }
+    if (lastSubject && document.querySelector(`#journalSubjectSelect option[value="${lastSubject}"]`)) {
+      document.getElementById("journalSubjectSelect").value = lastSubject;
+    }
+    if (lastLessonFilter && document.querySelector(`#lessonFilterSubject option[value="${lastLessonFilter}"]`)) {
+      document.getElementById("lessonFilterSubject").value = lastLessonFilter;
+    }
+  }
+
+  // ========== ДОПОМІЖНІ ФУНКЦІЇ ==========
+  function safeRemoveInput(input, cell) {
+    if (input && input.parentNode === cell) {
+      try { cell.removeChild(input); } catch(e) { console.warn('Error removing input:', e); }
+    }
+  }
+
   function validateGrade(grade, scale) {
     if (grade === 'н' || grade === 'св') return grade;
     const num = parseFloat(grade);
@@ -461,6 +374,14 @@ function saveLastSelection() {
     return null;
   }
 
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // ========== ФУНКЦІЇ ДЛЯ РОБОТИ З ОЦІНКАМИ ==========
   async function saveGradeDirect(lessonId, studentId, newGrade, scale) {
     if (newGrade === '') {
       const q = query(collection(db, "grades"), where("lessonId", "==", lessonId), where("studentId", "==", studentId));
@@ -469,7 +390,10 @@ function saveLastSelection() {
       return;
     }
     const validatedGrade = validateGrade(newGrade, scale);
-    if (validatedGrade === null) { alert(`Невірна оцінка! Дозволені: 1-${scale} або "н", "св"`); return; }
+    if (validatedGrade === null) {
+      alert(`Невірна оцінка! Дозволені: 1-${scale} або "н", "св"`);
+      return;
+    }
     const q = query(collection(db, "grades"), where("lessonId", "==", lessonId), where("studentId", "==", studentId));
     const existing = await getDocs(q);
     const gradeData = { lessonId, studentId, grade: validatedGrade, updatedAt: new Date().toISOString() };
@@ -485,7 +409,10 @@ function saveLastSelection() {
       return;
     }
     const validatedGrade = validateGrade(newGrade, scale);
-    if (validatedGrade === null) { alert(`Невірна оцінка! Дозволені: 1-${scale}`); return; }
+    if (validatedGrade === null) {
+      alert(`Невірна оцінка! Дозволені: 1-${scale}`);
+      return;
+    }
     const q = query(collection(db, "finalGrades"), where("studentId", "==", studentId), where("subjectId", "==", subjectId));
     const existing = await getDocs(q);
     const gradeData = { studentId, subjectId, grade: validatedGrade, updatedAt: new Date().toISOString() };
@@ -493,14 +420,23 @@ function saveLastSelection() {
     else await updateDoc(doc(db, "finalGrades", existing.docs[0].id), gradeData);
   }
 
-function updateGradeCellDisplay(cell, grade, scale) {
+  // ========== ФУНКЦІЇ ОНОВЛЕННЯ ВІДОБРАЖЕННЯ ==========
+  function updateGradeCellDisplay(cell, grade, scale) {
     if (!cell) return;
     cell.dataset.currentGrade = grade || '';
     let displayGrade = grade || '—';
     let gradeClass = '';
     if (grade === 'н') { gradeClass = 'grade-n'; displayGrade = 'н'; }
     else if (grade === 'св') { gradeClass = 'grade-sv'; displayGrade = 'св'; }
-    else { const num = parseFloat(grade); if (num === 5) gradeClass = 'grade-5'; else if (num === 4) gradeClass = 'grade-4'; else if (num === 3) gradeClass = 'grade-3'; else if (num === 2) gradeClass = 'grade-2'; else if (num === 1) gradeClass = 'grade-1'; displayGrade = grade || '—'; }
+    else {
+      const num = parseFloat(grade);
+      if (num === 5) gradeClass = 'grade-5';
+      else if (num === 4) gradeClass = 'grade-4';
+      else if (num === 3) gradeClass = 'grade-3';
+      else if (num === 2) gradeClass = 'grade-2';
+      else if (num === 1) gradeClass = 'grade-1';
+      displayGrade = grade || '—';
+    }
     const lessonId = cell.dataset.lessonId, studentId = cell.dataset.studentId, currentScale = cell.dataset.scale;
     cell.className = `grade-cell ${gradeClass}`;
     cell.textContent = displayGrade;
@@ -509,59 +445,8 @@ function updateGradeCellDisplay(cell, grade, scale) {
     if (studentId) cell.setAttribute('data-student-id', studentId);
     if (currentScale) cell.setAttribute('data-scale', currentScale);
     cell.onclick = function() { startEditGrade(cell); };
-    
-    // ОНОВЛЕННЯ: перераховуємо статистику для цього студента
     updateStudentStats(cell.dataset.studentId);
-}
-
-  async function updateStudentStats(studentId) {
-    if (!currentGroupId || !currentSubjectId) return;
-    
-    // Отримуємо всі заняття
-    const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("subjectId", "==", currentSubjectId), where("teacherId", "==", currentTeacherId)));
-    const lessons = [];
-    lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
-    lessons.sort((a, b) => { const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0); const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0); return dateA - dateB; });
-    
-    // Збираємо оцінки студента
-    let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
-    for (const lesson of lessons) {
-        const gradeSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id), where("studentId", "==", studentId)));
-        if (!gradeSnap.empty) {
-            const grade = gradeSnap.docs[0].data().grade;
-            if (grade === 'н') nCount++;
-            else if (grade === 'св') svCount++;
-            else { const num = parseFloat(grade); if (!isNaN(num)) { totalPoints += num; gradeCount++; } }
-        }
-    }
-    
-    const avg = gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-';
-    const avgNum = parseFloat(avg);
-    
-    // Знаходимо рядок студента в таблиці
-    const row = document.querySelector(`.journal-table td[data-student-id="${studentId}"]`)?.closest('tr');
-    if (row) {
-        // Оновлюємо середню оцінку
-        const avgCell = row.querySelector('td:nth-last-child(4)');
-        if (avgCell) {
-            let avgClass = '';
-            if (avgNum === 5) avgClass = 'grade-5';
-            else if (avgNum === 4) avgClass = 'grade-4';
-            else if (avgNum === 3) avgClass = 'grade-3';
-            else if (avgNum === 2) avgClass = 'grade-2';
-            else if (avgNum === 1) avgClass = 'grade-1';
-            avgCell.className = `stat-cell ${avgClass}`;
-            avgCell.style.fontWeight = '700';
-            avgCell.textContent = avg;
-        }
-        // Оновлюємо кількість пропусків
-        const nCell = row.querySelector('td:nth-last-child(3)');
-        if (nCell) { nCell.className = 'stat-cell-red-text'; nCell.textContent = nCount; }
-        // Оновлюємо кількість СВ
-        const svCell = row.querySelector('td:nth-last-child(2)');
-        if (svCell) { svCell.className = 'stat-cell-red-text'; svCell.textContent = svCount; }
-    }
-}
+  }
 
   function updateFinalGradeCellDisplay(cell, grade, scale) {
     if (!cell) return;
@@ -584,38 +469,77 @@ function updateGradeCellDisplay(cell, grade, scale) {
     cell.onclick = function() { startEditFinalGrade(cell); };
   }
 
-function saveAndCloseInput(input, cell) {
-    if (!input || !cell || currentEditingCell !== cell) return;
-    const newGrade = input.value.trim();
-    const lessonId = input.dataset.lessonId, studentId = input.dataset.studentId, subjectId = input.dataset.subjectId, scale = input.dataset.scale, cellType = input.dataset.cellType;
-    if (cellType === 'grade' && lessonId) {
-        saveGradeDirect(lessonId, studentId, newGrade, scale);
-        updateGradeCellDisplay(cell, newGrade, scale);
-        // ОНОВЛЕННЯ: перераховуємо підсумкову оцінку
-        updateFinalGradeForStudent(studentId, subjectId || currentSubjectId, scale);
-    } else if (cellType === 'final' && subjectId) {
-        saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
-        updateFinalGradeCellDisplay(cell, newGrade, scale);
+  async function updateStudentStats(studentId) {
+    if (!currentGroupId || !currentSubjectId) return;
+    
+    const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("subjectId", "==", currentSubjectId), where("teacherId", "==", currentTeacherId)));
+    const lessons = [];
+    lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
+    lessons.sort((a, b) => { const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0); const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0); return dateA - dateB; });
+    
+    let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
+    for (const lesson of lessons) {
+      const gradeSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id), where("studentId", "==", studentId)));
+      if (!gradeSnap.empty) {
+        const grade = gradeSnap.docs[0].data().grade;
+        if (grade === 'н') nCount++;
+        else if (grade === 'св') svCount++;
+        else { const num = parseFloat(grade); if (!isNaN(num)) { totalPoints += num; gradeCount++; } }
+      }
     }
-    if (input.parentNode === cell) { try { cell.removeChild(input); } catch(e) {} }
-    cell.style.padding = '10px 12px';
-    if (currentEditingCell === cell) { currentEditingCell = null; currentActiveInput = null; }
-}
+    
+    const avg = gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-';
+    const avgNum = parseFloat(avg);
+    
+    const row = document.querySelector(`.journal-table td[data-student-id="${studentId}"]`)?.closest('tr');
+    if (row) {
+      const avgCell = row.querySelector('td:nth-last-child(4)');
+      if (avgCell) {
+        let avgClass = '';
+        if (avgNum === 5) avgClass = 'grade-5';
+        else if (avgNum === 4) avgClass = 'grade-4';
+        else if (avgNum === 3) avgClass = 'grade-3';
+        else if (avgNum === 2) avgClass = 'grade-2';
+        else if (avgNum === 1) avgClass = 'grade-1';
+        avgCell.className = `stat-cell ${avgClass}`;
+        avgCell.style.fontWeight = '700';
+        avgCell.textContent = avg;
+      }
+      const nCell = row.querySelector('td:nth-last-child(3)');
+      if (nCell) { nCell.className = 'stat-cell-red-text'; nCell.textContent = nCount; }
+      const svCell = row.querySelector('td:nth-last-child(2)');
+      if (svCell) { svCell.className = 'stat-cell-red-text'; svCell.textContent = svCount; }
+    }
+  }
 
   async function updateFinalGradeForStudent(studentId, subjectId, scale) {
     if (!studentId || !subjectId) return;
     const finalSnap = await getDocs(query(collection(db, "finalGrades"), where("studentId", "==", studentId), where("subjectId", "==", subjectId)));
     const finalGrade = !finalSnap.empty ? finalSnap.docs[0].data().grade : '';
-    
-    // Знаходимо рядок студента
     const row = document.querySelector(`.journal-table td[data-student-id="${studentId}"]`)?.closest('tr');
     if (row) {
-        const finalCell = row.querySelector('.final-grade-cell');
-        if (finalCell) {
-            updateFinalGradeCellDisplay(finalCell, finalGrade, scale);
-        }
+      const finalCell = row.querySelector('.final-grade-cell');
+      if (finalCell) updateFinalGradeCellDisplay(finalCell, finalGrade, scale);
     }
-}
+  }
+
+  // ========== ФУНКЦІЇ РЕДАГУВАННЯ КОМІРОК ==========
+  function saveAndCloseInput(input, cell) {
+    if (!input || !cell || currentEditingCell !== cell) return;
+    const newGrade = input.value.trim();
+    const lessonId = input.dataset.lessonId, studentId = input.dataset.studentId, subjectId = input.dataset.subjectId, scale = input.dataset.scale, cellType = input.dataset.cellType;
+    if (cellType === 'grade' && lessonId) {
+      saveGradeDirect(lessonId, studentId, newGrade, scale);
+      updateGradeCellDisplay(cell, newGrade, scale);
+      updateFinalGradeForStudent(studentId, subjectId || currentSubjectId, scale);
+    } else if (cellType === 'final' && subjectId) {
+      saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
+      updateFinalGradeCellDisplay(cell, newGrade, scale);
+    }
+    if (input.parentNode === cell) { try { cell.removeChild(input); } catch(e) {} }
+    cell.style.padding = '10px 12px';
+    if (currentEditingCell === cell) { currentEditingCell = null; currentActiveInput = null; }
+  }
 
   function cancelEdit(input, cell) {
     if (!input || !cell) return;
@@ -643,33 +567,31 @@ function saveAndCloseInput(input, cell) {
     }
   }
 
-window.startEditGrade = function(cell) {
+  window.startEditGrade = function(cell) {
     if (currentEditingCell === cell) return;
     
-    // Завершуємо попереднє редагування миттєво
     if (currentEditingCell && currentActiveInput) {
-        const oldCell = currentEditingCell;
-        const oldInput = currentActiveInput;
-        const newGrade = oldInput.value.trim();
-        const lessonId = oldCell.dataset.lessonId;
-        const studentId = oldCell.dataset.studentId;
-        const scale = oldCell.dataset.scale;
-        
-        if (lessonId) {
-            saveGradeDirect(lessonId, studentId, newGrade, scale);
-            updateGradeCellDisplay(oldCell, newGrade, scale);
-        } else {
-            const subjectId = oldCell.dataset.subjectId;
-            if (subjectId) {
-                saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
-                updateFinalGradeCellDisplay(oldCell, newGrade, scale);
-            }
+      const oldCell = currentEditingCell;
+      const oldInput = currentActiveInput;
+      const newGrade = oldInput.value.trim();
+      const lessonId = oldCell.dataset.lessonId;
+      const studentId = oldCell.dataset.studentId;
+      const scale = oldCell.dataset.scale;
+      
+      if (lessonId) {
+        saveGradeDirect(lessonId, studentId, newGrade, scale);
+        updateGradeCellDisplay(oldCell, newGrade, scale);
+      } else {
+        const subjectId = oldCell.dataset.subjectId;
+        if (subjectId) {
+          saveFinalGradeDirect(studentId, subjectId, newGrade, scale);
+          updateFinalGradeCellDisplay(oldCell, newGrade, scale);
         }
-        
-        safeRemoveInput(oldInput, oldCell);
-        oldCell.style.padding = '10px 12px';
-        currentEditingCell = null;
-        currentActiveInput = null;
+      }
+      safeRemoveInput(oldInput, oldCell);
+      oldCell.style.padding = '10px 12px';
+      currentEditingCell = null;
+      currentActiveInput = null;
     }
     
     const lessonId = cell.dataset.lessonId;
@@ -693,33 +615,32 @@ window.startEditGrade = function(cell) {
     input.dataset.cellType = lessonId ? 'grade' : 'final';
     
     input.addEventListener('blur', function(e) {
-        setTimeout(() => {
-            if (currentEditingCell === cell && currentActiveInput === input && document.activeElement !== input) {
-                saveAndCloseInput(input, cell);
-            }
-        }, 100);
+      setTimeout(() => {
+        if (currentEditingCell === cell && currentActiveInput === input && document.activeElement !== input) {
+          saveAndCloseInput(input, cell);
+        }
+      }, 100);
     });
     
-    // НОВИЙ ОБРОБНИК focusout - додати після blur або замість нього
     input.addEventListener('focusout', function(e) {
-        setTimeout(() => {
-            if (currentEditingCell === cell && currentActiveInput === input && document.activeElement !== input) {
-                saveAndCloseInput(input, cell);
-            }
-        }, 150);
+      setTimeout(() => {
+        if (currentEditingCell === cell && currentActiveInput === input && document.activeElement !== input) {
+          saveAndCloseInput(input, cell);
+        }
+      }, 150);
     });
     
     input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            e.stopPropagation();
-            saveAndCloseInput(input, cell);
-            setTimeout(() => moveToNextGradeCell(cell), 10);
-        } else if (e.key === 'Escape') {
-            e.preventDefault();
-            cancelEdit(input, cell);
-        }
+      if (e.key === 'Enter') {
+        e.preventDefault();
         e.stopPropagation();
+        saveAndCloseInput(input, cell);
+        setTimeout(() => moveToNextGradeCell(cell), 10);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEdit(input, cell);
+      }
+      e.stopPropagation();
     });
     
     cell.innerHTML = '';
@@ -727,7 +648,7 @@ window.startEditGrade = function(cell) {
     cell.appendChild(input);
     currentActiveInput = input;
     input.focus();
-};
+  };
 
   window.startEditFinalGrade = function(cell) {
     if (currentEditingCell === cell) return;
@@ -752,6 +673,7 @@ window.startEditGrade = function(cell) {
     cell.innerHTML = ''; cell.style.padding = '4px'; cell.appendChild(input); currentActiveInput = input; input.focus();
   };
 
+  // ========== ФУНКЦІЯ ВІДОБРАЖЕННЯ ЖУРНАЛУ ==========
   async function renderJournal() {
     const groupId = document.getElementById("journalGroupSelect").value;
     const subjectId = document.getElementById("journalSubjectSelect").value;
@@ -774,6 +696,7 @@ window.startEditGrade = function(cell) {
     const lessons = []; lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
     lessons.sort((a, b) => { const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0); const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0); return dateA - dateB; });
     if (lessons.length === 0) { document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>'; return; }
+    
     const allGrades = {};
     for (const lesson of lessons) {
       const gradesSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id)));
@@ -782,6 +705,7 @@ window.startEditGrade = function(cell) {
     const finalGrades = {};
     const finalGradesSnap = await getDocs(query(collection(db, "finalGrades"), where("subjectId", "==", subjectId)));
     finalGradesSnap.forEach(g => { finalGrades[g.data().studentId] = g.data().grade; });
+    
     const studentStats = {};
     students.forEach(student => {
       let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
@@ -791,6 +715,7 @@ window.startEditGrade = function(cell) {
       });
       studentStats[student.id] = { avg: gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-', n: nCount, sv: svCount };
     });
+    
     let html = '<table class="journal-table"><thead><tr><th>№</th><th>Студент</th>';
     lessons.forEach(lesson => {
       const dateParts = lesson.date.split('-');
@@ -847,6 +772,7 @@ window.startEditGrade = function(cell) {
     document.querySelectorAll('.date-cell').forEach(cell => { cell.addEventListener('mouseenter', showTooltip); cell.addEventListener('mouseleave', hideTooltip); });
   }
 
+  // ========== ФУНКЦІЇ ПІДКАЗОК ==========
   function showTooltip(e) {
     if (currentTooltip) { currentTooltip.remove(); currentTooltip = null; }
     const cell = e.target.closest('.date-cell');
@@ -873,19 +799,18 @@ window.startEditGrade = function(cell) {
     tooltip.style.top = top + 'px';
     currentTooltip = tooltip;
   }
-  function hideTooltip() { if (currentTooltip) { currentTooltip.remove(); currentTooltip = null; } }
 
-  // ФУНКЦІЇ ДЛЯ ЗАНЯТЬ
+  function hideTooltip() {
+    if (currentTooltip) { currentTooltip.remove(); currentTooltip = null; }
+  }
+
+  // ========== ФУНКЦІЇ ДЛЯ РОБОТИ З ЗАНЯТТЯМИ ==========
   async function getNextLessonNumberForType(type, subjectId) {
     const q = query(collection(db, "lessons"), where("subjectId", "==", subjectId), where("type", "==", type), where("teacherId", "==", currentTeacherId));
     const snap = await getDocs(q);
     let maxNumber = 0;
     snap.forEach(doc => { const num = doc.data().number; if (num && num > maxNumber) maxNumber = num; });
     return maxNumber + 1;
-  }
-  function formatLessonDisplay(lesson) {
-    const typeShort = lesson.type === 'Лекція' ? 'Лек' : lesson.type === 'Практичне заняття' ? 'Прак' : lesson.type === 'Лабораторне заняття' ? 'Лаб' : lesson.type === 'Семінарське заняття' ? 'Сем' : lesson.type === 'Самостійне вивчення' ? 'С.в.' : lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
-    return `${typeShort} №${lesson.number || '?'}`;
   }
 
   window.editLesson = async (id) => {
@@ -898,13 +823,19 @@ window.startEditGrade = function(cell) {
       document.getElementById("lessonType").value = d.type;
       document.getElementById("lessonDate").value = d.date;
       document.getElementById("lessonTopic").value = d.topic || "";
-      if (d.sectionId) { setTimeout(() => { const sectionSelect = document.getElementById("lessonSection"); if (sectionSelect.querySelector(`option[value="${d.sectionId}"]`)) sectionSelect.value = d.sectionId; }, 300); }
-      toggleForm('form-add-lesson');
+      if (d.sectionId) {
+        setTimeout(() => {
+          const sectionSelect = document.getElementById("lessonSection");
+          if (sectionSelect.querySelector(`option[value="${d.sectionId}"]`)) sectionSelect.value = d.sectionId;
+        }, 300);
+      }
+      window.toggleForm('form-add-lesson');
       const btn = document.getElementById("saveLessonBtn");
       btn.innerText = "Оновити";
       btn.onclick = () => updateLesson(id);
     }
   };
+
   async function updateLesson(id) {
     const subjectId = document.getElementById("lessonSubject").value;
     const sectionSelect = document.getElementById("lessonSection");
@@ -914,17 +845,25 @@ window.startEditGrade = function(cell) {
     else if (sectionId === "new" && !newSectionName) { alert("Будь ласка, введіть назву нового розділу!"); return; }
     const currentLesson = await getDoc(doc(db, "lessons", id));
     const currentNumber = currentLesson.data().number;
-    const data = { subjectId: subjectId, type: document.getElementById("lessonType").value, date: document.getElementById("lessonDate").value, topic: document.getElementById("lessonTopic").value, sectionId: sectionId || null, teacherId: currentTeacherId };
+    const data = {
+      subjectId: subjectId,
+      type: document.getElementById("lessonType").value,
+      date: document.getElementById("lessonDate").value,
+      topic: document.getElementById("lessonTopic").value,
+      sectionId: sectionId || null,
+      teacherId: currentTeacherId
+    };
     if (currentNumber) data.number = currentNumber;
     await updateDoc(doc(db, "lessons", id), data);
     resetLessonForm();
     loadMyLessons();
     if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
   }
-document.getElementById("saveLessonBtn").onclick = async () => {
-    if (currentEditId) { 
-        await updateLesson(currentEditId); 
-        return; 
+
+  document.getElementById("saveLessonBtn").onclick = async () => {
+    if (currentEditId) {
+      await updateLesson(currentEditId);
+      return;
     }
     
     const date = document.getElementById("lessonDate").value;
@@ -934,70 +873,56 @@ document.getElementById("saveLessonBtn").onclick = async () => {
     let sectionId = sectionSelect.value;
     const newSectionName = document.getElementById("newSectionName").value.trim();
     
-    if (!subjectId || !date) { 
-        alert("Будь ласка, заповніть всі обов'язкові поля!"); 
-        return; 
+    if (!subjectId || !date) {
+      alert("Будь ласка, заповніть всі обов'язкові поля!");
+      return;
     }
     
     if (sectionId === "new" && newSectionName) {
-        sectionId = await createNewSection(subjectId, newSectionName);
-    } else if (sectionId === "new" && !newSectionName) { 
-        alert("Будь ласка, введіть назву нового розділу!"); 
-        return; 
+      sectionId = await createNewSection(subjectId, newSectionName);
+    } else if (sectionId === "new" && !newSectionName) {
+      alert("Будь ласка, введіть назву нового розділу!");
+      return;
     }
     
     const nextNumber = await getNextLessonNumberForType(type, subjectId);
-    const data = { 
-        subjectId: subjectId, 
-        type: type, 
-        date: date, 
-        topic: document.getElementById("lessonTopic").value, 
-        number: nextNumber, 
-        sectionId: sectionId || null, 
-        teacherId: currentTeacherId, 
-        createdAt: new Date().toISOString() 
+    const data = {
+      subjectId: subjectId,
+      type: type,
+      date: date,
+      topic: document.getElementById("lessonTopic").value,
+      number: nextNumber,
+      sectionId: sectionId || null,
+      teacherId: currentTeacherId,
+      createdAt: new Date().toISOString()
     };
     
     await addDoc(collection(db, "lessons"), data);
     
-    // ОНОВЛЕННЯ: автоматично оновлюємо журнал, якщо він відкритий
     if (document.getElementById("tab-journal").classList.contains("active")) {
-        // Оновлюємо список розділів у формі
-        const currentSubject = document.getElementById("lessonSubject").value;
-        if (currentSubject) await updateSectionSelect(currentSubject);
-        // Оновлюємо журнал
-        await renderJournal();
+      const currentSubject = document.getElementById("lessonSubject").value;
+      if (currentSubject) await updateSectionSelect(currentSubject);
+      await renderJournal();
     }
     
     resetLessonForm();
     loadMyLessons();
     if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-};
-  
+  };
+
   function resetLessonForm() {
-    document.getElementById("lessonTopic").value = ""; document.getElementById("lessonDate").value = ""; document.getElementById("lessonSection").value = "";
-    document.getElementById("newSectionGroup").style.display = "none"; document.getElementById("newSectionName").value = ""; currentEditId = null;
-    const btn = document.getElementById("saveLessonBtn"); btn.innerText = "Зберегти";
-    btn.onclick = async () => {
-      const date = document.getElementById("lessonDate").value, type = document.getElementById("lessonType").value, subjectId = document.getElementById("lessonSubject").value;
-      const sectionSelect = document.getElementById("lessonSection");
-      let sectionId = sectionSelect.value;
-      const newSectionName = document.getElementById("newSectionName").value.trim();
-      if (!subjectId || !date) { alert("Будь ласка, заповніть всі обов'язкові поля!"); return; }
-      if (sectionId === "new" && newSectionName) sectionId = await createNewSection(subjectId, newSectionName);
-      else if (sectionId === "new" && !newSectionName) { alert("Будь ласка, введіть назву нового розділу!"); return; }
-      const nextNumber = await getNextLessonNumberForType(type, subjectId);
-      const data = { subjectId, type, date, topic: document.getElementById("lessonTopic").value, number: nextNumber, sectionId: sectionId || null, teacherId: currentTeacherId, createdAt: new Date().toISOString() };
-      await addDoc(collection(db, "lessons"), data);
-      resetLessonForm();
-      loadMyLessons();
-      if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-    };
+    document.getElementById("lessonTopic").value = "";
+    document.getElementById("lessonDate").value = "";
+    document.getElementById("lessonSection").value = "";
+    document.getElementById("newSectionGroup").style.display = "none";
+    document.getElementById("newSectionName").value = "";
+    currentEditId = null;
+    const btn = document.getElementById("saveLessonBtn");
+    btn.innerText = "Зберегти";
     document.getElementById("form-add-lesson").style.display = "none";
   }
-  document.getElementById("lessonFilterSubject").addEventListener("change", () => loadMyLessons());
 
-  // ФУНКЦІЇ ДЛЯ РОЗДІЛІВ
+  // ========== ФУНКЦІЇ ДЛЯ РОЗДІЛІВ ==========
   async function loadSectionsForSubject(subjectId) {
     if (!subjectId) return [];
     const q = query(collection(db, "sections"), where("subjectId", "==", subjectId), where("teacherId", "==", currentTeacherId));
@@ -1007,41 +932,271 @@ document.getElementById("saveLessonBtn").onclick = async () => {
     sections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return sections;
   }
-async function updateSectionSelect(subjectId) {
+
+  async function updateSectionSelect(subjectId) {
     const sectionSelect = document.getElementById("lessonSection");
     if (!subjectId) {
-        sectionSelect.innerHTML = '<option value="">Оберіть спочатку предмет</option>';
-        return;
+      sectionSelect.innerHTML = '<option value="">Оберіть спочатку предмет</option>';
+      return;
     }
-    
     const sections = await loadSectionsForSubject(subjectId);
     let options = '<option value="">Оберіть розділ</option>';
-    sections.forEach(s => {
-        options += `<option value="${s.id}">${s.name}</option>`;
-    });
+    sections.forEach(s => { options += `<option value="${s.id}">${s.name}</option>`; });
     options += '<option value="new">+ Створити новий розділ</option>';
     sectionSelect.innerHTML = options;
     document.getElementById("newSectionGroup").style.display = "none";
     document.getElementById("newSectionName").value = "";
-}
+  }
 
-  // Оновлення списку розділів у формі додавання заняття
-async function refreshSectionsList() {
+  async function refreshSectionsList() {
     const subjectId = document.getElementById("lessonSubject").value;
-    if (subjectId) {
-        await updateSectionSelect(subjectId);
-    }
-}
-  
-async function createNewSection(subjectId, sectionName) {
+    if (subjectId) await updateSectionSelect(subjectId);
+  }
+
+  async function createNewSection(subjectId, sectionName) {
     const sectionData = { name: sectionName, subjectId: subjectId, teacherId: currentTeacherId, createdAt: new Date().toISOString() };
     const docRef = await addDoc(collection(db, "sections"), sectionData);
-    // ОНОВЛЕННЯ: автоматично оновлюємо список розділів у формі
     if (subjectId) await updateSectionSelect(subjectId);
     return docRef.id;
-}
+  }
 
-  // ФУНКЦІЇ ДЛЯ ГРУП
+  // ========== ФУНКЦІЇ ДЛЯ ВИДАЛЕННЯ ==========
+  window.deleteAllLessonsForSubject = async function() {
+    const filterSubject = document.getElementById("lessonFilterSubject").value;
+    if (filterSubject === "all") {
+      alert("Спочатку оберіть конкретний предмет у фільтрі!");
+      return;
+    }
+    
+    const checkQ = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId), where("subjectId", "==", filterSubject));
+    const checkSnap = await getDocs(checkQ);
+    
+    if (checkSnap.empty) {
+      alert("Немає занять для видалення!");
+      return;
+    }
+    
+    if (!confirm(`Ви дійсно хочете видалити ВСІ заняття для вибраного предмета? Цю дію не можна скасувати!`)) {
+      return;
+    }
+    
+    try {
+      let count = 0;
+      for (const docSnap of checkSnap.docs) {
+        await deleteDoc(doc(db, "lessons", docSnap.id));
+        count++;
+      }
+      alert(`Видалено ${count} занять`);
+      await loadMyLessons();
+      await window.updateDeleteAllButton();
+      if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
+    } catch (error) {
+      console.error("Помилка видалення занять:", error);
+      alert("Сталася помилка при видаленні занять");
+    }
+  };
+
+  window.deleteSection = async function(sectionId, sectionName) {
+    if (!confirm(`Видалити розділ "${sectionName}"? Всі заняття в цьому розділі будуть ВИДАЛЕНІ без можливості відновлення!`)) {
+      return;
+    }
+    
+    try {
+      const lessonsQ = query(collection(db, "lessons"), where("sectionId", "==", sectionId), where("teacherId", "==", currentTeacherId));
+      const lessonsSnap = await getDocs(lessonsQ);
+      let deletedCount = 0;
+      
+      for (const lessonDoc of lessonsSnap.docs) {
+        const gradesQ = query(collection(db, "grades"), where("lessonId", "==", lessonDoc.id));
+        const gradesSnap = await getDocs(gradesQ);
+        for (const gradeDoc of gradesSnap.docs) {
+          await deleteDoc(doc(db, "grades", gradeDoc.id));
+        }
+        await deleteDoc(doc(db, "lessons", lessonDoc.id));
+        deletedCount++;
+      }
+      
+      await deleteDoc(doc(db, "sections", sectionId));
+      alert(`Розділ "${sectionName}" видалено. Видалено ${deletedCount} занять.`);
+      await loadMyLessons();
+      const subjectId = document.getElementById("lessonSubject").value;
+      if (subjectId) await updateSectionSelect(subjectId);
+      if (document.getElementById("tab-journal").classList.contains("active")) await renderJournal();
+      if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
+    } catch (error) {
+      console.error("Помилка видалення розділу:", error);
+      alert("Сталася помилка при видаленні розділу");
+    }
+  };
+
+  window.toggleSection = function(sectionId) {
+    const sectionElement = document.getElementById(`section-${sectionId}`);
+    if (sectionElement) {
+      sectionElement.classList.toggle('section-collapsed');
+      const toggleBtn = sectionElement.querySelector('.section-toggle-btn');
+      if (toggleBtn) {
+        toggleBtn.textContent = sectionElement.classList.contains('section-collapsed') ? '▶' : '▼';
+      }
+    }
+  };
+
+  window.updateDeleteAllButton = async function() {
+    const filterSubject = document.getElementById("lessonFilterSubject").value;
+    const deleteBtn = document.getElementById("deleteAllLessonsBtn");
+    if (!deleteBtn) return;
+    
+    if (filterSubject === "all") {
+      deleteBtn.style.display = "none";
+      return;
+    }
+    
+    try {
+      const q = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId), where("subjectId", "==", filterSubject));
+      const snap = await getDocs(q);
+      deleteBtn.style.display = snap.empty ? "none" : "inline-flex";
+    } catch (error) {
+      console.error("Помилка перевірки занять:", error);
+      deleteBtn.style.display = "none";
+    }
+  };
+
+  // ========== ОСНОВНА ФУНКЦІЯ ЗАВАНТАЖЕННЯ ЗАНЯТЬ ==========
+  async function loadMyLessons() {
+    let lessonsQuery = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId));
+    const filterSubject = document.getElementById("lessonFilterSubject").value;
+    if (filterSubject !== "all") {
+      lessonsQuery = query(lessonsQuery, where("subjectId", "==", filterSubject));
+    }
+    const snap = await getDocs(lessonsQuery);
+    
+    const subjectsSnap = await getDocs(query(collection(db, "subjects"), where("teacherId", "==", currentTeacherId)));
+    const subMap = {};
+    for (const docSnap of subjectsSnap.docs) {
+      const s = docSnap.data();
+      const groupsSnap = await getDocs(query(collection(db, "groups"), where("id", "==", s.groupId)));
+      let groupName = '', academicYear = '';
+      if (!groupsSnap.empty) {
+        groupName = groupsSnap.docs[0].data().name;
+        academicYear = groupsSnap.docs[0].data().academicYear || '';
+      }
+      subMap[docSnap.id] = { name: s.name, group: groupName, year: academicYear || s.academicYear };
+    }
+    
+    const sectionsSnap = await getDocs(query(collection(db, "sections"), where("teacherId", "==", currentTeacherId)));
+    const sectionMap = {};
+    sectionsSnap.forEach(doc => { sectionMap[doc.id] = doc.data().name; });
+    
+    const container = document.getElementById("lessonsList");
+    if (snap.empty) {
+      container.innerHTML = '<div class="empty-state">Занять не знайдено</div>';
+      if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
+      return;
+    }
+    
+    const lessonsArray = [];
+    snap.forEach(docSnap => {
+      lessonsArray.push({
+        id: docSnap.id,
+        ...docSnap.data(),
+        createdAt: docSnap.data().createdAt || new Date(0).toISOString()
+      });
+    });
+    
+    const groupedBySection = {};
+    lessonsArray.forEach(lesson => {
+      const sectionId = lesson.sectionId || 'without_section';
+      if (!groupedBySection[sectionId]) groupedBySection[sectionId] = [];
+      groupedBySection[sectionId].push(lesson);
+    });
+    
+    for (const sectionId in groupedBySection) {
+      groupedBySection[sectionId].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    
+    const sectionsList = [];
+    for (const sectionId in groupedBySection) {
+      const lessons = groupedBySection[sectionId];
+      const latestLesson = lessons[0];
+      const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
+      const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db, "sections", sectionId)) : null;
+      const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
+      sectionsList.push({
+        id: sectionId,
+        name: sectionMap[sectionId] || 'Без розділу',
+        lessons: lessons,
+        latestDate: latestDate,
+        createdAt: createdAtSection
+      });
+    }
+    
+    sectionsList.sort((a, b) => {
+      if (a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate;
+      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+      return bTime - aTime;
+    });
+    
+    let html = '';
+    for (const section of sectionsList) {
+      const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
+      const isWithoutSection = section.name === 'Без розділу';
+      
+      if (!isWithoutSection) {
+        html += `<div id="section-${sectionIdSafe}" class="section-wrapper">
+                    <div class="section-header-wrapper">
+                        <div class="section-header-title" onclick="window.toggleSection('${sectionIdSafe}')">
+                            <span class="section-toggle-btn">▼</span> 📁 ${escapeHtml(section.name)} <span style="font-size: 11px; color: #6b7280; margin-left: 8px;">(${section.lessons.length} занять)</span>
+                        </div>
+                        <div class="section-header-actions">
+                            <button class="section-delete-btn" onclick="event.stopPropagation(); window.deleteSection('${section.id}', '${escapeHtml(section.name).replace(/'/g, "\\'")}')" title="Видалити розділ">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="data-list">`;
+      } else {
+        html += `<div id="section-${sectionIdSafe}" class="section-wrapper"><div class="data-list">`;
+      }
+      
+      for (const l of section.lessons) {
+        const dateParts = l.date.split('-');
+        const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+        
+        let typeShort = '';
+        switch (l.type) {
+          case 'Лекція': typeShort = 'Лек'; break;
+          case 'Практичне заняття': typeShort = 'Прак'; break;
+          case 'Лабораторне заняття': typeShort = 'Лаб'; break;
+          case 'Семінарське заняття': typeShort = 'Сем'; break;
+          case 'Самостійне вивчення': typeShort = 'С.в.'; break;
+          case 'Залік з модуля': typeShort = 'Залік'; break;
+          case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
+          default: typeShort = l.type;
+        }
+        
+        const subjectInfo = subMap[l.subjectId];
+        const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
+        
+        html += `<div class="data-card" onclick="window.editLesson('${l.id}')">
+                    <div class="data-info">
+                        <div class="data-icon">📅</div>
+                        <div>
+                            <div class="data-title">${escapeHtml(l.topic) || "Без теми"}</div>
+                            <div class="data-sub">${escapeHtml(subjectDisplay)} | ${typeShort} | ${formattedDate}</div>
+                        </div>
+                    </div>
+                    <div class="data-actions">
+                        <button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editLesson('${l.id}')">✏️</button>
+                        <button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('lessons','${l.id}')">🗑️</button>
+                    </div>
+                </div>`;
+      }
+      html += `</div></div>`;
+    }
+    
+    container.innerHTML = html;
+    if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
+  }
+
+  // ========== ФУНКЦІЇ ДЛЯ ГРУП ==========
   async function loadGroups() {
     const snap = await getDocs(collection(db, "groups"));
     const container = document.getElementById("groupsList");
@@ -1057,38 +1212,77 @@ async function createNewSection(subjectId, sectionName) {
       const groups = groupsByYear[year];
       groups.sort((a, b) => a.name.localeCompare(b.name));
       html += `<div class="year-group"><div class="year-title">${year} <span class="group-count">(${groups.length} груп)</span></div><div class="data-list">`;
-      groups.forEach(g => { html += `<div class="data-card" onclick="showGroupStats('${g.id}','${g.name}')"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div><div class="data-sub">Студентів: ${g.studentCount}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editGroup('${g.id}','${g.name}','${year}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('groups','${g.id}')">🗑️</button></div></div>`; });
+      groups.forEach(g => {
+        html += `<div class="data-card" onclick="window.showGroupStats('${g.id}','${g.name}')"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div><div class="data-sub">Студентів: ${g.studentCount}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editGroup('${g.id}','${g.name}','${year}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('groups','${g.id}')">🗑️</button></div></div>`;
+      });
       html += `</div></div>`;
     }
     container.innerHTML = html;
     populateSelects();
   }
+
   window.editGroup = (id, name, year) => {
     currentEditId = id;
     document.getElementById("groupName").value = name;
     document.getElementById("groupYear").value = year || '2025/2026';
-    toggleForm('form-add-group');
+    window.toggleForm('form-add-group');
     const btn = document.getElementById("saveGroupBtn");
     btn.innerText = "Оновити";
-    btn.onclick = async () => { const newName = document.getElementById("groupName").value; const newYear = document.getElementById("groupYear").value; if (newName) { await updateDoc(doc(db, "groups", id), { name: newName, academicYear: newYear }); resetGroupForm(); loadGroups(); updateStats(); } };
+    btn.onclick = async () => {
+      const newName = document.getElementById("groupName").value;
+      const newYear = document.getElementById("groupYear").value;
+      if (newName) {
+        await updateDoc(doc(db, "groups", id), { name: newName, academicYear: newYear });
+        resetGroupForm();
+        loadGroups();
+        updateStats();
+      }
+    };
   };
+
   function resetGroupForm() {
-    document.getElementById("groupName").value = ""; document.getElementById("groupYear").value = "2025/2026";
+    document.getElementById("groupName").value = "";
+    document.getElementById("groupYear").value = "2025/2026";
     currentEditId = null;
     const btn = document.getElementById("saveGroupBtn");
     btn.innerText = "Зберегти";
-    btn.onclick = async () => { const name = document.getElementById("groupName").value; const academicYear = document.getElementById("groupYear").value; if (name) { await addDoc(collection(db, "groups"), { name, academicYear }); resetGroupForm(); loadGroups(); updateStats(); } };
+    btn.onclick = async () => {
+      const name = document.getElementById("groupName").value;
+      const academicYear = document.getElementById("groupYear").value;
+      if (name) {
+        await addDoc(collection(db, "groups"), { name, academicYear });
+        resetGroupForm();
+        loadGroups();
+        updateStats();
+      }
+    };
     document.getElementById("form-add-group").style.display = "none";
   }
-  document.getElementById("saveGroupBtn").onclick = async () => { if (currentEditId) return; const name = document.getElementById("groupName").value; const academicYear = document.getElementById("groupYear").value; if (name) { await addDoc(collection(db, "groups"), { name, academicYear }); resetGroupForm(); loadGroups(); updateStats(); } };
 
-  // ФУНКЦІЇ ДЛЯ СТУДЕНТІВ
+  document.getElementById("saveGroupBtn").onclick = async () => {
+    if (currentEditId) return;
+    const name = document.getElementById("groupName").value;
+    const academicYear = document.getElementById("groupYear").value;
+    if (name) {
+      await addDoc(collection(db, "groups"), { name, academicYear });
+      resetGroupForm();
+      loadGroups();
+      updateStats();
+    }
+  };
+
+  // ========== ФУНКЦІЇ ДЛЯ СТУДЕНТІВ ==========
   async function loadStudents() {
     const snap = await getDocs(collection(db, "students"));
     const groupsSnap = await getDocs(collection(db, "groups"));
     const groupsMap = {};
     const groupsByYear = {};
-    groupsSnap.forEach(d => { const group = { id: d.id, name: d.data().name, academicYear: d.data().academicYear || 'Не вказано' }; groupsMap[d.id] = group; if (!groupsByYear[group.academicYear]) groupsByYear[group.academicYear] = []; groupsByYear[group.academicYear].push(group); });
+    groupsSnap.forEach(d => {
+      const group = { id: d.id, name: d.data().name, academicYear: d.data().academicYear || 'Не вказано' };
+      groupsMap[d.id] = group;
+      if (!groupsByYear[group.academicYear]) groupsByYear[group.academicYear] = [];
+      groupsByYear[group.academicYear].push(group);
+    });
     const yearFilter = document.getElementById("studentYearFilter");
     const currentYearValue = yearFilter.value;
     let yearOptions = '<option value="all">Всі роки</option>';
@@ -1115,10 +1309,15 @@ async function createNewSection(subjectId, sectionName) {
     const container = document.getElementById("studentsList");
     if (students.length === 0) { container.innerHTML = '<div class="empty-state">Студентів не знайдено</div>'; return; }
     let html = '<div class="data-list">';
-    students.forEach(s => { const groupName = groupsMap[s.groupId]?.name || s.groupId; const academicYear = s.academicYear || groupsMap[s.groupId]?.academicYear || 'Не вказано'; html += `<div class="data-card"><div class="data-info"><div class="data-icon">👨‍🎓</div><div><div class="data-title">${s.name} ${s.role === 'prefect' ? '<span class="prefect-badge">Староста</span>' : ''}</div><div class="data-sub">${groupName} | ${academicYear} | ${s.phone || ''}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editStudent('${s.id}','${s.name}','${s.groupId}','${s.phone || ''}','${s.role || 'student'}','${academicYear}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('students','${s.id}')">🗑️</button></div></div>`; });
+    students.forEach(s => {
+      const groupName = groupsMap[s.groupId]?.name || s.groupId;
+      const academicYear = s.academicYear || groupsMap[s.groupId]?.academicYear || 'Не вказано';
+      html += `<div class="data-card"><div class="data-info"><div class="data-icon">👨‍🎓</div><div><div class="data-title">${s.name} ${s.role === 'prefect' ? '<span class="prefect-badge">Староста</span>' : ''}</div><div class="data-sub">${groupName} | ${academicYear} | ${s.phone || ''}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editStudent('${s.id}','${s.name}','${s.groupId}','${s.phone || ''}','${s.role || 'student'}','${academicYear}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('students','${s.id}')">🗑️</button></div></div>`;
+    });
     html += '</div>';
     container.innerHTML = html;
   }
+
   window.editStudent = (id, name, groupId, phone, role, year) => {
     currentEditId = id;
     document.getElementById("studentName").value = name;
@@ -1126,24 +1325,78 @@ async function createNewSection(subjectId, sectionName) {
     document.getElementById("studentYear").value = year || '2025/2026';
     document.getElementById("studentPhone").value = phone;
     document.getElementById("studentRole").value = role;
-    toggleForm('form-add-student');
+    window.toggleForm('form-add-student');
     const btn = document.getElementById("saveStudentBtn");
     btn.innerText = "Оновити";
-    btn.onclick = async () => { const data = { name: document.getElementById("studentName").value, groupId: document.getElementById("studentGroup").value, academicYear: document.getElementById("studentYear").value, phone: document.getElementById("studentPhone").value, role: document.getElementById("studentRole").value }; await updateDoc(doc(db, "students", id), data); resetStudentForm(); loadStudents(); loadGroups(); updateStats(); };
+    btn.onclick = async () => {
+      const data = {
+        name: document.getElementById("studentName").value,
+        groupId: document.getElementById("studentGroup").value,
+        academicYear: document.getElementById("studentYear").value,
+        phone: document.getElementById("studentPhone").value,
+        role: document.getElementById("studentRole").value
+      };
+      await updateDoc(doc(db, "students", id), data);
+      resetStudentForm();
+      loadStudents();
+      loadGroups();
+      updateStats();
+    };
   };
+
   function resetStudentForm() {
-    document.getElementById("studentName").value = ""; document.getElementById("studentPhone").value = ""; document.getElementById("studentYear").value = "2025/2026"; document.getElementById("studentRole").value = "student";
+    document.getElementById("studentName").value = "";
+    document.getElementById("studentPhone").value = "";
+    document.getElementById("studentYear").value = "2025/2026";
+    document.getElementById("studentRole").value = "student";
     currentEditId = null;
     const btn = document.getElementById("saveStudentBtn");
     btn.innerText = "Зберегти";
-    btn.onclick = async () => { const groupId = document.getElementById("studentGroup").value; const data = { name: document.getElementById("studentName").value, groupId: groupId, academicYear: document.getElementById("studentYear").value, phone: document.getElementById("studentPhone").value, role: document.getElementById("studentRole").value }; if (data.name && data.groupId) { sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId); await addDoc(collection(db, "students"), data); resetStudentForm(); loadStudents(); loadGroups(); updateStats(); } };
+    btn.onclick = async () => {
+      const groupId = document.getElementById("studentGroup").value;
+      const data = {
+        name: document.getElementById("studentName").value,
+        groupId: groupId,
+        academicYear: document.getElementById("studentYear").value,
+        phone: document.getElementById("studentPhone").value,
+        role: document.getElementById("studentRole").value
+      };
+      if (data.name && data.groupId) {
+        sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId);
+        await addDoc(collection(db, "students"), data);
+        resetStudentForm();
+        loadStudents();
+        loadGroups();
+        updateStats();
+      }
+    };
     document.getElementById("form-add-student").style.display = "none";
   }
-  document.getElementById("saveStudentBtn").onclick = async () => { if (currentEditId) return; const groupId = document.getElementById("studentGroup").value; const data = { name: document.getElementById("studentName").value, groupId: groupId, academicYear: document.getElementById("studentYear").value, phone: document.getElementById("studentPhone").value, role: document.getElementById("studentRole").value }; if (data.name && data.groupId) { sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId); await addDoc(collection(db, "students"), data); resetStudentForm(); loadStudents(); loadGroups(); updateStats(); } };
+
+  document.getElementById("saveStudentBtn").onclick = async () => {
+    if (currentEditId) return;
+    const groupId = document.getElementById("studentGroup").value;
+    const data = {
+      name: document.getElementById("studentName").value,
+      groupId: groupId,
+      academicYear: document.getElementById("studentYear").value,
+      phone: document.getElementById("studentPhone").value,
+      role: document.getElementById("studentRole").value
+    };
+    if (data.name && data.groupId) {
+      sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId);
+      await addDoc(collection(db, "students"), data);
+      resetStudentForm();
+      loadStudents();
+      loadGroups();
+      updateStats();
+    }
+  };
+
   document.getElementById("studentYearFilter").addEventListener("change", () => loadStudents());
   document.getElementById("studentGroupFilter").addEventListener("change", () => loadStudents());
 
-  // ФУНКЦІЇ ДЛЯ ПРЕДМЕТІВ
+  // ========== ФУНКЦІЇ ДЛЯ ПРЕДМЕТІВ ==========
   async function loadMySubjects() {
     const snap = await getDocs(query(collection(db, "subjects"), where("teacherId", "==", currentTeacherId)));
     const groupsSnap = await getDocs(collection(db, "groups"));
@@ -1152,11 +1405,16 @@ async function createNewSection(subjectId, sectionName) {
     const container = document.getElementById("subjectsList");
     if (snap.empty) { container.innerHTML = '<div class="empty-state">Предметів/дисциплін не знайдено. Додайте ваш перший предмет!</div>'; return; }
     let html = '<div class="data-list">';
-    snap.forEach(docSnap => { const s = docSnap.data(); const groupName = groupsMap[s.groupId] || s.groupId || 'Групу не обрано'; html += `<div class="data-card" onclick="showSubjectInfo('${docSnap.id}')"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name}</div><div class="data-sub">${groupName} | ${s.academicYear || 'Не вказано'}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; });
+    snap.forEach(docSnap => {
+      const s = docSnap.data();
+      const groupName = groupsMap[s.groupId] || s.groupId || 'Групу не обрано';
+      html += `<div class="data-card" onclick="window.showSubjectInfo('${docSnap.id}')"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name}</div><div class="data-sub">${groupName} | ${s.academicYear || 'Не вказано'}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`;
+    });
     html += '</div>';
     container.innerHTML = html;
     populateSelects();
   }
+
   window.editSubject = async (id) => {
     const snap = await getDoc(doc(db, "subjects", id));
     if (snap.exists() && snap.data().teacherId === currentTeacherId) {
@@ -1175,23 +1433,41 @@ async function createNewSection(subjectId, sectionName) {
       document.getElementById("subjectLabs").value = d.labs || 0;
       document.getElementById("subjectSeminars").value = d.seminars || 0;
       document.getElementById("subjectSelfStudy").value = d.selfStudy || 0;
-      toggleForm('form-add-subject');
+      window.toggleForm('form-add-subject');
       const btn = document.getElementById("saveSubjectBtn");
       btn.innerText = "Оновити";
       btn.onclick = () => updateSubject(id);
     }
   };
+
   async function updateSubject(id) {
     const groupsSnap = await getDocs(collection(db, "groups"));
     const groupsMap = {};
     groupsSnap.forEach(g => { groupsMap[g.id] = g.data().name; });
     const groupId = document.getElementById("subjectGroup").value;
-    const data = { name: document.getElementById("subjectName").value, scale: document.getElementById("subjectScale").value, type: document.getElementById("subjectType").value, groupId: groupId, groupName: groupsMap[groupId] || groupId, academicYear: document.getElementById("subjectYear").value, credits: parseInt(document.getElementById("subjectCredits").value) || 0, hours: parseInt(document.getElementById("subjectHours").value) || 0, modules: parseInt(document.getElementById("subjectModules").value) || 0, lectures: parseInt(document.getElementById("subjectLectures").value) || 0, practicals: parseInt(document.getElementById("subjectPracticals").value) || 0, labs: parseInt(document.getElementById("subjectLabs").value) || 0, seminars: parseInt(document.getElementById("subjectSeminars").value) || 0, selfStudy: parseInt(document.getElementById("subjectSelfStudy").value) || 0, teacherId: currentTeacherId };
+    const data = {
+      name: document.getElementById("subjectName").value,
+      scale: document.getElementById("subjectScale").value,
+      type: document.getElementById("subjectType").value,
+      groupId: groupId,
+      groupName: groupsMap[groupId] || groupId,
+      academicYear: document.getElementById("subjectYear").value,
+      credits: parseInt(document.getElementById("subjectCredits").value) || 0,
+      hours: parseInt(document.getElementById("subjectHours").value) || 0,
+      modules: parseInt(document.getElementById("subjectModules").value) || 0,
+      lectures: parseInt(document.getElementById("subjectLectures").value) || 0,
+      practicals: parseInt(document.getElementById("subjectPracticals").value) || 0,
+      labs: parseInt(document.getElementById("subjectLabs").value) || 0,
+      seminars: parseInt(document.getElementById("subjectSeminars").value) || 0,
+      selfStudy: parseInt(document.getElementById("subjectSelfStudy").value) || 0,
+      teacherId: currentTeacherId
+    };
     await updateDoc(doc(db, "subjects", id), data);
     resetSubjectForm();
     loadMySubjects();
     updateStats();
   }
+
   document.getElementById("saveSubjectBtn").onclick = async () => {
     if (currentEditId) await updateSubject(currentEditId);
     else {
@@ -1199,18 +1475,50 @@ async function createNewSection(subjectId, sectionName) {
       const groupsMap = {};
       groupsSnap.forEach(g => { groupsMap[g.id] = g.data().name; });
       const groupId = document.getElementById("subjectGroup").value;
-      const data = { name: document.getElementById("subjectName").value, scale: document.getElementById("subjectScale").value, type: document.getElementById("subjectType").value, groupId: groupId, groupName: groupsMap[groupId] || groupId, academicYear: document.getElementById("subjectYear").value, credits: parseInt(document.getElementById("subjectCredits").value) || 0, hours: parseInt(document.getElementById("subjectHours").value) || 0, modules: parseInt(document.getElementById("subjectModules").value) || 0, lectures: parseInt(document.getElementById("subjectLectures").value) || 0, practicals: parseInt(document.getElementById("subjectPracticals").value) || 0, labs: parseInt(document.getElementById("subjectLabs").value) || 0, seminars: parseInt(document.getElementById("subjectSeminars").value) || 0, selfStudy: parseInt(document.getElementById("subjectSelfStudy").value) || 0, teacherId: currentTeacherId };
+      const data = {
+        name: document.getElementById("subjectName").value,
+        scale: document.getElementById("subjectScale").value,
+        type: document.getElementById("subjectType").value,
+        groupId: groupId,
+        groupName: groupsMap[groupId] || groupId,
+        academicYear: document.getElementById("subjectYear").value,
+        credits: parseInt(document.getElementById("subjectCredits").value) || 0,
+        hours: parseInt(document.getElementById("subjectHours").value) || 0,
+        modules: parseInt(document.getElementById("subjectModules").value) || 0,
+        lectures: parseInt(document.getElementById("subjectLectures").value) || 0,
+        practicals: parseInt(document.getElementById("subjectPracticals").value) || 0,
+        labs: parseInt(document.getElementById("subjectLabs").value) || 0,
+        seminars: parseInt(document.getElementById("subjectSeminars").value) || 0,
+        selfStudy: parseInt(document.getElementById("subjectSelfStudy").value) || 0,
+        teacherId: currentTeacherId
+      };
       if (data.name) await addDoc(collection(db, "subjects"), data);
       resetSubjectForm();
       loadMySubjects();
       updateStats();
     }
   };
+
   function resetSubjectForm() {
-    document.getElementById("subjectName").value = ""; document.getElementById("subjectScale").value = "12"; document.getElementById("subjectType").value = "Обов'язкова"; document.getElementById("subjectGroup").value = ""; document.getElementById("subjectYear").value = "2025/2026"; document.getElementById("subjectCredits").value = ""; document.getElementById("subjectHours").value = ""; document.getElementById("subjectModules").value = ""; document.getElementById("subjectLectures").value = "0"; document.getElementById("subjectPracticals").value = "0"; document.getElementById("subjectLabs").value = "0"; document.getElementById("subjectSeminars").value = "0"; document.getElementById("subjectSelfStudy").value = "0"; currentEditId = null; document.getElementById("saveSubjectBtn").innerText = "Зберегти"; document.getElementById("form-add-subject").style.display = "none";
+    document.getElementById("subjectName").value = "";
+    document.getElementById("subjectScale").value = "12";
+    document.getElementById("subjectType").value = "Обов'язкова";
+    document.getElementById("subjectGroup").value = "";
+    document.getElementById("subjectYear").value = "2025/2026";
+    document.getElementById("subjectCredits").value = "";
+    document.getElementById("subjectHours").value = "";
+    document.getElementById("subjectModules").value = "";
+    document.getElementById("subjectLectures").value = "0";
+    document.getElementById("subjectPracticals").value = "0";
+    document.getElementById("subjectLabs").value = "0";
+    document.getElementById("subjectSeminars").value = "0";
+    document.getElementById("subjectSelfStudy").value = "0";
+    currentEditId = null;
+    document.getElementById("saveSubjectBtn").innerText = "Зберегти";
+    document.getElementById("form-add-subject").style.display = "none";
   }
 
-  // ДОДАТКОВІ ФУНКЦІЇ
+  // ========== ДОДАТКОВІ ФУНКЦІЇ ==========
   window.showGroupStats = async (groupId, groupName) => {
     const modal = document.getElementById("groupModal");
     const modalBody = document.getElementById("modalBody");
@@ -1230,7 +1538,10 @@ async function createNewSection(subjectId, sectionName) {
         if (!finalSnap.empty) {
           const grade = finalSnap.docs[0].data().grade;
           const numGrade = parseFloat(grade);
-          if (!isNaN(numGrade) && numGrade > 0) { if (!finalGrades[subject.id]) finalGrades[subject.id] = {}; finalGrades[subject.id][student.id] = numGrade; }
+          if (!isNaN(numGrade) && numGrade > 0) {
+            if (!finalGrades[subject.id]) finalGrades[subject.id] = {};
+            finalGrades[subject.id][student.id] = numGrade;
+          }
         }
       }
     }
@@ -1239,7 +1550,15 @@ async function createNewSection(subjectId, sectionName) {
       let totalPoints = 0, totalGrades = 0;
       students.forEach(student => {
         const grade = finalGrades[subject.id]?.[student.id];
-        if (grade) { if (grade === 5) gradeCounts[5]++; else if (grade === 4) gradeCounts[4]++; else if (grade === 3) gradeCounts[3]++; else if (grade === 2) gradeCounts[2]++; else if (grade === 1) gradeCounts[1]++; totalPoints += grade; totalGrades++; }
+        if (grade) {
+          if (grade === 5) gradeCounts[5]++;
+          else if (grade === 4) gradeCounts[4]++;
+          else if (grade === 3) gradeCounts[3]++;
+          else if (grade === 2) gradeCounts[2]++;
+          else if (grade === 1) gradeCounts[1]++;
+          totalPoints += grade;
+          totalGrades++;
+        }
       });
       const avgGrade = totalGrades > 0 ? (totalPoints / totalGrades).toFixed(2) : 0;
       const quality = students.length > 0 ? ((gradeCounts[5] + gradeCounts[4]) / students.length * 100).toFixed(1) : 0;
@@ -1248,7 +1567,9 @@ async function createNewSection(subjectId, sectionName) {
     document.getElementById("modalTitle").innerHTML = `Статистика групи ${groupName}`;
     modalBody.innerHTML = statsHtml.length > 0 ? statsHtml.join('') : '<div class="stat-item">Немає підсумкових оцінок для статистики</div>';
   };
+
   window.closeModal = () => { document.getElementById("groupModal").classList.remove("active"); };
+
   window.showSubjectInfo = async (subjectId) => {
     const snap = await getDoc(doc(db, "subjects", subjectId));
     if (snap.exists()) {
@@ -1265,6 +1586,7 @@ async function createNewSection(subjectId, sectionName) {
       document.getElementById("subjectModal").classList.add("active");
     }
   };
+
   window.closeSubjectModal = () => { document.getElementById("subjectModal").classList.remove("active"); };
 
   async function updateStats() {
@@ -1284,6 +1606,7 @@ async function createNewSection(subjectId, sectionName) {
     await updateStats();
   }
 
+  // ========== ФУНКЦІЇ ДЛЯ ФІЛЬТРІВ ЖУРНАЛУ ==========
   async function populateJournalFilters() {
     const groupsSnap = await getDocs(collection(db, "groups"));
     const yearsSet = new Set();
@@ -1293,45 +1616,100 @@ async function createNewSection(subjectId, sectionName) {
     sortedYears.forEach(year => { yearOptions += `<option value="${year}">${year}</option>`; });
     document.getElementById("journalYearSelect").innerHTML = yearOptions;
     const currentYear = document.getElementById("journalYearSelect").value;
+    
     document.getElementById("journalYearSelect").onchange = async () => {
       const selectedYear = document.getElementById("journalYearSelect").value;
-      if (!selectedYear) { document.getElementById("journalGroupSelect").innerHTML = '<option value="">Оберіть групу</option>'; document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>'; saveLastSelection(); renderJournal(); return; }
+      if (!selectedYear) {
+        document.getElementById("journalGroupSelect").innerHTML = '<option value="">Оберіть групу</option>';
+        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
+        saveLastSelection();
+        renderJournal();
+        return;
+      }
       const groupsSnap2 = await getDocs(query(collection(db, "groups"), where("academicYear", "==", selectedYear)));
       let groupOptions = '<option value="">Оберіть групу</option>';
       const groupsArray = [];
-      groupsSnap2.forEach(g => { groupOptions += `<option value="${g.id}">${g.data().name}</option>`; groupsArray.push({ id: g.id, name: g.data().name }); });
+      groupsSnap2.forEach(g => {
+        groupOptions += `<option value="${g.id}">${g.data().name}</option>`;
+        groupsArray.push({ id: g.id, name: g.data().name });
+      });
       document.getElementById("journalGroupSelect").innerHTML = groupOptions;
       document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
-      if (groupsArray.length === 1) { document.getElementById("journalGroupSelect").value = groupsArray[0].id; const groupEvent = new Event('change'); document.getElementById("journalGroupSelect").dispatchEvent(groupEvent); } else { saveLastSelection(); renderJournal(); }
+      if (groupsArray.length === 1) {
+        document.getElementById("journalGroupSelect").value = groupsArray[0].id;
+        const groupEvent = new Event('change');
+        document.getElementById("journalGroupSelect").dispatchEvent(groupEvent);
+      } else {
+        saveLastSelection();
+        renderJournal();
+      }
     };
+    
     document.getElementById("journalGroupSelect").onchange = async () => {
       const selectedGroup = document.getElementById("journalGroupSelect").value;
-      if (!selectedGroup) { document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>'; saveLastSelection(); renderJournal(); return; }
+      if (!selectedGroup) {
+        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
+        saveLastSelection();
+        renderJournal();
+        return;
+      }
       const groupDoc = await getDoc(doc(db, "groups", selectedGroup));
       const groupName = groupDoc.exists() ? groupDoc.data().name : '';
       const groupYear = groupDoc.exists() ? groupDoc.data().academicYear : '';
       const subjectsSnap = await getDocs(query(collection(db, "subjects"), where("groupId", "==", selectedGroup), where("teacherId", "==", currentTeacherId)));
       let subjectOptions = '<option value="">Оберіть предмет</option>';
       const subjectsArray = [];
-      for (const docSnap of subjectsSnap.docs) { const s = docSnap.data(); const displayText = `${s.name} (${groupName} | ${groupYear})`; subjectOptions += `<option value="${docSnap.id}">${displayText}</option>`; subjectsArray.push({ id: docSnap.id, displayText }); }
+      for (const docSnap of subjectsSnap.docs) {
+        const s = docSnap.data();
+        const displayText = `${s.name} (${groupName} | ${groupYear})`;
+        subjectOptions += `<option value="${docSnap.id}">${displayText}</option>`;
+        subjectsArray.push({ id: docSnap.id, displayText });
+      }
       document.getElementById("journalSubjectSelect").innerHTML = subjectOptions;
       if (subjectsArray.length === 1) document.getElementById("journalSubjectSelect").value = subjectsArray[0].id;
-      saveLastSelection(); renderJournal();
+      saveLastSelection();
+      renderJournal();
     };
-    document.getElementById("journalSubjectSelect").onchange = () => { saveLastSelection(); renderJournal(); };
-    if (currentYear && currentYear !== "Оберіть рік") { const event = new Event('change'); document.getElementById("journalYearSelect").dispatchEvent(event); }
+    
+    document.getElementById("journalSubjectSelect").onchange = () => {
+      saveLastSelection();
+      renderJournal();
+    };
+    
+    if (currentYear && currentYear !== "Оберіть рік") {
+      const event = new Event('change');
+      document.getElementById("journalYearSelect").dispatchEvent(event);
+    }
   }
 
   function populateSelects() {
-    getDocs(collection(db, "groups")).then(snap => { let opts = '<option value="">Оберіть групу</option>'; snap.forEach(d => opts += `<option value="${d.id}">${d.data().name}</option>`); document.getElementById("studentGroup").innerHTML = opts; const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastStudentGroup); if (lastGroup && document.querySelector(`#studentGroup option[value="${lastGroup}"]`)) document.getElementById("studentGroup").value = lastGroup; });
+    getDocs(collection(db, "groups")).then(snap => {
+      let opts = '<option value="">Оберіть групу</option>';
+      snap.forEach(d => opts += `<option value="${d.id}">${d.data().name}</option>`);
+      document.getElementById("studentGroup").innerHTML = opts;
+      const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastStudentGroup);
+      if (lastGroup && document.querySelector(`#studentGroup option[value="${lastGroup}"]`)) {
+        document.getElementById("studentGroup").value = lastGroup;
+      }
+    });
+    
     getDocs(query(collection(db, "subjects"), where("teacherId", "==", currentTeacherId))).then(async snap => {
       let opts = '<option value="">Оберіть предмет</option>';
       let filterOpts = '<option value="all">Всі предмети</option>';
       for (const docSnap of snap.docs) {
         const s = docSnap.data();
         let groupName = '', academicYear = '';
-        if (s.groupId) { const groupDoc = await getDoc(doc(db, "groups", s.groupId)); if (groupDoc.exists()) { groupName = groupDoc.data().name; academicYear = groupDoc.data().academicYear || ''; } }
-        if (!groupName) { groupName = s.groupName || 'Групу не обрано'; academicYear = s.academicYear || ''; }
+        if (s.groupId) {
+          const groupDoc = await getDoc(doc(db, "groups", s.groupId));
+          if (groupDoc.exists()) {
+            groupName = groupDoc.data().name;
+            academicYear = groupDoc.data().academicYear || '';
+          }
+        }
+        if (!groupName) {
+          groupName = s.groupName || 'Групу не обрано';
+          academicYear = s.academicYear || '';
+        }
         const displayText = `${s.name} (${groupName} | ${academicYear || 'рік не вказано'})`;
         opts += `<option value="${docSnap.id}">${displayText}</option>`;
         filterOpts += `<option value="${docSnap.id}">${displayText}</option>`;
@@ -1339,426 +1717,128 @@ async function createNewSection(subjectId, sectionName) {
       document.getElementById("lessonSubject").innerHTML = opts;
       document.getElementById("lessonFilterSubject").innerHTML = filterOpts;
     });
+    
     const lessonSubject = document.getElementById("lessonSubject");
-    if (lessonSubject) lessonSubject.addEventListener("change", async (e) => { await updateSectionSelect(e.target.value); });
+    if (lessonSubject) {
+      lessonSubject.addEventListener("change", async (e) => { await updateSectionSelect(e.target.value); });
+    }
     const lessonSection = document.getElementById("lessonSection");
-    if (lessonSection) lessonSection.addEventListener("change", (e) => { const newSectionGroup = document.getElementById("newSectionGroup"); if (e.target.value === "new") newSectionGroup.style.display = "block"; else { newSectionGroup.style.display = "none"; document.getElementById("newSectionName").value = ""; } });
+    if (lessonSection) {
+      lessonSection.addEventListener("change", (e) => {
+        const newSectionGroup = document.getElementById("newSectionGroup");
+        if (e.target.value === "new") {
+          newSectionGroup.style.display = "block";
+        } else {
+          newSectionGroup.style.display = "none";
+          document.getElementById("newSectionName").value = "";
+        }
+      });
+    }
     populateJournalFilters();
   }
 
-  window.logout = async () => { await signOut(auth); window.location.href = "index.html"; };
-window.switchTab = function(tabId) {
+  // ========== ГЛОБАЛЬНІ ФУНКЦІЇ WINDOW ==========
+  window.logout = async () => {
+    await signOut(auth);
+    window.location.href = "index.html";
+  };
+
+  window.switchTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     
-    // Знаходимо кнопку, яка викликала подію
     const buttons = document.querySelectorAll('.tab-btn');
     const tabMap = {
-        'tab-journal': 0, 'tab-lessons': 1, 'tab-groups': 2, 'tab-students': 3, 'tab-subjects': 4
+      'tab-journal': 0, 'tab-lessons': 1, 'tab-groups': 2, 'tab-students': 3, 'tab-subjects': 4
     };
     if (tabMap[tabId] !== undefined && buttons[tabMap[tabId]]) {
-        buttons[tabMap[tabId]].classList.add('active');
+      buttons[tabMap[tabId]].classList.add('active');
     }
     
     saveActiveTab(tabId);
     saveLastSelection();
     
-    if (tabId === 'tab-journal') {
-        renderJournal();
-    }
-    if (tabId === 'tab-lessons') {
-        loadMyLessons();
-    }
-};
+    if (tabId === 'tab-journal') renderJournal();
+    if (tabId === 'tab-lessons') loadMyLessons();
+  };
 
-  // Відновлюємо фільтри та вкладку ПІСЛЯ завантаження всіх даних
-restoreLastSelection();
-restoreActiveTab();
+  window.toggleForm = (formId) => {
+    const f = document.getElementById(formId);
+    if (f) f.style.display = f.style.display === "none" || f.style.display === "" ? "block" : "none";
+    if (currentEditId) currentEditId = null;
+  };
 
-// Додаткове завантаження для вкладки занять, якщо вона активна
-if (document.getElementById("tab-lessons").classList.contains("active")) {
-    await loadMyLessons();
-}
-  window.toggleForm = (formId) => { const f = document.getElementById(formId); if (f) f.style.display = f.style.display === "none" || f.style.display === "" ? "block" : "none"; if (currentEditId) currentEditId = null; };
-window.deleteItem = async (col, id) => {
+  window.deleteItem = async (col, id) => {
     if (confirm("Видалити?")) {
-        await deleteDoc(doc(db, col, id));
-        if (col === 'groups') loadGroups();
-        if (col === 'students') { loadStudents(); loadGroups(); }
-        if (col === 'subjects') loadMySubjects();
-        if (col === 'lessons') {
-            await loadMyLessons();
-            await window.updateDeleteAllButton();
-            if (typeof refreshSectionsList === 'function') refreshSectionsList();
-        }
-        updateStats();
-        if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
+      await deleteDoc(doc(db, col, id));
+      if (col === 'groups') loadGroups();
+      if (col === 'students') { loadStudents(); loadGroups(); }
+      if (col === 'subjects') loadMySubjects();
+      if (col === 'lessons') {
+        await loadMyLessons();
+        await window.updateDeleteAllButton();
+        if (typeof refreshSectionsList === 'function') refreshSectionsList();
+      }
+      updateStats();
+      if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
     }
-};
+  };
+
+  // ========== ОБРОБНИКИ ПОДІЙ ==========
   document.addEventListener('click', function(e) {
     if (currentEditingCell && currentActiveInput) {
       const isClickOnInput = currentActiveInput === e.target || currentActiveInput.contains(e.target);
       const isClickOnCell = currentEditingCell === e.target || currentEditingCell.contains(e.target);
       const isClickOnAnotherCell = e.target.closest('.grade-cell') || e.target.closest('.final-grade-cell');
-      if (!isClickOnInput && !isClickOnCell && !isClickOnAnotherCell) saveAndCloseInput(currentActiveInput, currentEditingCell);
+      if (!isClickOnInput && !isClickOnCell && !isClickOnAnotherCell) {
+        saveAndCloseInput(currentActiveInput, currentEditingCell);
+      }
     }
   });
 
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists() && snap.data().role === "teacher") {
-            currentTeacherId = user.uid;
-            document.getElementById("userName").textContent = snap.data().displayName || "Викладач";
-            document.getElementById("userAvatar").src = snap.data().photoURL || "https://ui-avatars.com/api/?name=" + encodeURIComponent(snap.data().displayName || "Teacher");
-            
-            await loadAllData();
-            
-            // Відновлюємо збережений стан ПІСЛЯ завантаження даних
-            restoreLastSelection();
-            restoreActiveTab();
-            
-            // Якщо активна вкладка занять - завантажуємо їх
-            if (document.getElementById("tab-lessons").classList.contains("active")) {
-                await loadMyLessons();
-            }
-            
-            // Якщо активна вкладка журналу - рендеримо
-            if (document.getElementById("tab-journal").classList.contains("active")) {
-                const currentYear = document.getElementById("journalYearSelect").value;
-                if (currentYear && currentYear !== "Оберіть рік") {
-                    setTimeout(() => {
-                        const event = new Event('change');
-                        document.getElementById("journalYearSelect").dispatchEvent(event);
-                    }, 200);
-                } else {
-                    renderJournal();
-                }
-            }
-        } else {
-            window.location.href = "index.html";
-        }
-    } else {
-        window.location.href = "index.html";
-    }
-});
-
-  // Функція для видалення всіх занять з вибраного предмета
-window.deleteAllLessonsForSubject = async function() {
-    const filterSubject = document.getElementById("lessonFilterSubject").value;
-    if (filterSubject === "all") {
-        alert("Спочатку оберіть конкретний предмет у фільтрі!");
-        return;
-    }
-    
-    // Перевіряємо чи є заняття
-    const checkQ = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId), where("subjectId", "==", filterSubject));
-    const checkSnap = await getDocs(checkQ);
-    
-    if (checkSnap.empty) {
-        alert("Немає занять для видалення!");
-        return;
-    }
-    
-    if (!confirm(`Ви дійсно хочете видалити ВСІ заняття для вибраного предмета? Цю дію не можна скасувати!`)) {
-        return;
-    }
-    
-    try {
-        let count = 0;
-        for (const docSnap of checkSnap.docs) {
-            await deleteDoc(doc(db, "lessons", docSnap.id));
-            count++;
-        }
-        
-        alert(`Видалено ${count} занять`);
-        await loadMyLessons();
-        await window.updateDeleteAllButton();
-        if (document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-    } catch (error) {
-        console.error("Помилка видалення занять:", error);
-        alert("Сталася помилка при видаленні занять");
-    }
-};
-
-// Функція для видалення розділу
-window.deleteSection = async function(sectionId, sectionName) {
-    if (!confirm(`Видалити розділ "${sectionName}"? Всі заняття в цьому розділі будуть ВИДАЛЕНІ без можливості відновлення!`)) {
-        return;
-    }
-    
-    try {
-        // Знаходимо всі заняття в цьому розділі
-        const lessonsQ = query(collection(db, "lessons"), where("sectionId", "==", sectionId), where("teacherId", "==", currentTeacherId));
-        const lessonsSnap = await getDocs(lessonsQ);
-        
-        let deletedCount = 0;
-        
-        // Видаляємо кожне заняття
-        for (const lessonDoc of lessonsSnap.docs) {
-            // Спочатку видаляємо всі оцінки, пов'язані з цим заняттям
-            const gradesQ = query(collection(db, "grades"), where("lessonId", "==", lessonDoc.id));
-            const gradesSnap = await getDocs(gradesQ);
-            for (const gradeDoc of gradesSnap.docs) {
-                await deleteDoc(doc(db, "grades", gradeDoc.id));
-            }
-            
-            // Видаляємо саме заняття
-            await deleteDoc(doc(db, "lessons", lessonDoc.id));
-            deletedCount++;
-        }
-        
-        // Видаляємо розділ
-        await deleteDoc(doc(db, "sections", sectionId));
-        
-        alert(`Розділ "${sectionName}" видалено. Видалено ${deletedCount} занять.`);
-        
-        // Оновлюємо список занять
-        await loadMyLessons();
-        
-        // Оновлюємо список розділів у формі додавання заняття
-        const subjectId = document.getElementById("lessonSubject").value;
-        if (subjectId) {
-            await updateSectionSelect(subjectId);
-        }
-        
-        // Оновлюємо журнал, якщо він відкритий
-        if (document.getElementById("tab-journal").classList.contains("active")) {
-            await renderJournal();
-        }
-        
-        // Оновлюємо кнопку видалення всіх занять
-        if (typeof window.updateDeleteAllButton === 'function') {
-            await window.updateDeleteAllButton();
-        }
-        
-    } catch (error) {
-        console.error("Помилка видалення розділу:", error);
-        alert("Сталася помилка при видаленні розділу");
-    }
-};
-
-// Функція для перемикання видимості розділу
-window.toggleSection = function(sectionId) {
-    const sectionElement = document.getElementById(`section-${sectionId}`);
-    if (sectionElement) {
-        sectionElement.classList.toggle('section-collapsed');
-        const toggleBtn = sectionElement.querySelector('.section-toggle-btn');
-        if (toggleBtn) {
-            toggleBtn.textContent = sectionElement.classList.contains('section-collapsed') ? '▶' : '▼';
-        }
-    }
-};
-
-// Показати/приховати кнопку видалення всіх занять
-window.updateDeleteAllButton = async function() {
-    const filterSubject = document.getElementById("lessonFilterSubject").value;
-    const deleteBtn = document.getElementById("deleteAllLessonsBtn");
-    
-    if (!deleteBtn) return;
-    
-    // Якщо вибрано "Всі предмети" - ховаємо кнопку
-    if (filterSubject === "all") {
-        deleteBtn.style.display = "none";
-        return;
-    }
-    
-    // Перевіряємо, чи є заняття для вибраного предмета
-    try {
-        const q = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId), where("subjectId", "==", filterSubject));
-        const snap = await getDocs(q);
-        
-        if (snap.empty) {
-            deleteBtn.style.display = "none";
-        } else {
-            deleteBtn.style.display = "inline-flex";
-        }
-    } catch (error) {
-        console.error("Помилка перевірки занять:", error);
-        deleteBtn.style.display = "none";
-    }
-};
-
-// Оновлена функція loadMyLessons з кнопками для розділів
-async function loadMyLessons() { 
-    let lessonsQuery = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId));
-    const filterSubject = document.getElementById("lessonFilterSubject").value;
-    if (filterSubject !== "all") {
-        lessonsQuery = query(lessonsQuery, where("subjectId", "==", filterSubject));
-    }
-    const snap = await getDocs(lessonsQuery); 
-    
-    const subjectsSnap = await getDocs(query(collection(db, "subjects"), where("teacherId", "==", currentTeacherId))); 
-    const subMap = {};
-    for (const docSnap of subjectsSnap.docs) {
-        const s = docSnap.data();
-        const groupsSnap = await getDocs(query(collection(db, "groups"), where("id", "==", s.groupId)));
-        let groupName = '', academicYear = '';
-        if (!groupsSnap.empty) {
-            groupName = groupsSnap.docs[0].data().name;
-            academicYear = groupsSnap.docs[0].data().academicYear || '';
-        }
-        subMap[docSnap.id] = { name: s.name, group: groupName, year: academicYear || s.academicYear };
-    }
-    
-    const sectionsSnap = await getDocs(query(collection(db, "sections"), where("teacherId", "==", currentTeacherId)));
-    const sectionMap = {};
-    sectionsSnap.forEach(doc => { sectionMap[doc.id] = doc.data().name; });
-    
-    const container = document.getElementById("lessonsList"); 
-    if (snap.empty) {
-        container.innerHTML = '<div class="empty-state">Занять не знайдено</div>';
-        if (typeof window.updateDeleteAllButton === 'function') {
-            await window.updateDeleteAllButton();
-        }
-        return;
-    } 
-    
-    const lessonsArray = [];
-    snap.forEach(docSnap => {
-        lessonsArray.push({ 
-            id: docSnap.id, 
-            ...docSnap.data(), 
-            createdAt: docSnap.data().createdAt || new Date(0).toISOString() 
-        });
-    });
-    
-    const groupedBySection = {};
-    lessonsArray.forEach(lesson => {
-        const sectionId = lesson.sectionId || 'without_section';
-        if (!groupedBySection[sectionId]) groupedBySection[sectionId] = [];
-        groupedBySection[sectionId].push(lesson);
-    });
-    
-    for (const sectionId in groupedBySection) {
-        groupedBySection[sectionId].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-    
-    const sectionsList = [];
-    for (const sectionId in groupedBySection) {
-        const lessons = groupedBySection[sectionId];
-        const latestLesson = lessons[0];
-        const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
-        const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db, "sections", sectionId)) : null;
-        const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
-        sectionsList.push({
-            id: sectionId,
-            name: sectionMap[sectionId] || 'Без розділу',
-            lessons: lessons,
-            latestDate: latestDate,
-            createdAt: createdAtSection
-        });
-    }
-    
-    sectionsList.sort((a, b) => {
-        if (a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate;
-        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
-        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
-        return bTime - aTime;
-    });
-    
-    let html = '';
-    for (const section of sectionsList) {
-        const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
-        const isWithoutSection = section.name === 'Без розділу';
-        
-        if (!isWithoutSection) {
-            html += `<div id="section-${sectionIdSafe}" class="section-wrapper">
-                        <div class="section-header-wrapper">
-                            <div class="section-header-title" onclick="window.toggleSection('${sectionIdSafe}')">
-                                <span class="section-toggle-btn">▼</span> 📁 ${escapeHtml(section.name)} <span style="font-size: 11px; color: #6b7280; margin-left: 8px;">(${section.lessons.length} занять)</span>
-                            </div>
-                            <div class="section-header-actions">
-                                <button class="section-delete-btn" onclick="event.stopPropagation(); window.deleteSection('${section.id}', '${escapeHtml(section.name).replace(/'/g, "\\'")}')" title="Видалити розділ">🗑️</button>
-                            </div>
-                        </div>
-                        <div class="data-list">`;
-        } else {
-            html += `<div id="section-${sectionIdSafe}" class="section-wrapper">
-                        <div class="data-list">`;
-        }
-        
-        for (const l of section.lessons) {
-            const dateParts = l.date.split('-');
-            const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-            
-            let typeShort = '';
-            switch (l.type) {
-                case 'Лекція': typeShort = 'Лек'; break;
-                case 'Практичне заняття': typeShort = 'Прак'; break;
-                case 'Лабораторне заняття': typeShort = 'Лаб'; break;
-                case 'Семінарське заняття': typeShort = 'Сем'; break;
-                case 'Самостійне вивчення': typeShort = 'С.в.'; break;
-                case 'Залік з модуля': typeShort = 'Залік'; break;
-                case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
-                default: typeShort = l.type;
-            }
-            
-            const subjectInfo = subMap[l.subjectId];
-            const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
-            
-            html += `<div class="data-card" onclick="editLesson('${l.id}')">
-                        <div class="data-info">
-                            <div class="data-icon">📅</div>
-                            <div>
-                                <div class="data-title">${escapeHtml(l.topic) || "Без теми"}</div>
-                                <div class="data-sub">${escapeHtml(subjectDisplay)} | ${typeShort} | ${formattedDate}</div>
-                            </div>
-                        </div>
-                        <div class="data-actions">
-                            <button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editLesson('${l.id}')">✏️</button>
-                            <button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('lessons','${l.id}')">🗑️</button>
-                        </div>
-                    </div>`;
-        }
-        html += `</div></div>`;
-    }
-    
-    container.innerHTML = html;
-    
-    // Оновлюємо кнопку видалення всіх занять
-    if (typeof window.updateDeleteAllButton === 'function') {
-        await window.updateDeleteAllButton();
-    }
-}
-
-// Допоміжна функція для екранування HTML
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Додаємо обробник для фільтра, щоб показувати/ховати кнопку видалення
-document.getElementById("lessonFilterSubject").addEventListener("change", () => {
+  document.getElementById("lessonFilterSubject").addEventListener("change", () => {
     loadMyLessons();
-    updateDeleteAllButton();
-});
+    window.updateDeleteAllButton();
+  });
 
-// Додаємо обробник для кнопки видалення всіх занять
-document.getElementById("deleteAllLessonsBtn").addEventListener("click", deleteAllLessonsForSubject);
+  document.getElementById("deleteAllLessonsBtn").addEventListener("click", window.deleteAllLessonsForSubject);
 
-  // Автоматичне оновлення журналу при зміні фільтрів
-document.getElementById("journalYearSelect").addEventListener('change', () => renderJournal());
-document.getElementById("journalGroupSelect").addEventListener('change', () => renderJournal());
-document.getElementById("journalSubjectSelect").addEventListener('change', () => renderJournal());
-
-  // Додаємо обробник для фільтра
-const lessonFilter = document.getElementById("lessonFilterSubject");
-if (lessonFilter) {
-    lessonFilter.addEventListener("change", async () => {
-        await loadMyLessons();
-        await window.updateDeleteAllButton();
-    });
-}
-
-// Додаємо обробник для кнопки видалення всіх занять
-const deleteAllBtn = document.getElementById("deleteAllLessonsBtn");
-if (deleteAllBtn) {
-    deleteAllBtn.addEventListener("click", deleteAllLessonsForSubject);
-}
+  // ========== АВТЕНТИФІКАЦІЯ ТА ЗАПУСК ==========
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists() && snap.data().role === "teacher") {
+        currentTeacherId = user.uid;
+        document.getElementById("userName").textContent = snap.data().displayName || "Викладач";
+        document.getElementById("userAvatar").src = snap.data().photoURL || "https://ui-avatars.com/api/?name=" + encodeURIComponent(snap.data().displayName || "Teacher");
+        
+        await loadAllData();
+        restoreLastSelection();
+        restoreActiveTab();
+        
+        if (document.getElementById("tab-lessons").classList.contains("active")) {
+          await loadMyLessons();
+        }
+        
+        if (document.getElementById("tab-journal").classList.contains("active")) {
+          const currentYear = document.getElementById("journalYearSelect").value;
+          if (currentYear && currentYear !== "Оберіть рік") {
+            setTimeout(() => {
+              const event = new Event('change');
+              document.getElementById("journalYearSelect").dispatchEvent(event);
+            }, 200);
+          } else {
+            renderJournal();
+          }
+        }
+      } else {
+        window.location.href = "index.html";
+      }
+    } else {
+      window.location.href = "index.html";
+    }
+  });
 </script>
 </body>
 </html>
