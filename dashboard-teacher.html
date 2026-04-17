@@ -1,5 +1,3 @@
-Ось повний HTML-код із зміненою системою сортування занять (без скорочень). Заняття всередині кожного розділу тепер відображаються від найновіших до найстаріших за часом створення (`createdAt`), групування за розділами збережено.
-```html
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -312,9 +310,18 @@
       background: var(--accent-light) !important;
     }
     
-    .lesson-special {
+    /* Червоний колір для заголовків заліків та колонок Н/СВ */
+    .date-cell.lesson-special {
       color: #dc2626 !important;
       font-weight: 700;
+    }
+    .stat-cell-red {
+      color: #dc2626 !important;
+      font-weight: 700;
+      background: #fee2e2;
+    }
+    th.date-cell.lesson-special {
+      color: #dc2626 !important;
     }
 
     .section-header {
@@ -460,11 +467,6 @@
       margin-left: 8px;
       font-weight: normal;
     }
-    .subject-group-info {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
   </style>
 </head>
 <body>
@@ -512,7 +514,7 @@
       </div>
       <div class="journal-info">
         💡 <strong>Як користуватися:</strong><br>
-        Виберіть навчальний рік, групу та предмет. Оцінки зберігаються автоматично.<br>
+        Виберіть навчальний рік, групу та предмет. Оцінки зберігаються миттєво.<br>
         <strong>н</strong> — пропуск, <strong>св</strong> — відсутність світла.<br>
         Наведіть на дату в таблиці, щоб побачити тему заняття.
       </div>
@@ -561,7 +563,7 @@
           <label class="form-label">Назва нового розділу</label>
           <input type="text" id="newSectionName" class="form-input" placeholder="Введіть назву розділу">
         </div>
-<div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
+        <div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
         <button class="btn-primary" id="saveLessonBtn">Зберегти</button>
       </div>
       <div id="lessonsList" class="data-list"><div class="empty-state">Занять не знайдено</div></div>
@@ -693,19 +695,10 @@
   let currentTooltip = null;
   let currentEditingCell = null;
 
-const STORAGE_KEYS = {
-    lastYear: 'journal_last_year',
-    lastGroup: 'journal_last_group',
-    lastSubject: 'journal_last_subject',
-    lastStudentGroup: 'student_last_group'
-  };
-  
+  const STORAGE_KEYS = { lastYear: 'journal_last_year', lastGroup: 'journal_last_group', lastSubject: 'journal_last_subject', lastStudentGroup: 'student_last_group' };
   const TAB_KEY = 'active_tab';
 
-  function saveActiveTab(tabId) {
-    sessionStorage.setItem(TAB_KEY, tabId);
-  }
-  
+  function saveActiveTab(tabId) { sessionStorage.setItem(TAB_KEY, tabId); }
   function restoreActiveTab() {
     const savedTab = sessionStorage.getItem(TAB_KEY);
     if(savedTab && document.getElementById(savedTab)) {
@@ -713,16 +706,8 @@ const STORAGE_KEYS = {
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(savedTab).classList.add('active');
       const buttons = document.querySelectorAll('.tab-btn');
-      const tabMap = {
-        'tab-journal': 0,
-        'tab-lessons': 1,
-        'tab-groups': 2,
-        'tab-students': 3,
-        'tab-subjects': 4
-      };
-      if(tabMap[savedTab] !== undefined) {
-        buttons[tabMap[savedTab]]?.classList.add('active');
-      }
+      const tabMap = { 'tab-journal': 0, 'tab-lessons': 1, 'tab-groups': 2, 'tab-students': 3, 'tab-subjects': 4 };
+      if(tabMap[savedTab] !== undefined) buttons[tabMap[savedTab]]?.classList.add('active');
       if(savedTab === 'tab-journal') renderJournal();
     }
     return savedTab;
@@ -753,44 +738,24 @@ const STORAGE_KEYS = {
     const lastYear = sessionStorage.getItem(STORAGE_KEYS.lastYear);
     const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastGroup);
     const lastSubject = sessionStorage.getItem(STORAGE_KEYS.lastSubject);
-    
-    if(lastYear && document.querySelector(`#journalYearSelect option[value="${lastYear}"]`)) {
-      document.getElementById("journalYearSelect").value = lastYear;
-    }
-    if(lastGroup && document.querySelector(`#journalGroupSelect option[value="${lastGroup}"]`)) {
-      document.getElementById("journalGroupSelect").value = lastGroup;
-    }
-    if(lastSubject && document.querySelector(`#journalSubjectSelect option[value="${lastSubject}"]`)) {
-      document.getElementById("journalSubjectSelect").value = lastSubject;
-    }
-    
+    if(lastYear && document.querySelector(`#journalYearSelect option[value="${lastYear}"]`)) document.getElementById("journalYearSelect").value = lastYear;
+    if(lastGroup && document.querySelector(`#journalGroupSelect option[value="${lastGroup}"]`)) document.getElementById("journalGroupSelect").value = lastGroup;
+    if(lastSubject && document.querySelector(`#journalSubjectSelect option[value="${lastSubject}"]`)) document.getElementById("journalSubjectSelect").value = lastSubject;
     const currentYear = document.getElementById("journalYearSelect").value;
     const currentGroup = document.getElementById("journalGroupSelect").value;
     const currentSubject = document.getElementById("journalSubjectSelect").value;
-    
     if(currentYear && currentYear !== "Оберіть рік") {
-      setTimeout(() => {
-        const event = new Event('change');
-        document.getElementById("journalYearSelect").dispatchEvent(event);
-      }, 100);
-    } else if(currentGroup && currentGroup !== "Оберіть групу" && currentSubject && currentSubject !== "Оберіть предмет") {
-      renderJournal();
-    }
+      setTimeout(() => { const event = new Event('change'); document.getElementById("journalYearSelect").dispatchEvent(event); }, 100);
+    } else if(currentGroup && currentGroup !== "Оберіть групу" && currentSubject && currentSubject !== "Оберіть предмет") { renderJournal(); }
   }
   
   function saveLastSelection() {
     const year = document.getElementById("journalYearSelect").value;
     const groupId = document.getElementById("journalGroupSelect").value;
     const subjectId = document.getElementById("journalSubjectSelect").value;
-    if(year && year !== "Оберіть рік") {
-      sessionStorage.setItem(STORAGE_KEYS.lastYear, year);
-    }
-    if(groupId && groupId !== "Оберіть групу") {
-      sessionStorage.setItem(STORAGE_KEYS.lastGroup, groupId);
-    }
-    if(subjectId && subjectId !== "Оберіть предмет") {
-      sessionStorage.setItem(STORAGE_KEYS.lastSubject, subjectId);
-    }
+    if(year && year !== "Оберіть рік") sessionStorage.setItem(STORAGE_KEYS.lastYear, year);
+    if(groupId && groupId !== "Оберіть групу") sessionStorage.setItem(STORAGE_KEYS.lastGroup, groupId);
+    if(subjectId && subjectId !== "Оберіть предмет") sessionStorage.setItem(STORAGE_KEYS.lastSubject, subjectId);
   }
   
   window.logout = async()=>{ await signOut(auth); window.location.href="index.html"; };
@@ -832,45 +797,20 @@ const STORAGE_KEYS = {
     const snap = await getDocs(collection(db,"groups")); 
     const container = document.getElementById("groupsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Груп не знайдено</div>'; return; } 
-    
     const studentsSnap = await getDocs(collection(db,"students"));
     const studentCountByGroup = {};
-    studentsSnap.forEach(s => {
-      const groupId = s.data().groupId;
-      if(groupId) studentCountByGroup[groupId] = (studentCountByGroup[groupId] || 0) + 1;
-    });
-    
+    studentsSnap.forEach(s => { const groupId = s.data().groupId; if(groupId) studentCountByGroup[groupId] = (studentCountByGroup[groupId] || 0) + 1; });
     const groupsByYear = {};
-    snap.forEach(docSnap => { 
-      const g = docSnap.data(); 
-      const year = g.academicYear || 'Не вказано';
-      if(!groupsByYear[year]) groupsByYear[year] = [];
-      groupsByYear[year].push({
-        id: docSnap.id, 
-        name: g.name, 
-        studentCount: studentCountByGroup[docSnap.id] || 0
-      });
-    });
-    
-    const sortedYears = Object.keys(groupsByYear).sort((a, b) => {
-      if(a === 'Не вказано') return 1;
-      if(b === 'Не вказано') return -1;
-      const aStart = parseInt(a.split('/')[0]);
-      const bStart = parseInt(b.split('/')[0]);
-      return bStart - aStart;
-    });
-    
+    snap.forEach(docSnap => { const g = docSnap.data(); const year = g.academicYear || 'Не вказано'; if(!groupsByYear[year]) groupsByYear[year] = []; groupsByYear[year].push({ id: docSnap.id, name: g.name, studentCount: studentCountByGroup[docSnap.id] || 0 }); });
+    const sortedYears = Object.keys(groupsByYear).sort((a, b) => { if(a === 'Не вказано') return 1; if(b === 'Не вказано') return -1; const aStart = parseInt(a.split('/')[0]); const bStart = parseInt(b.split('/')[0]); return bStart - aStart; });
     let html = '';
     for(const year of sortedYears) {
       const groups = groupsByYear[year];
       groups.sort((a, b) => a.name.localeCompare(b.name));
       html += `<div class="year-group"><div class="year-title">${year} <span class="group-count">(${groups.length} груп)</span></div><div class="data-list">`;
-      groups.forEach(g => {
-        html += `<div class="data-card" onclick="showGroupStats('${g.id}','${g.name}')"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div><div class="data-sub">Студентів: ${g.studentCount}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editGroup('${g.id}','${g.name}','${year}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('groups','${g.id}')">🗑️</button></div></div>`;
-      });
+      groups.forEach(g => { html += `<div class="data-card" onclick="showGroupStats('${g.id}','${g.name}')"><div class="data-info"><div class="data-icon">👥</div><div><div class="data-title">${g.name}</div><div class="data-sub">Студентів: ${g.studentCount}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editGroup('${g.id}','${g.name}','${year}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('groups','${g.id}')">🗑️</button></div></div>`; });
       html += `</div></div>`;
     }
-    
     container.innerHTML = html; 
     populateSelects(); 
   }
@@ -886,7 +826,8 @@ const STORAGE_KEYS = {
     studentsSnap.forEach(s => students.push({id: s.id, ...s.data()}));
     students.sort((a, b) => a.name.localeCompare(b.name));
     
-    const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId)));
+    // Тільки предмети для цієї групи
+    const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId), where("groupId","==",groupId)));
     const subjects = [];
     subjectsSnap.forEach(s => subjects.push({id: s.id, name: s.data().name, scale: s.data().scale}));
     
@@ -926,56 +867,33 @@ const STORAGE_KEYS = {
       const avgGrade = totalGrades > 0 ? (totalPoints / totalGrades).toFixed(2) : 0;
       const quality = students.length > 0 ? ((gradeCounts[5] + gradeCounts[4]) / students.length * 100).toFixed(1) : 0;
       
-      return `
-        <div class="stat-item">
-          <div class="stat-label">${subject.name}</div>
-          <div class="stat-value">Середній бал: ${avgGrade}</div>
-          <div class="stat-label">Якість знань: ${Math.min(quality, 100)}%</div>
-          <div class="stat-label">Оцінки: 5:${gradeCounts[5]} | 4:${gradeCounts[4]} | 3:${gradeCounts[3]} | 2:${gradeCounts[2]} | 1:${gradeCounts[1]}</div>
-        </div>
-      `;
+      return `<div class="stat-item"><div class="stat-label">${subject.name}</div><div class="stat-value">Середній бал: ${avgGrade}</div><div class="stat-label">Якість знань: ${Math.min(quality, 100)}%</div><div class="stat-label">Оцінки: 5:${gradeCounts[5]} | 4:${gradeCounts[4]} | 3:${gradeCounts[3]} | 2:${gradeCounts[2]} | 1:${gradeCounts[1]}</div></div>`;
     }).filter(s => s !== null);
     
     document.getElementById("modalTitle").innerHTML = `Статистика групи ${groupName}`;
     modalBody.innerHTML = statsHtml.length > 0 ? statsHtml.join('') : '<div class="stat-item">Немає підсумкових оцінок для статистики</div>';
   };
   
-  window.closeModal = () => {
-    document.getElementById("groupModal").classList.remove("active");
-  };
+  window.closeModal = () => { document.getElementById("groupModal").classList.remove("active"); };
   
   window.showSubjectInfo = async (subjectId) => {
     const snap = await getDoc(doc(db,"subjects",subjectId));
     if(snap.exists()){
       const s = snap.data();
-      
       const hoursParts = [];
       if(s.lectures && s.lectures > 0) hoursParts.push(`Лекції: ${s.lectures}`);
       if(s.practicals && s.practicals > 0) hoursParts.push(`Практичні: ${s.practicals}`);
       if(s.labs && s.labs > 0) hoursParts.push(`Лабораторні: ${s.labs}`);
       if(s.seminars && s.seminars > 0) hoursParts.push(`Семінарські: ${s.seminars}`);
       if(s.selfStudy && s.selfStudy > 0) hoursParts.push(`Самостійна робота: ${s.selfStudy}`);
-      
       const hoursString = hoursParts.length > 0 ? hoursParts.join(' | ') : 'Не вказано';
-      
       document.getElementById("subjectModalTitle").innerHTML = s.name;
-      document.getElementById("subjectModalBody").innerHTML = `
-        <div class="stat-item"><div class="stat-label">Система оцінювання</div><div class="stat-value">${s.scale}-бальна</div></div>
-        <div class="stat-item"><div class="stat-label">Вид</div><div class="stat-value">${s.type}</div></div>
-        <div class="stat-item"><div class="stat-label">Група</div><div class="stat-value">${s.groupName || s.groupId}</div></div>
-        <div class="stat-item"><div class="stat-label">Навчальний рік</div><div class="stat-value">${s.academicYear || 'Не вказано'}</div></div>
-        <div class="stat-item"><div class="stat-label">Кредити ЄКТС</div><div class="stat-value">${s.credits || 0}</div></div>
-        <div class="stat-item"><div class="stat-label">Загально годин</div><div class="stat-value">${s.hours || 0}</div></div>
-        <div class="stat-item"><div class="stat-label">Кількість модулів</div><div class="stat-value">${s.modules || 0}</div></div>
-        <div class="stat-item"><div class="stat-label">Розподіл годин</div><div class="stat-value">${hoursString}</div></div>
-      `;
+      document.getElementById("subjectModalBody").innerHTML = `<div class="stat-item"><div class="stat-label">Система оцінювання</div><div class="stat-value">${s.scale}-бальна</div></div><div class="stat-item"><div class="stat-label">Вид</div><div class="stat-value">${s.type}</div></div><div class="stat-item"><div class="stat-label">Група</div><div class="stat-value">${s.groupName || s.groupId}</div></div><div class="stat-item"><div class="stat-label">Навчальний рік</div><div class="stat-value">${s.academicYear || 'Не вказано'}</div></div><div class="stat-item"><div class="stat-label">Кредити ЄКТС</div><div class="stat-value">${s.credits || 0}</div></div><div class="stat-item"><div class="stat-label">Загально годин</div><div class="stat-value">${s.hours || 0}</div></div><div class="stat-item"><div class="stat-label">Кількість модулів</div><div class="stat-value">${s.modules || 0}</div></div><div class="stat-item"><div class="stat-label">Розподіл годин</div><div class="stat-value">${hoursString}</div></div>`;
       document.getElementById("subjectModal").classList.add("active");
     }
   };
   
-  window.closeSubjectModal = () => {
-    document.getElementById("subjectModal").classList.remove("active");
-  };
+  window.closeSubjectModal = () => { document.getElementById("subjectModal").classList.remove("active"); };
   
   window.editGroup = (id, name, year)=>{ 
     currentEditId = id; 
@@ -984,16 +902,7 @@ const STORAGE_KEYS = {
     toggleForm('form-add-group'); 
     const btn = document.getElementById("saveGroupBtn"); 
     btn.innerText = "Оновити"; 
-    btn.onclick = async () => {
-      const newName = document.getElementById("groupName").value; 
-      const newYear = document.getElementById("groupYear").value;
-      if(newName) {
-        await updateDoc(doc(db,"groups",id), {name: newName, academicYear: newYear});
-        resetGroupForm();
-        loadGroups();
-        updateStats();
-      }
-    };
+    btn.onclick = async () => { const newName = document.getElementById("groupName").value; const newYear = document.getElementById("groupYear").value; if(newName) { await updateDoc(doc(db,"groups",id), {name: newName, academicYear: newYear}); resetGroupForm(); loadGroups(); updateStats(); } };
   };
   
   function resetGroupForm(){ 
@@ -1002,30 +911,11 @@ const STORAGE_KEYS = {
     currentEditId = null; 
     const btn = document.getElementById("saveGroupBtn"); 
     btn.innerText = "Зберегти"; 
-    btn.onclick = async () => {
-      const name = document.getElementById("groupName").value; 
-      const academicYear = document.getElementById("groupYear").value;
-      if(name) {
-        await addDoc(collection(db,"groups"), {name, academicYear}); 
-        resetGroupForm(); 
-        loadGroups(); 
-        updateStats(); 
-      }
-    };
+    btn.onclick = async () => { const name = document.getElementById("groupName").value; const academicYear = document.getElementById("groupYear").value; if(name) { await addDoc(collection(db,"groups"), {name, academicYear}); resetGroupForm(); loadGroups(); updateStats(); } };
     document.getElementById("form-add-group").style.display = "none"; 
   }
   
-  document.getElementById("saveGroupBtn").onclick = async () => { 
-    if(currentEditId) return;
-    const name = document.getElementById("groupName").value; 
-    const academicYear = document.getElementById("groupYear").value;
-    if(name) {
-      await addDoc(collection(db,"groups"), {name, academicYear}); 
-      resetGroupForm(); 
-      loadGroups(); 
-      updateStats(); 
-    }
-  };
+  document.getElementById("saveGroupBtn").onclick = async () => { if(currentEditId) return; const name = document.getElementById("groupName").value; const academicYear = document.getElementById("groupYear").value; if(name) { await addDoc(collection(db,"groups"), {name, academicYear}); resetGroupForm(); loadGroups(); updateStats(); } };
 
   // SUBJECTS
   async function loadMySubjects(){ 
@@ -1033,14 +923,10 @@ const STORAGE_KEYS = {
     const groupsSnap = await getDocs(collection(db,"groups"));
     const groupsMap = {};
     groupsSnap.forEach(g => { groupsMap[g.id] = g.data().name; });
-    
     const container = document.getElementById("subjectsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Предметів/дисциплін не знайдено. Додайте ваш перший предмет!</div>'; return; } 
     let html='<div class="data-list">'; 
-    snap.forEach(docSnap=>{ const s = docSnap.data(); 
-      const groupName = groupsMap[s.groupId] || s.groupId || 'Групу не обрано';
-      html+=`<div class="data-card" onclick="showSubjectInfo('${docSnap.id}')"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name}</div><div class="data-sub">${groupName} | ${s.academicYear || 'Не вказано'}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; 
-    }); 
+    snap.forEach(docSnap=>{ const s = docSnap.data(); const groupName = groupsMap[s.groupId] || s.groupId || 'Групу не обрано'; html+=`<div class="data-card" onclick="showSubjectInfo('${docSnap.id}')"><div class="data-info"><div class="data-icon">📘</div><div><div class="data-title">${s.name}</div><div class="data-sub">${groupName} | ${s.academicYear || 'Не вказано'}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editSubject('${docSnap.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('subjects','${docSnap.id}')">🗑️</button></div></div>`; }); 
     html+='</div>'; 
     container.innerHTML=html; 
     populateSelects(); 
@@ -1075,25 +961,8 @@ const STORAGE_KEYS = {
     const groupsSnap = await getDocs(collection(db,"groups"));
     const groupsMap = {};
     groupsSnap.forEach(g => { groupsMap[g.id] = g.data().name; });
-    
     const groupId = document.getElementById("subjectGroup").value;
-    const data = { 
-      name:document.getElementById("subjectName").value, 
-      scale:document.getElementById("subjectScale").value, 
-      type:document.getElementById("subjectType").value, 
-      groupId: groupId,
-      groupName: groupsMap[groupId] || groupId,
-      academicYear: document.getElementById("subjectYear").value,
-      credits:parseInt(document.getElementById("subjectCredits").value)||0, 
-      hours:parseInt(document.getElementById("subjectHours").value)||0, 
-      modules:parseInt(document.getElementById("subjectModules").value)||0, 
-      lectures:parseInt(document.getElementById("subjectLectures").value)||0, 
-      practicals:parseInt(document.getElementById("subjectPracticals").value)||0, 
-      labs:parseInt(document.getElementById("subjectLabs").value)||0,
-      seminars:parseInt(document.getElementById("subjectSeminars").value)||0,
-      selfStudy:parseInt(document.getElementById("subjectSelfStudy").value)||0,
-      teacherId: currentTeacherId
-    }; 
+    const data = { name:document.getElementById("subjectName").value, scale:document.getElementById("subjectScale").value, type:document.getElementById("subjectType").value, groupId: groupId, groupName: groupsMap[groupId] || groupId, academicYear: document.getElementById("subjectYear").value, credits:parseInt(document.getElementById("subjectCredits").value)||0, hours:parseInt(document.getElementById("subjectHours").value)||0, modules:parseInt(document.getElementById("subjectModules").value)||0, lectures:parseInt(document.getElementById("subjectLectures").value)||0, practicals:parseInt(document.getElementById("subjectPracticals").value)||0, labs:parseInt(document.getElementById("subjectLabs").value)||0, seminars:parseInt(document.getElementById("subjectSeminars").value)||0, selfStudy:parseInt(document.getElementById("subjectSelfStudy").value)||0, teacherId: currentTeacherId }; 
     await updateDoc(doc(db,"subjects",id),data); 
     resetSubjectForm(); 
     loadMySubjects(); 
@@ -1106,28 +975,9 @@ const STORAGE_KEYS = {
       const groupsSnap = await getDocs(collection(db,"groups"));
       const groupsMap = {};
       groupsSnap.forEach(g => { groupsMap[g.id] = g.data().name; });
-      
       const groupId = document.getElementById("subjectGroup").value;
-      const data = { 
-        name:document.getElementById("subjectName").value, 
-        scale:document.getElementById("subjectScale").value, 
-        type:document.getElementById("subjectType").value, 
-        groupId: groupId,
-        groupName: groupsMap[groupId] || groupId,
-        academicYear: document.getElementById("subjectYear").value,
-        credits:parseInt(document.getElementById("subjectCredits").value)||0, 
-        hours:parseInt(document.getElementById("subjectHours").value)||0, 
-        modules:parseInt(document.getElementById("subjectModules").value)||0, 
-        lectures:parseInt(document.getElementById("subjectLectures").value)||0, 
-        practicals:parseInt(document.getElementById("subjectPracticals").value)||0, 
-        labs:parseInt(document.getElementById("subjectLabs").value)||0,
-        seminars:parseInt(document.getElementById("subjectSeminars").value)||0,
-        selfStudy:parseInt(document.getElementById("subjectSelfStudy").value)||0,
-        teacherId: currentTeacherId
-      }; 
-      if(data.name) {
-        await addDoc(collection(db,"subjects"),data);
-      }
+      const data = { name:document.getElementById("subjectName").value, scale:document.getElementById("subjectScale").value, type:document.getElementById("subjectType").value, groupId: groupId, groupName: groupsMap[groupId] || groupId, academicYear: document.getElementById("subjectYear").value, credits:parseInt(document.getElementById("subjectCredits").value)||0, hours:parseInt(document.getElementById("subjectHours").value)||0, modules:parseInt(document.getElementById("subjectModules").value)||0, lectures:parseInt(document.getElementById("subjectLectures").value)||0, practicals:parseInt(document.getElementById("subjectPracticals").value)||0, labs:parseInt(document.getElementById("subjectLabs").value)||0, seminars:parseInt(document.getElementById("subjectSeminars").value)||0, selfStudy:parseInt(document.getElementById("subjectSelfStudy").value)||0, teacherId: currentTeacherId }; 
+      if(data.name) { await addDoc(collection(db,"subjects"),data); }
       resetSubjectForm(); 
       loadMySubjects(); 
       updateStats(); 
@@ -1135,22 +985,7 @@ const STORAGE_KEYS = {
   };
   
   function resetSubjectForm(){ 
-    document.getElementById("subjectName").value=""; 
-    document.getElementById("subjectScale").value="12"; 
-    document.getElementById("subjectType").value="Обов'язкова"; 
-    document.getElementById("subjectGroup").value="";
-    document.getElementById("subjectYear").value="2025/2026";
-    document.getElementById("subjectCredits").value=""; 
-    document.getElementById("subjectHours").value=""; 
-    document.getElementById("subjectModules").value=""; 
-    document.getElementById("subjectLectures").value="0"; 
-    document.getElementById("subjectPracticals").value="0"; 
-    document.getElementById("subjectLabs").value="0"; 
-    document.getElementById("subjectSeminars").value="0";
-    document.getElementById("subjectSelfStudy").value="0";
-    currentEditId=null; 
-    document.getElementById("saveSubjectBtn").innerText="Зберегти"; 
-    document.getElementById("form-add-subject").style.display="none"; 
+    document.getElementById("subjectName").value=""; document.getElementById("subjectScale").value="12"; document.getElementById("subjectType").value="Обов'язкова"; document.getElementById("subjectGroup").value=""; document.getElementById("subjectYear").value="2025/2026"; document.getElementById("subjectCredits").value=""; document.getElementById("subjectHours").value=""; document.getElementById("subjectModules").value=""; document.getElementById("subjectLectures").value="0"; document.getElementById("subjectPracticals").value="0"; document.getElementById("subjectLabs").value="0"; document.getElementById("subjectSeminars").value="0"; document.getElementById("subjectSelfStudy").value="0"; currentEditId=null; document.getElementById("saveSubjectBtn").innerText="Зберегти"; document.getElementById("form-add-subject").style.display="none"; 
   }
 
   // STUDENTS
@@ -1159,70 +994,32 @@ const STORAGE_KEYS = {
     const groupsSnap = await getDocs(collection(db,"groups")); 
     const groupsMap = {}; 
     const groupsByYear = {};
-    
-    groupsSnap.forEach(d => {
-      const group = {id: d.id, name: d.data().name, academicYear: d.data().academicYear || 'Не вказано'};
-      groupsMap[d.id] = group;
-      if(!groupsByYear[group.academicYear]) groupsByYear[group.academicYear] = [];
-      groupsByYear[group.academicYear].push(group);
-    });
-    
+    groupsSnap.forEach(d => { const group = {id: d.id, name: d.data().name, academicYear: d.data().academicYear || 'Не вказано'}; groupsMap[d.id] = group; if(!groupsByYear[group.academicYear]) groupsByYear[group.academicYear] = []; groupsByYear[group.academicYear].push(group); });
     const yearFilter = document.getElementById("studentYearFilter");
     const currentYearValue = yearFilter.value;
     let yearOptions = '<option value="all">Всі роки</option>';
-    const sortedYears = Object.keys(groupsByYear).sort((a, b) => {
-      if(a === 'Не вказано') return 1;
-      if(b === 'Не вказано') return -1;
-      const aStart = parseInt(a.split('/')[0]);
-      const bStart = parseInt(b.split('/')[0]);
-      return bStart - aStart;
-    });
-    sortedYears.forEach(year => {
-      yearOptions += `<option value="${year}">${year}</option>`;
-    });
+    const sortedYears = Object.keys(groupsByYear).sort((a, b) => { if(a === 'Не вказано') return 1; if(b === 'Не вказано') return -1; const aStart = parseInt(a.split('/')[0]); const bStart = parseInt(b.split('/')[0]); return bStart - aStart; });
+    sortedYears.forEach(year => { yearOptions += `<option value="${year}">${year}</option>`; });
     yearFilter.innerHTML = yearOptions;
-    if(currentYearValue !== 'all' && currentYearValue !== yearFilter.value) {
-      yearFilter.value = currentYearValue;
-    }
-    
+    if(currentYearValue !== 'all' && currentYearValue !== yearFilter.value) { yearFilter.value = currentYearValue; }
     const selectedYear = document.getElementById("studentYearFilter").value;
     const selectedGroup = document.getElementById("studentGroupFilter").value;
-    
     let availableGroups = [];
-    if(selectedYear !== 'all') {
-      availableGroups = groupsByYear[selectedYear] || [];
-    } else {
-      availableGroups = Object.values(groupsMap);
-    }
-    
+    if(selectedYear !== 'all') { availableGroups = groupsByYear[selectedYear] || []; } else { availableGroups = Object.values(groupsMap); }
     const groupFilter = document.getElementById("studentGroupFilter");
     let groupOptions = '<option value="all">Всі групи</option>';
-    availableGroups.forEach(g => {
-      groupOptions += `<option value="${g.id}">${g.name}</option>`;
-    });
+    availableGroups.forEach(g => { groupOptions += `<option value="${g.id}">${g.name}</option>`; });
     groupFilter.innerHTML = groupOptions;
-    if(selectedGroup !== 'all' && groupFilter.querySelector(`option[value="${selectedGroup}"]`)) {
-      groupFilter.value = selectedGroup;
-    } else {
-      groupFilter.value = 'all';
-    }
-    
+    if(selectedGroup !== 'all' && groupFilter.querySelector(`option[value="${selectedGroup}"]`)) { groupFilter.value = selectedGroup; } else { groupFilter.value = 'all'; }
     let students = [];
     snap.forEach(docSnap=>{ students.push({id:docSnap.id, ...docSnap.data()}); });
-    
     const finalGroupId = document.getElementById("studentGroupFilter").value;
     if(finalGroupId !== "all") students = students.filter(s => s.groupId === finalGroupId);
-    
     students.sort((a, b) => a.name.localeCompare(b.name));
-    
     const container = document.getElementById("studentsList"); 
     if(students.length === 0){ container.innerHTML='<div class="empty-state">Студентів не знайдено</div>'; return; } 
     let html='<div class="data-list">'; 
-    students.forEach(s=>{ 
-      const groupName = groupsMap[s.groupId]?.name || s.groupId; 
-      const academicYear = s.academicYear || groupsMap[s.groupId]?.academicYear || 'Не вказано';
-      html+=`<div class="data-card"><div class="data-info"><div class="data-icon">👨‍🎓</div><div><div class="data-title">${s.name} ${s.role==='prefect'?'<span class="prefect-badge">Староста</span>':''}</div><div class="data-sub">${groupName} | ${academicYear} | ${s.phone||''}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editStudent('${s.id}','${s.name}','${s.groupId}','${s.phone||''}','${s.role||'student'}','${academicYear}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('students','${s.id}')">🗑️</button></div></div>`; 
-    }); 
+    students.forEach(s=>{ const groupName = groupsMap[s.groupId]?.name || s.groupId; const academicYear = s.academicYear || groupsMap[s.groupId]?.academicYear || 'Не вказано'; html+=`<div class="data-card"><div class="data-info"><div class="data-icon">👨‍🎓</div><div><div class="data-title">${s.name} ${s.role==='prefect'?'<span class="prefect-badge">Староста</span>':''}</div><div class="data-sub">${groupName} | ${academicYear} | ${s.phone||''}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="window.editStudent('${s.id}','${s.name}','${s.groupId}','${s.phone||''}','${s.role||'student'}','${academicYear}')">✏️</button><button class="icon-btn delete-btn" onclick="window.deleteItem('students','${s.id}')">🗑️</button></div></div>`; }); 
     html+='</div>'; 
     container.innerHTML=html; 
   }
@@ -1237,151 +1034,58 @@ const STORAGE_KEYS = {
     toggleForm('form-add-student'); 
     const btn = document.getElementById("saveStudentBtn"); 
     btn.innerText = "Оновити"; 
-    btn.onclick = async () => {
-      const data = { 
-        name: document.getElementById("studentName").value, 
-        groupId: document.getElementById("studentGroup").value, 
-        academicYear: document.getElementById("studentYear").value,
-        phone: document.getElementById("studentPhone").value, 
-        role: document.getElementById("studentRole").value 
-      }; 
-      await updateDoc(doc(db,"students",id), data); 
-      resetStudentForm(); 
-      loadStudents(); 
-      loadGroups();
-      updateStats(); 
-    };
+    btn.onclick = async () => { const data = { name: document.getElementById("studentName").value, groupId: document.getElementById("studentGroup").value, academicYear: document.getElementById("studentYear").value, phone: document.getElementById("studentPhone").value, role: document.getElementById("studentRole").value }; await updateDoc(doc(db,"students",id), data); resetStudentForm(); loadStudents(); loadGroups(); updateStats(); };
   };
   
   function resetStudentForm(){ 
-    document.getElementById("studentName").value = ""; 
-    document.getElementById("studentPhone").value = ""; 
-    document.getElementById("studentYear").value = "2025/2026";
-    document.getElementById("studentRole").value = "student"; 
-    currentEditId = null; 
-    const btn = document.getElementById("saveStudentBtn"); 
-    btn.innerText = "Зберегти"; 
-    btn.onclick = async () => {
-      const groupId = document.getElementById("studentGroup").value;
-      const data = { 
-        name: document.getElementById("studentName").value, 
-        groupId: groupId, 
-        academicYear: document.getElementById("studentYear").value,
-        phone: document.getElementById("studentPhone").value, 
-        role: document.getElementById("studentRole").value 
-      }; 
-      if(data.name && data.groupId) {
-        sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId);
-        await addDoc(collection(db,"students"), data); 
-        resetStudentForm(); 
-        loadStudents(); 
-        loadGroups();
-        updateStats(); 
-      }
-    };
-    document.getElementById("form-add-student").style.display = "none"; 
+    document.getElementById("studentName").value = ""; document.getElementById("studentPhone").value = ""; document.getElementById("studentYear").value = "2025/2026"; document.getElementById("studentRole").value = "student"; currentEditId = null; const btn = document.getElementById("saveStudentBtn"); btn.innerText = "Зберегти"; btn.onclick = async () => { const groupId = document.getElementById("studentGroup").value; const data = { name: document.getElementById("studentName").value, groupId: groupId, academicYear: document.getElementById("studentYear").value, phone: document.getElementById("studentPhone").value, role: document.getElementById("studentRole").value }; if(data.name && data.groupId) { sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId); await addDoc(collection(db,"students"), data); resetStudentForm(); loadStudents(); loadGroups(); updateStats(); } }; document.getElementById("form-add-student").style.display = "none"; 
   }
   
-document.getElementById("saveStudentBtn").onclick = async () => { 
-    if(currentEditId) return;
-    const groupId = document.getElementById("studentGroup").value;
-    const data = { 
-      name: document.getElementById("studentName").value, 
-      groupId: groupId, 
-      academicYear: document.getElementById("studentYear").value,
-      phone: document.getElementById("studentPhone").value, 
-      role: document.getElementById("studentRole").value 
-    }; 
-    if(data.name && data.groupId) {
-      sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId);
-      await addDoc(collection(db,"students"), data); 
-      resetStudentForm(); 
-      loadStudents(); 
-      loadGroups();
-      updateStats(); 
-    } 
-  };
+  document.getElementById("saveStudentBtn").onclick = async () => { if(currentEditId) return; const groupId = document.getElementById("studentGroup").value; const data = { name: document.getElementById("studentName").value, groupId: groupId, academicYear: document.getElementById("studentYear").value, phone: document.getElementById("studentPhone").value, role: document.getElementById("studentRole").value }; if(data.name && data.groupId) { sessionStorage.setItem(STORAGE_KEYS.lastStudentGroup, groupId); await addDoc(collection(db,"students"), data); resetStudentForm(); loadStudents(); loadGroups(); updateStats(); } };
   
   document.getElementById("studentYearFilter").addEventListener("change", () => loadStudents());
   document.getElementById("studentGroupFilter").addEventListener("change", () => loadStudents());
 
-  // ========== ОНОВЛЕНА ЛОГІКА ЗАНЯТЬ: БЕЗ ПРІОРИТЕТІВ, ТІЛЬКИ createdAt ==========
-  function formatLessonDisplay(lesson, allLessons) {
-    const typeShort = lesson.type === 'Лекція' ? 'Лек' : 
-                     lesson.type === 'Практичне заняття' ? 'Прак' :
-                     lesson.type === 'Лабораторне заняття' ? 'Лаб' :
-                     lesson.type === 'Семінарське заняття' ? 'Сем' :
-                     lesson.type === 'Самостійне вивчення' ? 'С.в.' :
-                     lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
-    
-    // Динамічна нумерація: серед усіх занять того ж типу, відсортованих за датою
-    const sameType = (allLessons || [])
-      .filter(l => l.type === lesson.type)
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-    const num = sameType.findIndex(l => l.id === lesson.id) + 1;
-    
-    return `${typeShort} №${num}`;
+  // ========== ЗАНЯТТЯ - правильна нумерація (перше створене = №1) ==========
+  async function getNextLessonNumberForType(type, subjectId) {
+    const q = query(collection(db,"lessons"), where("subjectId","==",subjectId), where("type","==",type), where("teacherId","==",currentTeacherId));
+    const snap = await getDocs(q);
+    let maxNumber = 0;
+    snap.forEach(doc => { const num = doc.data().number; if(num && num > maxNumber) maxNumber = num; });
+    return maxNumber + 1;
+  }
+  
+  function formatLessonDisplay(lesson) {
+    const typeShort = lesson.type === 'Лекція' ? 'Лек' : lesson.type === 'Практичне заняття' ? 'Прак' : lesson.type === 'Лабораторне заняття' ? 'Лаб' : lesson.type === 'Семінарське заняття' ? 'Сем' : lesson.type === 'Самостійне вивчення' ? 'С.в.' : lesson.type === 'Залік з модуля' ? 'Залік' : 'Тем.';
+    return `${typeShort} №${lesson.number || '?'}`;
   }
 
-  // LESSONS — нове сортування: всередині розділу за createdAt (новіші першими)
   async function loadMyLessons(){ 
     let lessonsQuery = query(collection(db,"lessons"), where("teacherId","==",currentTeacherId));
     const filterSubject = document.getElementById("lessonFilterSubject").value;
-    if(filterSubject !== "all"){
-      lessonsQuery = query(lessonsQuery, where("subjectId","==",filterSubject));
-    }
+    if(filterSubject !== "all"){ lessonsQuery = query(lessonsQuery, where("subjectId","==",filterSubject)); }
     const snap = await getDocs(lessonsQuery); 
-    
     const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))); 
     const subMap = {};
     for(const docSnap of subjectsSnap.docs){
       const s = docSnap.data();
       const groupsSnap = await getDocs(query(collection(db,"groups"), where("id","==",s.groupId)));
-      let groupName = '';
-      let academicYear = '';
-      if(!groupsSnap.empty){
-        groupName = groupsSnap.docs[0].data().name;
-        academicYear = groupsSnap.docs[0].data().academicYear || '';
-      }
+      let groupName = '', academicYear = '';
+      if(!groupsSnap.empty){ groupName = groupsSnap.docs[0].data().name; academicYear = groupsSnap.docs[0].data().academicYear || ''; }
       subMap[docSnap.id] = {name: s.name, group: groupName, year: academicYear || s.academicYear};
     }
-    
     const sectionsSnap = await getDocs(query(collection(db,"sections"), where("teacherId","==",currentTeacherId)));
     const sectionMap = {};
-    sectionsSnap.forEach(doc => {
-      sectionMap[doc.id] = doc.data().name;
-    });
-    
+    sectionsSnap.forEach(doc => { sectionMap[doc.id] = doc.data().name; });
     const container = document.getElementById("lessonsList"); 
     if(snap.empty){ container.innerHTML='<div class="empty-state">Занять не знайдено</div>'; return; } 
-    
     const lessonsArray = [];
-    snap.forEach(docSnap => {
-      lessonsArray.push({
-        id: docSnap.id, 
-        ...docSnap.data(),
-        createdAt: docSnap.data().createdAt || new Date(0).toISOString()
-      });
-    });
-    
-    // Групуємо за розділами
+    snap.forEach(docSnap => { lessonsArray.push({ id: docSnap.id, ...docSnap.data(), createdAt: docSnap.data().createdAt || new Date(0).toISOString() }); });
     const groupedBySection = {};
-    lessonsArray.forEach(lesson => {
-      const sectionId = lesson.sectionId || 'without_section';
-      if(!groupedBySection[sectionId]) groupedBySection[sectionId] = [];
-      groupedBySection[sectionId].push(lesson);
-    });
-    
-    // Сортуємо всередині кожного розділу: новіші за createdAt зверху
+    lessonsArray.forEach(lesson => { const sectionId = lesson.sectionId || 'without_section'; if(!groupedBySection[sectionId]) groupedBySection[sectionId] = []; groupedBySection[sectionId].push(lesson); });
     for(const sectionId in groupedBySection) {
-      groupedBySection[sectionId].sort((a, b) => {
-        const dateA = new Date(a.createdAt);
-        const dateB = new Date(b.createdAt);
-        return dateB - dateA; // новіші першими
-      });
+      groupedBySection[sectionId].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
-    
-    // Сортуємо розділи за найновішим заняттям у розділі (або за датою створення розділу)
     const sectionsList = [];
     for(const sectionId in groupedBySection) {
       const lessons = groupedBySection[sectionId];
@@ -1389,40 +1093,23 @@ document.getElementById("saveStudentBtn").onclick = async () => {
       const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
       const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db,"sections",sectionId)) : null;
       const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
-      sectionsList.push({
-        id: sectionId,
-        name: sectionMap[sectionId] || 'Без розділу',
-        lessons: lessons,
-        latestDate: latestDate,
-        createdAt: createdAtSection
-      });
+      sectionsList.push({ id: sectionId, name: sectionMap[sectionId] || 'Без розділу', lessons: lessons, latestDate: latestDate, createdAt: createdAtSection });
     }
-    
-    // Сортуємо розділи: спочатку ті, де є нові заняття, потім за датою створення розділу
-    sectionsList.sort((a, b) => {
-      if(a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate;
-      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
-      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
-      return bTime - aTime;
-    });
-    
+    sectionsList.sort((a, b) => { if(a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate; const aTime = a.createdAt ? a.createdAt.getTime() : 0; const bTime = b.createdAt ? b.createdAt.getTime() : 0; return bTime - aTime; });
     let html = '';
     for(const section of sectionsList) {
-      if(section.name !== 'Без розділу') {
-        html += `<div class="section-header" style="margin-top: 20px; margin-bottom: 10px; padding: 8px 12px; background: #e0e7ff; border-radius: 8px; font-weight: 600; color: var(--accent);">📁 ${section.name}</div>`;
-      }
+      if(section.name !== 'Без розділу') { html += `<div class="section-header">📁 ${section.name}</div>`; }
       html += '<div class="data-list">';
       for(const l of section.lessons) {
         const dateParts = l.date.split('-');
         const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-        const displayType = formatLessonDisplay(l, lessonsArray);
+        const displayType = formatLessonDisplay(l);
         const subjectInfo = subMap[l.subjectId];
         const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
         html += `<div class="data-card" onclick="editLesson('${l.id}')"><div class="data-info"><div class="data-icon">📅</div><div><div class="data-title">${l.topic||"Без теми"}</div><div class="data-sub">${subjectDisplay} | ${displayType} | ${formattedDate}</div></div></div><div class="data-actions"><button class="icon-btn edit-btn" onclick="event.stopPropagation(); window.editLesson('${l.id}')">✏️</button><button class="icon-btn delete-btn" onclick="event.stopPropagation(); window.deleteItem('lessons','${l.id}')">🗑️</button></div></div>`;
       }
       html += '</div>';
     }
-    
     container.innerHTML = html; 
   }
   
@@ -1431,23 +1118,12 @@ document.getElementById("saveStudentBtn").onclick = async () => {
     if(snap.exists() && snap.data().teacherId === currentTeacherId){ 
       currentEditId=id; 
       const d=snap.data();
-      
       await updateSectionSelect(d.subjectId);
-      
       document.getElementById("lessonSubject").value=d.subjectId; 
       document.getElementById("lessonType").value=d.type; 
       document.getElementById("lessonDate").value=d.date; 
       document.getElementById("lessonTopic").value=d.topic||"";
-      
-      if(d.sectionId) {
-        setTimeout(() => {
-          const sectionSelect = document.getElementById("lessonSection");
-          if(sectionSelect.querySelector(`option[value="${d.sectionId}"]`)) {
-            sectionSelect.value = d.sectionId;
-          }
-        }, 300);
-      }
-      
+      if(d.sectionId) { setTimeout(() => { const sectionSelect = document.getElementById("lessonSection"); if(sectionSelect.querySelector(`option[value="${d.sectionId}"]`)) sectionSelect.value = d.sectionId; }, 300); }
       toggleForm('form-add-lesson'); 
       const btn = document.getElementById("saveLessonBtn"); 
       btn.innerText="Оновити"; 
@@ -1460,28 +1136,11 @@ document.getElementById("saveStudentBtn").onclick = async () => {
     const sectionSelect = document.getElementById("lessonSection");
     let sectionId = sectionSelect.value;
     const newSectionName = document.getElementById("newSectionName").value.trim();
-    
-    if(sectionId === "new" && newSectionName) {
-      sectionId = await createNewSection(subjectId, newSectionName);
-    } else if(sectionId === "new" && !newSectionName) {
-      alert("Будь ласка, введіть назву нового розділу!");
-      return;
-    }
-    
+    if(sectionId === "new" && newSectionName) { sectionId = await createNewSection(subjectId, newSectionName); } else if(sectionId === "new" && !newSectionName) { alert("Будь ласка, введіть назву нового розділу!"); return; }
     const currentLesson = await getDoc(doc(db,"lessons",id));
     const currentNumber = currentLesson.data().number;
-    
-    const data = { 
-      subjectId: subjectId, 
-      type: document.getElementById("lessonType").value, 
-      date: document.getElementById("lessonDate").value, 
-      topic: document.getElementById("lessonTopic").value,
-      sectionId: sectionId || null,
-      teacherId: currentTeacherId
-    }; 
-    
+    const data = { subjectId: subjectId, type: document.getElementById("lessonType").value, date: document.getElementById("lessonDate").value, topic: document.getElementById("lessonTopic").value, sectionId: sectionId || null, teacherId: currentTeacherId }; 
     if(currentNumber) data.number = currentNumber;
-    
     await updateDoc(doc(db,"lessons",id), data); 
     resetLessonForm(); 
     loadMyLessons(); 
@@ -1489,40 +1148,17 @@ document.getElementById("saveStudentBtn").onclick = async () => {
   }
   
   document.getElementById("saveLessonBtn").onclick = async()=>{ 
-    if(currentEditId) {
-      await updateLesson(currentEditId);
-      return;
-    }
-    
+    if(currentEditId) { await updateLesson(currentEditId); return; }
     const date = document.getElementById("lessonDate").value;
     const type = document.getElementById("lessonType").value;
     const subjectId = document.getElementById("lessonSubject").value;
     const sectionSelect = document.getElementById("lessonSection");
     let sectionId = sectionSelect.value;
     const newSectionName = document.getElementById("newSectionName").value.trim();
-    
-    if(!subjectId || !date) {
-      alert("Будь ласка, заповніть всі обов'язкові поля!");
-      return;
-    }
-    
-    if(sectionId === "new" && newSectionName) {
-      sectionId = await createNewSection(subjectId, newSectionName);
-    } else if(sectionId === "new" && !newSectionName) {
-      alert("Будь ласка, введіть назву нового розділу!");
-      return;
-    }
-    
-    const data = { 
-      subjectId: subjectId, 
-      type: type, 
-      date: date, 
-      topic: document.getElementById("lessonTopic").value,
-      sectionId: sectionId || null,
-      teacherId: currentTeacherId,
-      createdAt: new Date().toISOString()
-    }; 
-    
+    if(!subjectId || !date) { alert("Будь ласка, заповніть всі обов'язкові поля!"); return; }
+    if(sectionId === "new" && newSectionName) { sectionId = await createNewSection(subjectId, newSectionName); } else if(sectionId === "new" && !newSectionName) { alert("Будь ласка, введіть назву нового розділу!"); return; }
+    const nextNumber = await getNextLessonNumberForType(type, subjectId);
+    const data = { subjectId: subjectId, type: type, date: date, topic: document.getElementById("lessonTopic").value, number: nextNumber, sectionId: sectionId || null, teacherId: currentTeacherId, createdAt: new Date().toISOString() }; 
     await addDoc(collection(db,"lessons"), data);
     resetLessonForm(); 
     loadMyLessons(); 
@@ -1530,224 +1166,58 @@ document.getElementById("saveStudentBtn").onclick = async () => {
   };
   
   function resetLessonForm(){ 
-    document.getElementById("lessonTopic").value = ""; 
-    document.getElementById("lessonDate").value = ""; 
-    document.getElementById("lessonSection").value = "";
-    document.getElementById("newSectionGroup").style.display = "none";
-    document.getElementById("newSectionName").value = "";
-    currentEditId = null; 
-    const btn = document.getElementById("saveLessonBtn"); 
-    btn.innerText = "Зберегти"; 
-    btn.onclick = async () => {
-      const date = document.getElementById("lessonDate").value;
-      const type = document.getElementById("lessonType").value;
-      const subjectId = document.getElementById("lessonSubject").value;
-      const sectionSelect = document.getElementById("lessonSection");
-      let sectionId = sectionSelect.value;
-      const newSectionName = document.getElementById("newSectionName").value.trim();
-      
-      if(!subjectId || !date) {
-        alert("Будь ласка, заповніть всі обов'язкові поля!");
-        return;
-      }
-      
-      if(sectionId === "new" && newSectionName) {
-        sectionId = await createNewSection(subjectId, newSectionName);
-      } else if(sectionId === "new" && !newSectionName) {
-        alert("Будь ласка, введіть назву нового розділу!");
-        return;
-      }
-      
-      const data = { 
-        subjectId: subjectId, 
-        type: type, 
-        date: date, 
-        topic: document.getElementById("lessonTopic").value,
-        sectionId: sectionId || null,
-        teacherId: currentTeacherId,
-        createdAt: new Date().toISOString()
-      }; 
-      
-      await addDoc(collection(db,"lessons"), data);
-      resetLessonForm(); 
-      loadMyLessons(); 
-      if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-    };
-    document.getElementById("form-add-lesson").style.display = "none"; 
+    document.getElementById("lessonTopic").value = ""; document.getElementById("lessonDate").value = ""; document.getElementById("lessonSection").value = ""; document.getElementById("newSectionGroup").style.display = "none"; document.getElementById("newSectionName").value = ""; currentEditId = null; const btn = document.getElementById("saveLessonBtn"); btn.innerText = "Зберегти"; btn.onclick = async () => { const date = document.getElementById("lessonDate").value; const type = document.getElementById("lessonType").value; const subjectId = document.getElementById("lessonSubject").value; const sectionSelect = document.getElementById("lessonSection"); let sectionId = sectionSelect.value; const newSectionName = document.getElementById("newSectionName").value.trim(); if(!subjectId || !date) { alert("Будь ласка, заповніть всі обов'язкові поля!"); return; } if(sectionId === "new" && newSectionName) { sectionId = await createNewSection(subjectId, newSectionName); } else if(sectionId === "new" && !newSectionName) { alert("Будь ласка, введіть назву нового розділу!"); return; } const nextNumber = await getNextLessonNumberForType(type, subjectId); const data = { subjectId, type, date, topic: document.getElementById("lessonTopic").value, number: nextNumber, sectionId: sectionId || null, teacherId: currentTeacherId, createdAt: new Date().toISOString() }; await addDoc(collection(db,"lessons"), data); resetLessonForm(); loadMyLessons(); if(document.getElementById("tab-journal").classList.contains("active")) renderJournal(); }; document.getElementById("form-add-lesson").style.display = "none"; 
   }
   
   document.getElementById("lessonFilterSubject").addEventListener("change", () => loadMyLessons());
 
-  window.deleteItem = async (col, id)=>{ 
-    if(confirm("Видалити?")){ 
-      await deleteDoc(doc(db,col,id)); 
-      if(col==='groups') {
-        loadGroups(); 
-      }
-      if(col==='students') {
-        loadStudents(); 
-        loadGroups();
-      }
-      if(col==='subjects') loadMySubjects(); 
-      if(col==='lessons') loadMyLessons(); 
-      updateStats(); 
-      if(document.getElementById("tab-journal").classList.contains("active")) renderJournal();
-    } 
-  };
+  window.deleteItem = async (col, id)=>{ if(confirm("Видалити?")){ await deleteDoc(doc(db,col,id)); if(col==='groups') loadGroups(); if(col==='students') { loadStudents(); loadGroups(); } if(col==='subjects') loadMySubjects(); if(col==='lessons') loadMyLessons(); updateStats(); if(document.getElementById("tab-journal").classList.contains("active")) renderJournal(); } };
 
   async function populateJournalFilters() {
     const groupsSnap = await getDocs(collection(db,"groups"));
     const yearsSet = new Set();
-    groupsSnap.forEach(g => {
-      const year = g.data().academicYear;
-      if(year) yearsSet.add(year);
-    });
-    
+    groupsSnap.forEach(g => { const year = g.data().academicYear; if(year) yearsSet.add(year); });
     let yearOptions = '<option value="">Оберіть рік</option>';
-    const sortedYears = Array.from(yearsSet).sort((a, b) => {
-      const aStart = parseInt(a.split('/')[0]);
-      const bStart = parseInt(b.split('/')[0]);
-      return bStart - aStart;
-    });
-    sortedYears.forEach(year => {
-      yearOptions += `<option value="${year}">${year}</option>`;
-    });
+    const sortedYears = Array.from(yearsSet).sort((a, b) => { const aStart = parseInt(a.split('/')[0]); const bStart = parseInt(b.split('/')[0]); return bStart - aStart; });
+    sortedYears.forEach(year => { yearOptions += `<option value="${year}">${year}</option>`; });
     document.getElementById("journalYearSelect").innerHTML = yearOptions;
-    
     const currentYear = document.getElementById("journalYearSelect").value;
-    
     document.getElementById("journalYearSelect").onchange = async () => {
       const selectedYear = document.getElementById("journalYearSelect").value;
-      if(!selectedYear) {
-        document.getElementById("journalGroupSelect").innerHTML = '<option value="">Оберіть групу</option>';
-        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
-        saveLastSelection();
-        renderJournal();
-        return;
-      }
-      
+      if(!selectedYear) { document.getElementById("journalGroupSelect").innerHTML = '<option value="">Оберіть групу</option>'; document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>'; saveLastSelection(); renderJournal(); return; }
       const groupsSnap2 = await getDocs(query(collection(db,"groups"), where("academicYear","==",selectedYear)));
       let groupOptions = '<option value="">Оберіть групу</option>';
       const groupsArray = [];
-      groupsSnap2.forEach(g => {
-        groupOptions += `<option value="${g.id}">${g.data().name}</option>`;
-        groupsArray.push({id: g.id, name: g.data().name});
-      });
+      groupsSnap2.forEach(g => { groupOptions += `<option value="${g.id}">${g.data().name}</option>`; groupsArray.push({id: g.id, name: g.data().name}); });
       document.getElementById("journalGroupSelect").innerHTML = groupOptions;
       document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
-      
-      if(groupsArray.length === 1) {
-        document.getElementById("journalGroupSelect").value = groupsArray[0].id;
-        const groupEvent = new Event('change');
-        document.getElementById("journalGroupSelect").dispatchEvent(groupEvent);
-      } else {
-        saveLastSelection();
-        renderJournal();
-      }
+      if(groupsArray.length === 1) { document.getElementById("journalGroupSelect").value = groupsArray[0].id; const groupEvent = new Event('change'); document.getElementById("journalGroupSelect").dispatchEvent(groupEvent); } else { saveLastSelection(); renderJournal(); }
     };
-    
     document.getElementById("journalGroupSelect").onchange = async () => {
       const selectedGroup = document.getElementById("journalGroupSelect").value;
-      if(!selectedGroup) {
-        document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>';
-        saveLastSelection();
-        renderJournal();
-        return;
-      }
-      
+      if(!selectedGroup) { document.getElementById("journalSubjectSelect").innerHTML = '<option value="">Оберіть предмет</option>'; saveLastSelection(); renderJournal(); return; }
       const groupDoc = await getDoc(doc(db,"groups",selectedGroup));
       const groupName = groupDoc.exists() ? groupDoc.data().name : '';
       const groupYear = groupDoc.exists() ? groupDoc.data().academicYear : '';
-      
       const subjectsSnap = await getDocs(query(collection(db,"subjects"), where("groupId","==",selectedGroup), where("teacherId","==",currentTeacherId)));
       let subjectOptions = '<option value="">Оберіть предмет</option>';
       const subjectsArray = [];
-      for(const docSnap of subjectsSnap.docs){
-        const s = docSnap.data();
-        const displayText = `${s.name} (${groupName} | ${groupYear})`;
-        subjectOptions += `<option value="${docSnap.id}">${displayText}</option>`;
-        subjectsArray.push({id: docSnap.id, displayText});
-      }
+      for(const docSnap of subjectsSnap.docs){ const s = docSnap.data(); const displayText = `${s.name} (${groupName} | ${groupYear})`; subjectOptions += `<option value="${docSnap.id}">${displayText}</option>`; subjectsArray.push({id: docSnap.id, displayText}); }
       document.getElementById("journalSubjectSelect").innerHTML = subjectOptions;
-      
-      if(subjectsArray.length === 1) {
-        document.getElementById("journalSubjectSelect").value = subjectsArray[0].id;
-      }
-      
-      saveLastSelection();
-      renderJournal();
+      if(subjectsArray.length === 1) { document.getElementById("journalSubjectSelect").value = subjectsArray[0].id; }
+      saveLastSelection(); renderJournal();
     };
-    
-    document.getElementById("journalSubjectSelect").onchange = () => {
-      saveLastSelection();
-      renderJournal();
-    };
-    
-    if(currentYear && currentYear !== "Оберіть рік") {
-      const event = new Event('change');
-      document.getElementById("journalYearSelect").dispatchEvent(event);
-    }
+    document.getElementById("journalSubjectSelect").onchange = () => { saveLastSelection(); renderJournal(); };
+    if(currentYear && currentYear !== "Оберіть рік") { const event = new Event('change'); document.getElementById("journalYearSelect").dispatchEvent(event); }
   }
 
   function populateSelects(){ 
-    getDocs(collection(db,"groups")).then(snap=>{ 
-      let opts='<option value="">Оберіть групу</option>'; 
-      snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); 
-      document.getElementById("studentGroup").innerHTML=opts;
-      const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastStudentGroup);
-      if(lastGroup && document.querySelector(`#studentGroup option[value="${lastGroup}"]`)) {
-        document.getElementById("studentGroup").value = lastGroup;
-      }
-    });
-    
-    getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))).then(async snap=>{ 
-      let opts='<option value="">Оберіть предмет</option>'; 
-      let filterOpts='<option value="all">Всі предмети</option>';
-      
-      for(const docSnap of snap.docs){
-        const s = docSnap.data();
-        let groupName = '';
-        let academicYear = '';
-        if(s.groupId) {
-          const groupDoc = await getDoc(doc(db,"groups",s.groupId));
-          if(groupDoc.exists()){
-            groupName = groupDoc.data().name;
-            academicYear = groupDoc.data().academicYear || '';
-          }
-        }
-        if(!groupName) {
-          groupName = s.groupName || 'Групу не обрано';
-          academicYear = s.academicYear || '';
-        }
-        const displayText = `${s.name} (${groupName} | ${academicYear || 'рік не вказано'})`;
-        opts += `<option value="${docSnap.id}">${displayText}</option>`;
-        filterOpts += `<option value="${docSnap.id}">${displayText}</option>`;
-      }
-      
-      document.getElementById("lessonSubject").innerHTML=opts; 
-      document.getElementById("lessonFilterSubject").innerHTML=filterOpts;
-    }); 
-    
+    getDocs(collection(db,"groups")).then(snap=>{ let opts='<option value="">Оберіть групу</option>'; snap.forEach(d=>opts+=`<option value="${d.id}">${d.data().name}</option>`); document.getElementById("studentGroup").innerHTML=opts; const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastStudentGroup); if(lastGroup && document.querySelector(`#studentGroup option[value="${lastGroup}"]`)) { document.getElementById("studentGroup").value = lastGroup; } });
+    getDocs(query(collection(db,"subjects"), where("teacherId","==",currentTeacherId))).then(async snap=>{ let opts='<option value="">Оберіть предмет</option>'; let filterOpts='<option value="all">Всі предмети</option>'; for(const docSnap of snap.docs){ const s = docSnap.data(); let groupName = ''; let academicYear = ''; if(s.groupId) { const groupDoc = await getDoc(doc(db,"groups",s.groupId)); if(groupDoc.exists()){ groupName = groupDoc.data().name; academicYear = groupDoc.data().academicYear || ''; } } if(!groupName) { groupName = s.groupName || 'Групу не обрано'; academicYear = s.academicYear || ''; } const displayText = `${s.name} (${groupName} | ${academicYear || 'рік не вказано'})`; opts += `<option value="${docSnap.id}">${displayText}</option>`; filterOpts += `<option value="${docSnap.id}">${displayText}</option>`; } document.getElementById("lessonSubject").innerHTML=opts; document.getElementById("lessonFilterSubject").innerHTML=filterOpts; }); 
     const lessonSubject = document.getElementById("lessonSubject");
-    if(lessonSubject) {
-      lessonSubject.addEventListener("change", async (e) => {
-        await updateSectionSelect(e.target.value);
-      });
-    }
-    
+    if(lessonSubject) { lessonSubject.addEventListener("change", async (e) => { await updateSectionSelect(e.target.value); }); }
     const lessonSection = document.getElementById("lessonSection");
-    if(lessonSection) {
-      lessonSection.addEventListener("change", (e) => {
-        const newSectionGroup = document.getElementById("newSectionGroup");
-        if(e.target.value === "new") {
-          newSectionGroup.style.display = "block";
-        } else {
-          newSectionGroup.style.display = "none";
-          document.getElementById("newSectionName").value = "";
-        }
-      });
-    }
-    
+    if(lessonSection) { lessonSection.addEventListener("change", (e) => { const newSectionGroup = document.getElementById("newSectionGroup"); if(e.target.value === "new") { newSectionGroup.style.display = "block"; } else { newSectionGroup.style.display = "none"; document.getElementById("newSectionName").value = ""; } }); }
     populateJournalFilters();
   }
 
@@ -1763,16 +1233,10 @@ document.getElementById("saveStudentBtn").onclick = async () => {
   
   async function updateSectionSelect(subjectId) {
     const sectionSelect = document.getElementById("lessonSection");
-    if(!subjectId) {
-      sectionSelect.innerHTML = '<option value="">Оберіть спочатку предмет</option>';
-      return;
-    }
-    
+    if(!subjectId) { sectionSelect.innerHTML = '<option value="">Оберіть спочатку предмет</option>'; return; }
     const sections = await loadSectionsForSubject(subjectId);
     let options = '<option value="">Оберіть розділ</option>';
-    sections.forEach(s => {
-      options += `<option value="${s.id}">${s.name}</option>`;
-    });
+    sections.forEach(s => { options += `<option value="${s.id}">${s.name}</option>`; });
     options += '<option value="new">+ Створити новий розділ</option>';
     sectionSelect.innerHTML = options;
     document.getElementById("newSectionGroup").style.display = "none";
@@ -1780,12 +1244,7 @@ document.getElementById("saveStudentBtn").onclick = async () => {
   }
   
   async function createNewSection(subjectId, sectionName) {
-    const sectionData = {
-      name: sectionName,
-      subjectId: subjectId,
-      teacherId: currentTeacherId,
-      createdAt: new Date().toISOString()
-    };
+    const sectionData = { name: sectionName, subjectId: subjectId, teacherId: currentTeacherId, createdAt: new Date().toISOString() };
     const docRef = await addDoc(collection(db,"sections"), sectionData);
     return docRef.id;
   }
@@ -1799,69 +1258,64 @@ document.getElementById("saveStudentBtn").onclick = async () => {
     return null;
   }
   
-  async function saveFinalGrade(studentId, subjectId, newGrade, scale, cell) {
+  // ШВИДКЕ ЗБЕРЕЖЕННЯ ОЦІНОК (миттєве, без очікування)
+  async function saveGradeDirect(lessonId, studentId, newGrade, scale, cellElement) {
+    if(newGrade === '') {
+      const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
+      const existing = await getDocs(q);
+      if(!existing.empty){ await deleteDoc(doc(db,"grades",existing.docs[0].id)); }
+      return;
+    }
+    const validatedGrade = validateGrade(newGrade, scale);
+    if(validatedGrade === null) { alert(`Невірна оцінка! Дозволені: 1-${scale} або "н", "св"`); return; }
+    const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
+    const existing = await getDocs(q);
+    const gradeData = { lessonId, studentId, grade: validatedGrade, updatedAt: new Date().toISOString() };
+    if(existing.empty){ await addDoc(collection(db,"grades"), gradeData); } 
+    else { await updateDoc(doc(db,"grades",existing.docs[0].id), gradeData); }
+  }
+  
+  async function saveFinalGradeDirect(studentId, subjectId, newGrade, scale, cellElement) {
     if(newGrade === '') {
       const q = query(collection(db,"finalGrades"), where("studentId","==",studentId), where("subjectId","==",subjectId));
       const existing = await getDocs(q);
-      if(!existing.empty){
-        await deleteDoc(doc(db,"finalGrades",existing.docs[0].id));
-      }
+      if(!existing.empty){ await deleteDoc(doc(db,"finalGrades",existing.docs[0].id)); }
       return;
     }
-    
     const validatedGrade = validateGrade(newGrade, scale);
-    if(validatedGrade === null) {
-      alert(`Невірна оцінка! Для цього предмета дозволені оцінки: 1-${scale}`);
-      return;
-    }
-    
+    if(validatedGrade === null) { alert(`Невірна оцінка! Дозволені: 1-${scale}`); return; }
     const q = query(collection(db,"finalGrades"), where("studentId","==",studentId), where("subjectId","==",subjectId));
     const existing = await getDocs(q);
-    
-    const gradeData = {
-      studentId,
-      subjectId,
-      grade: validatedGrade,
-      updatedAt: new Date().toISOString()
-    };
-    
-    if(existing.empty){
-      await addDoc(collection(db,"finalGrades"), gradeData);
-    } else {
-      await updateDoc(doc(db,"finalGrades",existing.docs[0].id), gradeData);
-    }
+    const gradeData = { studentId, subjectId, grade: validatedGrade, updatedAt: new Date().toISOString() };
+    if(existing.empty){ await addDoc(collection(db,"finalGrades"), gradeData); } 
+    else { await updateDoc(doc(db,"finalGrades",existing.docs[0].id), gradeData); }
   }
   
-  window.startEditFinalGrade = function(cell) {
+  window.startEditGrade = function(cell) {
     if(currentEditingCell) return;
-    
     const currentGrade = cell.dataset.currentGrade || '';
+    const lessonId = cell.dataset.lessonId;
     const studentId = cell.dataset.studentId;
-    const subjectId = cell.dataset.subjectId;
     const scale = cell.dataset.scale;
-    
     currentEditingCell = cell;
-    
     const input = document.createElement('input');
     input.type = 'text';
     input.value = '';
     input.placeholder = '';
     input.className = 'grade-input';
     input.style.width = '60px';
-    
     input.addEventListener('blur', async () => {
       const newGrade = input.value.trim();
-      await saveFinalGrade(studentId, subjectId, newGrade, scale, cell);
+      await saveGradeDirect(lessonId, studentId, newGrade, scale, cell);
       cell.removeChild(input);
       cell.style.padding = '10px 12px';
       currentEditingCell = null;
       renderJournal();
     });
-    
     input.addEventListener('keypress', async (e) => {
       if(e.key === 'Enter') {
         const newGrade = input.value.trim();
-        await saveFinalGrade(studentId, subjectId, newGrade, scale, cell);
+        await saveGradeDirect(lessonId, studentId, newGrade, scale, cell);
         cell.removeChild(input);
         cell.style.padding = '10px 12px';
         currentEditingCell = null;
@@ -1873,7 +1327,47 @@ document.getElementById("saveStudentBtn").onclick = async () => {
         currentEditingCell = null;
       }
     });
-    
+    cell.innerHTML = '';
+    cell.style.padding = '4px';
+    cell.appendChild(input);
+    input.focus();
+  };
+  
+  window.startEditFinalGrade = function(cell) {
+    if(currentEditingCell) return;
+    const studentId = cell.dataset.studentId;
+    const subjectId = cell.dataset.subjectId;
+    const scale = cell.dataset.scale;
+    currentEditingCell = cell;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = '';
+    input.placeholder = '';
+    input.className = 'grade-input';
+    input.style.width = '60px';
+    input.addEventListener('blur', async () => {
+      const newGrade = input.value.trim();
+      await saveFinalGradeDirect(studentId, subjectId, newGrade, scale, cell);
+      cell.removeChild(input);
+      cell.style.padding = '10px 12px';
+      currentEditingCell = null;
+      renderJournal();
+    });
+    input.addEventListener('keypress', async (e) => {
+      if(e.key === 'Enter') {
+        const newGrade = input.value.trim();
+        await saveFinalGradeDirect(studentId, subjectId, newGrade, scale, cell);
+        cell.removeChild(input);
+        cell.style.padding = '10px 12px';
+        currentEditingCell = null;
+        renderJournal();
+      }
+      if(e.key === 'Escape') {
+        cell.removeChild(input);
+        cell.style.padding = '10px 12px';
+        currentEditingCell = null;
+      }
+    });
     cell.innerHTML = '';
     cell.style.padding = '4px';
     cell.appendChild(input);
@@ -1884,94 +1378,43 @@ document.getElementById("saveStudentBtn").onclick = async () => {
     const groupId = document.getElementById("journalGroupSelect").value; 
     const subjectId = document.getElementById("journalSubjectSelect").value;
     const year = document.getElementById("journalYearSelect").value;
-    
-    if(!year || !groupId || !subjectId || groupId === "Оберіть групу" || subjectId === "Оберіть предмет"){ 
-      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div>'; 
-      return; 
-    } 
-    
+    if(!year || !groupId || !subjectId || groupId === "Оберіть групу" || subjectId === "Оберіть предмет"){ document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div>'; return; } 
     const subjectDoc = await getDoc(doc(db,"subjects",subjectId));
     const subjectScale = subjectDoc.exists() ? subjectDoc.data().scale : '12';
-    
     const studentsSnap = await getDocs(query(collection(db,"students"), where("groupId","==",groupId))); 
-    const students = []; 
-    studentsSnap.forEach(d=>students.push({id:d.id,...d.data()})); 
-    students.sort((a, b) => a.name.localeCompare(b.name));
-    
-    if(students.length===0){ 
-      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає студентів у групі</div>'; 
-      return; 
-    }
-    
+    const students = []; studentsSnap.forEach(d=>students.push({id:d.id,...d.data()})); students.sort((a, b) => a.name.localeCompare(b.name));
+    if(students.length===0){ document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає студентів у групі</div>'; return; }
     const lessonsSnap = await getDocs(query(collection(db,"lessons"), where("subjectId","==",subjectId), where("teacherId","==",currentTeacherId)));
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({id: l.id, ...l.data()}));
-    
-    lessons.sort((a, b) => {
-      const dateCompare = new Date(a.date) - new Date(b.date);
-      if(dateCompare !== 0) return dateCompare;
-      return (a.number || 1) - (b.number || 1);
-    });
-    
-    if(lessons.length === 0){
-      document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
-      return;
-    }
-
-    function getLessonNumber(lesson, allLessons) {
-      const sameType = allLessons
-        .filter(l => l.type === lesson.type)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-      return sameType.findIndex(l => l.id === lesson.id) + 1;
-    }
+    // Сортування за датою (від найстарішої до найновішої) - як у вкладці "Заняття"
+    lessons.sort((a, b) => new Date(a.date) - new Date(b.date));
+    if(lessons.length === 0){ document.getElementById("journalTableContainer").innerHTML='<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>'; return; }
     
     const allGrades = {};
     for(const lesson of lessons){
       const gradesSnap = await getDocs(query(collection(db,"grades"), where("lessonId","==",lesson.id)));
-      gradesSnap.forEach(g => {
-        const gradeData = g.data();
-        if(!allGrades[lesson.id]) allGrades[lesson.id] = {};
-        allGrades[lesson.id][gradeData.studentId] = gradeData.grade;
-      });
+      gradesSnap.forEach(g => { const gradeData = g.data(); if(!allGrades[lesson.id]) allGrades[lesson.id] = {}; allGrades[lesson.id][gradeData.studentId] = gradeData.grade; });
     }
-    
     const finalGrades = {};
     const finalGradesSnap = await getDocs(query(collection(db,"finalGrades"), where("subjectId","==",subjectId)));
-    finalGradesSnap.forEach(g => {
-      finalGrades[g.data().studentId] = g.data().grade;
-    });
+    finalGradesSnap.forEach(g => { finalGrades[g.data().studentId] = g.data().grade; });
     
     const studentStats = {};
     students.forEach(student => {
-      let totalPoints = 0;
-      let gradeCount = 0;
-      let nCount = 0;
-      let svCount = 0;
-      
+      let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
       lessons.forEach(lesson => {
         const grade = allGrades[lesson.id]?.[student.id];
         if(grade){
           if(grade === 'н') nCount++;
           else if(grade === 'св') svCount++;
-          else {
-            const num = parseFloat(grade);
-            if(!isNaN(num)){
-              totalPoints += num;
-              gradeCount++;
-            }
-          }
+          else { const num = parseFloat(grade); if(!isNaN(num)){ totalPoints += num; gradeCount++; } }
         }
       });
-      
-      studentStats[student.id] = {
-        avg: gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-',
-        n: nCount,
-        sv: svCount
-      };
+      studentStats[student.id] = { avg: gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-', n: nCount, sv: svCount };
     });
     
     let html = '<table class="journal-table"><thead><tr><th>№</th><th>Студент</th>';
-    
     lessons.forEach(lesson => {
       const dateParts = lesson.date.split('-');
       const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
@@ -1986,13 +1429,12 @@ document.getElementById("saveStudentBtn").onclick = async () => {
         case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
         default: typeShort = lesson.type;
       }
-      const isSpecial = lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання';
-      const lessonNum = getLessonNumber(lesson, lessons);
-      const typeShortWithNum = `${typeShort} №${lessonNum}`;
-      html += `<th class="date-cell" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShortWithNum}</small></th>`;
+      const isSpecial = (lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання');
+      const specialClass = isSpecial ? 'lesson-special' : '';
+      html += `<th class="date-cell ${specialClass}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
     });
-    
-    html += `<th>Сер.</th><th>Н</th><th>СВ</th><th>Підсумкова</th></tr></thead><tbody>`;
+    // Колонки Н, СВ - червоні
+    html += `<th class="stat-cell-red">Сер.</th><th class="stat-cell-red">Н</th><th class="stat-cell-red">СВ</th><th class="stat-cell-red">Підсумкова</th></tr></thead><tbody>`;
     
     let studentCounter = 1;
     students.forEach(student => {
@@ -2005,186 +1447,55 @@ document.getElementById("saveStudentBtn").onclick = async () => {
       else if(finalNum === 3) finalGradeClass = 'grade-3';
       else if(finalNum === 2) finalGradeClass = 'grade-2';
       else if(finalNum === 1) finalGradeClass = 'grade-1';
-      
-      html += `<tr>
-        <td style="text-align:center; width: 40px;">${studentCounter}</td>
-        <td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
-      
+      html += `<tr><td style="text-align:center; width: 40px;">${studentCounter}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
       lessons.forEach(lesson => {
         const grade = allGrades[lesson.id]?.[student.id] || '';
         let gradeClass = '';
         let displayGrade = grade;
         if(grade === 'н') gradeClass = 'grade-n';
         else if(grade === 'св') gradeClass = 'grade-sv';
-        else {
-          const num = parseFloat(grade);
-          if(num === 5) gradeClass = 'grade-5';
-          else if(num === 4) gradeClass = 'grade-4';
-          else if(num === 3) gradeClass = 'grade-3';
-          else if(num === 2) gradeClass = 'grade-2';
-          else if(num === 1) gradeClass = 'grade-1';
-          displayGrade = grade;
-        }
-        
+        else { const num = parseFloat(grade); if(num === 5) gradeClass = 'grade-5'; else if(num === 4) gradeClass = 'grade-4'; else if(num === 3) gradeClass = 'grade-3'; else if(num === 2) gradeClass = 'grade-2'; else if(num === 1) gradeClass = 'grade-1'; displayGrade = grade; }
         html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade || '—'}</td>`;
       });
-      
       const avgNum = parseFloat(stats.avg);
       let avgClass = '';
-      if(avgNum === 5) avgClass = 'grade-5';
-      else if(avgNum === 4) avgClass = 'grade-4';
-      else if(avgNum === 3) avgClass = 'grade-3';
-      else if(avgNum === 2) avgClass = 'grade-2';
-      else if(avgNum === 1) avgClass = 'grade-1';
-      
-      html += `<td class="stat-cell ${avgClass}">${stats.avg}</td>
-               <td class="stat-cell">${stats.n}</td>
-               <td class="stat-cell">${stats.sv}</td>
-               <td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>
-              </tr>`;
+      if(avgNum === 5) avgClass = 'grade-5'; else if(avgNum === 4) avgClass = 'grade-4'; else if(avgNum === 3) avgClass = 'grade-3'; else if(avgNum === 2) avgClass = 'grade-2'; else if(avgNum === 1) avgClass = 'grade-1';
+      html += `<td class="stat-cell-red ${avgClass}">${stats.avg}</td><td class="stat-cell-red">${stats.n}</td><td class="stat-cell-red">${stats.sv}</td><td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td></tr>`;
       studentCounter++;
     });
-    
     html += '</tbody></table>';
     document.getElementById("journalTableContainer").innerHTML = html;
-    
-    document.querySelectorAll('.date-cell').forEach(cell => {
-      cell.addEventListener('mouseenter', showTooltip);
-      cell.addEventListener('mouseleave', hideTooltip);
-    });
-  }
-  
-  window.startEditGrade = function(cell) {
-    if(currentEditingCell) return;
-    
-    const currentGrade = cell.dataset.currentGrade || '';
-    const lessonId = cell.dataset.lessonId;
-    const studentId = cell.dataset.studentId;
-    const scale = cell.dataset.scale;
-    
-    currentEditingCell = cell;
-    
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = '';
-    input.placeholder = '';
-    input.className = 'grade-input';
-    input.style.width = '60px';
-    
-    input.addEventListener('blur', async () => {
-      const newGrade = input.value.trim();
-      await saveGradeDirect(lessonId, studentId, newGrade, scale);
-      cell.removeChild(input);
-      cell.style.padding = '10px 12px';
-      currentEditingCell = null;
-      renderJournal();
-    });
-    
-    input.addEventListener('keypress', async (e) => {
-      if(e.key === 'Enter') {
-        const newGrade = input.value.trim();
-        await saveGradeDirect(lessonId, studentId, newGrade, scale);
-        cell.removeChild(input);
-        cell.style.padding = '10px 12px';
-        currentEditingCell = null;
-        renderJournal();
-      }
-      if(e.key === 'Escape') {
-        cell.removeChild(input);
-        cell.style.padding = '10px 12px';
-        currentEditingCell = null;
-      }
-    });
-    
-    cell.innerHTML = '';
-    cell.style.padding = '4px';
-    cell.appendChild(input);
-    input.focus();
-  };
-  
-  async function saveGradeDirect(lessonId, studentId, newGrade, scale) {
-    if(newGrade === '') {
-      const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
-      const existing = await getDocs(q);
-      if(!existing.empty){
-        await deleteDoc(doc(db,"grades",existing.docs[0].id));
-      }
-      return;
-    }
-    
-    const validatedGrade = validateGrade(newGrade, scale);
-    if(validatedGrade === null) {
-      alert(`Невірна оцінка! Для цього предмета дозволені оцінки: 1-${scale} або "н", "св"`);
-      return;
-    }
-    
-    const q = query(collection(db,"grades"), where("lessonId","==",lessonId), where("studentId","==",studentId));
-    const existing = await getDocs(q);
-    
-    const gradeData = {
-      lessonId,
-      studentId,
-      grade: validatedGrade,
-      updatedAt: new Date().toISOString()
-    };
-    
-    if(existing.empty){
-      await addDoc(collection(db,"grades"), gradeData);
-    } else {
-      await updateDoc(doc(db,"grades",existing.docs[0].id), gradeData);
-    }
+    document.querySelectorAll('.date-cell').forEach(cell => { cell.addEventListener('mouseenter', showTooltip); cell.addEventListener('mouseleave', hideTooltip); });
   }
   
   function showTooltip(e) {
-    if(currentTooltip) {
-      currentTooltip.remove();
-      currentTooltip = null;
-    }
-    
+    if(currentTooltip) { currentTooltip.remove(); currentTooltip = null; }
     const cell = e.target.closest('.date-cell');
     if(!cell) return;
-    
     let lessonType = cell.dataset.lessonType;
     const lessonTopic = cell.dataset.lessonTopic;
     const lessonDate = cell.dataset.lessonDate;
-    
     if(lessonType === 'Практичне') lessonType = 'Практичне заняття';
     if(lessonType === 'Лабораторне') lessonType = 'Лабораторне заняття';
     if(lessonType === 'Семінарське') lessonType = 'Семінарське заняття';
-    
     const dateParts = lessonDate.split('-');
     const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-    
     const tooltip = document.createElement('div');
     tooltip.className = 'tooltip';
     tooltip.innerHTML = `<strong>${formattedDate}</strong><br>${lessonType}<br>${lessonTopic || 'Без теми'}`;
     document.body.appendChild(tooltip);
-    
     const rect = cell.getBoundingClientRect();
     let left = rect.left;
     let top = rect.top - tooltip.offsetHeight - 5;
-    
-    if(top < 0) {
-      top = rect.bottom + 5;
-    }
-    if(left + tooltip.offsetWidth > window.innerWidth) {
-      left = window.innerWidth - tooltip.offsetWidth - 10;
-    }
+    if(top < 0) { top = rect.bottom + 5; }
+    if(left + tooltip.offsetWidth > window.innerWidth) { left = window.innerWidth - tooltip.offsetWidth - 10; }
     if(left < 0) left = 10;
-    
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
-    
     currentTooltip = tooltip;
   }
   
-  function hideTooltip() {
-    if(currentTooltip) {
-      currentTooltip.remove();
-      currentTooltip = null;
-    }
-  }
+  function hideTooltip() { if(currentTooltip) { currentTooltip.remove(); currentTooltip = null; } }
 </script>
 </body>
 </html>
-```
