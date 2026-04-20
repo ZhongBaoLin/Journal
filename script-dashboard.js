@@ -35,6 +35,15 @@
     activeTab: 'active_tab'
   };
 
+  window.lastMouseX = 0;
+    window.lastMouseY = 0;
+    
+    // Додаємо відстеження миші глобально
+    document.addEventListener('mousemove', (e) => {
+        window.lastMouseX = e.clientX;
+        window.lastMouseY = e.clientY;
+    });
+
   // ========== НЕГАЙНЕ ВІДНОВЛЕННЯ ВКЛАДКИ ДО ЗАВАНТАЖЕННЯ ДАНИХ ==========
   // Виконується синхронно, щоб уникнути миготіння при оновленні сторінки
   (function immediateTabRestore() {
@@ -875,6 +884,248 @@ document.getElementById("saveLessonBtn").onclick = window._globalSaveLessonHandl
     document.getElementById("form-add-lesson").style.display = "none";
   }
 
+// ========== DRAG AND DROP ДЛЯ ЗАНЯТЬ ==========
+let draggedLesson = null;
+let dragStartTime = 0;
+let dragTimeout = null;
+let isDragging = false;
+let dragIndicator = null;
+
+// Функція для початку drag (при довгому натисканні)
+function initDragAndDrop() {
+    const lessonsList = document.getElementById('lessonsList');
+    if (!lessonsList) return;
+    
+    // Delegation для всіх lesson-card
+    lessonsList.addEventListener('mousedown', (e) => {
+        const lessonCard = e.target.closest('.data-card');
+        if (!lessonCard) return;
+        
+        // Запобігаємо drag на кнопках
+        if (e.target.closest('.icon-btn') || e.target.closest('.delete-btn') || e.target.closest('.edit-btn')) {
+            return;
+        }
+        
+        dragStartTime = Date.now();
+        draggedLesson = lessonCard;
+        
+        // Таймер для довгого натискання (300ms)
+        dragTimeout = setTimeout(() => {
+            startDrag(lessonCard, e);
+        }, 300);
+    });
+    
+    lessonsList.addEventListener('mouseup', () => {
+        clearTimeout(dragTimeout);
+        if (!isDragging && draggedLesson) {
+            // Коротке натискання - нічого не робимо (можна додати редагування)
+            draggedLesson = null;
+        }
+    });
+    
+    lessonsList.addEventListener('mousemove', (e) => {
+        if (isDragging && draggedLesson) {
+            handleDragMove(e);
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            endDrag();
+        }
+        clearTimeout(dragTimeout);
+        draggedLesson = null;
+    });
+}
+
+function startDrag(lessonCard, event) {
+    if (!lessonCard) return;
+    
+    isDragging = true;
+    lessonCard.classList.add('lesson-drag-start');
+    
+    // Анімація потовщення рамок
+    lessonCard.style.transition = 'all 0.2s ease';
+    lessonCard.style.border = '2px solid var(--accent)';
+    lessonCard.style.boxShadow = '0 0 0 2px rgba(37, 99, 235, 0.3)';
+    
+    // Зберігаємо оригінальний стиль
+    const originalTransform = lessonCard.style.transform;
+    lessonCard.style.transform = 'scale(1.02)';
+    
+    // Додаємо індикатор
+    dragIndicator = document.createElement('div');
+    dragIndicator.className = 'drag-indicator';
+    dragIndicator.textContent = 'Перетягніть для зміни позиції';
+    document.body.appendChild(dragIndicator);
+    
+    // Вібруємо (якщо підтримується)
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
+    
+    // Додаємо клас для всіх drop-зон
+    document.querySelectorAll('.section-wrapper, .data-list').forEach(el => {
+        if (el !== lessonCard && !el.closest('.data-card')) {
+            el.classList.add('section-drop-zone');
+        }
+    });
+    
+    // Зберігаємо початкову позицію миші
+    if (event) {
+        updateDragIndicator(event.clientX, event.clientY);
+    }
+}
+
+function handleDragMove(e) {
+    if (!isDragging || !draggedLesson) return;
+    
+    e.preventDefault();
+    updateDragIndicator(e.clientX, e.clientY);
+    
+    // Знаходимо елемент під курсором
+    const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
+    const targetLesson = elementUnderCursor?.closest('.data-card');
+    const targetSection = elementUnderCursor?.closest('.section-wrapper');
+    
+    // Видаляємо попередній клас hover
+    document.querySelectorAll('.lesson-drag-over').forEach(el => {
+        el.classList.remove('lesson-drag-over');
+    });
+    
+    // Додаємо клас hover на цільовий елемент
+    if (targetLesson && targetLesson !== draggedLesson) {
+        targetLesson.classList.add('lesson-drag-over');
+    } else if (targetSection && !targetLesson) {
+        targetSection.classList.add('lesson-drag-over');
+    }
+}
+
+async function endDrag() {
+    if (!isDragging || !draggedLesson) {
+        cleanupDrag();
+        return;
+    }
+    
+    // Знаходимо фінальну позицію
+    const mouseX = window.lastMouseX || 0;
+    const mouseY = window.lastMouseY || 0;
+    const elementUnderCursor = document.elementFromPoint(mouseX, mouseY);
+    const targetLesson = elementUnderCursor?.closest('.data-card');
+    const targetSection = elementUnderCursor?.closest('.section-wrapper');
+    
+    if (targetLesson && targetLesson !== draggedLesson) {
+        // Переміщення перед/після цільового заняття
+        await moveLessonBeforeAfter(draggedLesson, targetLesson);
+    } else if (targetSection && !targetLesson) {
+        // Переміщення в розділ
+        await moveLessonToSection(draggedLesson, targetSection);
+    }
+    
+    cleanupDrag();
+    
+    // Оновлюємо відображення
+    await loadMyLessons();
+    
+    // Оновлюємо журнал якщо він активний
+    if (document.getElementById("tab-journal").classList.contains("active")) {
+        await renderJournal();
+    }
+}
+
+function cleanupDrag() {
+    if (draggedLesson) {
+        draggedLesson.classList.remove('lesson-drag-start');
+        draggedLesson.style.border = '';
+        draggedLesson.style.boxShadow = '';
+        draggedLesson.style.transform = '';
+    }
+    
+    document.querySelectorAll('.lesson-drag-over, .section-drop-zone').forEach(el => {
+        el.classList.remove('lesson-drag-over', 'section-drop-zone');
+    });
+    
+    if (dragIndicator) {
+        dragIndicator.remove();
+        dragIndicator = null;
+    }
+    
+    isDragging = false;
+    draggedLesson = null;
+}
+
+function updateDragIndicator(x, y) {
+    window.lastMouseX = x;
+    window.lastMouseY = y;
+    if (dragIndicator) {
+        dragIndicator.style.left = (x + 15) + 'px';
+        dragIndicator.style.top = (y + 15) + 'px';
+    }
+}
+
+async function moveLessonBeforeAfter(draggedCard, targetCard) {
+    const draggedId = draggedCard.querySelector('[onclick*="editLesson"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    const targetId = targetCard.querySelector('[onclick*="editLesson"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    
+    if (!draggedId || !targetId) return;
+    
+    // Отримуємо всі заняття
+    const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId)));
+    const lessons = [];
+    lessonsSnap.forEach(doc => {
+        lessons.push({ id: doc.id, ...doc.data(), order: doc.data().order || 0 });
+    });
+    
+    // Знаходимо індекси
+    const draggedIndex = lessons.findIndex(l => l.id === draggedId);
+    const targetIndex = lessons.findIndex(l => l.id === targetId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    // Переміщуємо елемент
+    const draggedLesson = lessons.splice(draggedIndex, 1)[0];
+    const newTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+    lessons.splice(newTargetIndex, 0, draggedLesson);
+    
+    // Оновлюємо order для всіх занять
+    for (let i = 0; i < lessons.length; i++) {
+        await updateDoc(doc(db, "lessons", lessons[i].id), { order: i });
+    }
+}
+
+async function moveLessonToSection(draggedCard, targetSection) {
+    const draggedId = draggedCard.querySelector('[onclick*="editLesson"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if (!draggedId) return;
+    
+    // Отримуємо ID розділу з targetSection
+    const sectionId = targetSection.id?.replace('section-', '');
+    if (!sectionId) return;
+    
+    // Оновлюємо заняття з новим розділом
+    await updateDoc(doc(db, "lessons", draggedId), { 
+        sectionId: sectionId === 'without_section' ? null : sectionId 
+    });
+    
+    // Оновлюємо порядок в новому розділі
+    const sectionLessonsSnap = await getDocs(query(collection(db, "lessons"), 
+        where("sectionId", "==", (sectionId === 'without_section' ? null : sectionId)),
+        where("teacherId", "==", currentTeacherId)
+    ));
+    
+    const sectionLessons = [];
+    sectionLessonsSnap.forEach(doc => {
+        sectionLessons.push({ id: doc.id, ...doc.data() });
+    });
+    
+    // Оновлюємо order
+    for (let i = 0; i < sectionLessons.length; i++) {
+        await updateDoc(doc(db, "lessons", sectionLessons[i].id), { order: i });
+    }
+}
+
+// Експортуємо функції для глобального використання
+window.initDragAndDrop = initDragAndDrop;
+
   // ========== ФУНКЦІЇ ДЛЯ РОЗДІЛІВ ==========
   async function loadSectionsForSubject(subjectId) {
     if (!subjectId) return [];
@@ -1114,25 +1365,25 @@ window.selectSection = function(value, label, event) {
   };
 
   // ========== ОСНОВНА ФУНКЦІЯ ЗАВАНТАЖЕННЯ ЗАНЯТЬ ==========
-  async function loadMyLessons() {
+async function loadMyLessons() {
     let lessonsQuery = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId));
     const filterSubject = document.getElementById("lessonFilterSubject").value;
     if (filterSubject !== "all") {
-      lessonsQuery = query(lessonsQuery, where("subjectId", "==", filterSubject));
+        lessonsQuery = query(lessonsQuery, where("subjectId", "==", filterSubject));
     }
     const snap = await getDocs(lessonsQuery);
     
     const subjectsSnap = await getDocs(query(collection(db, "subjects"), where("teacherId", "==", currentTeacherId)));
     const subMap = {};
     for (const docSnap of subjectsSnap.docs) {
-      const s = docSnap.data();
-      const groupsSnap = await getDocs(query(collection(db, "groups"), where("id", "==", s.groupId)));
-      let groupName = '', academicYear = '';
-      if (!groupsSnap.empty) {
-        groupName = groupsSnap.docs[0].data().name;
-        academicYear = groupsSnap.docs[0].data().academicYear || '';
-      }
-      subMap[docSnap.id] = { name: s.name, group: groupName, year: academicYear || s.academicYear };
+        const s = docSnap.data();
+        const groupsSnap = await getDocs(query(collection(db, "groups"), where("id", "==", s.groupId)));
+        let groupName = '', academicYear = '';
+        if (!groupsSnap.empty) {
+            groupName = groupsSnap.docs[0].data().name;
+            academicYear = groupsSnap.docs[0].data().academicYear || '';
+        }
+        subMap[docSnap.id] = { name: s.name, group: groupName, year: academicYear || s.academicYear };
     }
     
     const sectionsSnap = await getDocs(query(collection(db, "sections"), where("teacherId", "==", currentTeacherId)));
@@ -1141,126 +1392,134 @@ window.selectSection = function(value, label, event) {
     
     const container = document.getElementById("lessonsList");
     if (snap.empty) {
-      container.innerHTML = '<div class="empty-state">Занять не знайдено</div>';
-      if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
-      return;
+        container.innerHTML = '<div class="empty-state">Занять не знайдено</div>';
+        if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
+        return;
     }
     
     const lessonsArray = [];
     snap.forEach(docSnap => {
-      lessonsArray.push({
-        id: docSnap.id,
-        ...docSnap.data(),
-        createdAt: docSnap.data().createdAt || new Date(0).toISOString()
-      });
+        lessonsArray.push({
+            id: docSnap.id,
+            ...docSnap.data(),
+            createdAt: docSnap.data().createdAt || new Date(0).toISOString(),
+            order: docSnap.data().order || 0
+        });
     });
+    
+    // Сортуємо за order
+    lessonsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
     
     const groupedBySection = {};
     lessonsArray.forEach(lesson => {
-      const sectionId = lesson.sectionId || 'without_section';
-      if (!groupedBySection[sectionId]) groupedBySection[sectionId] = [];
-      groupedBySection[sectionId].push(lesson);
+        const sectionId = lesson.sectionId || 'without_section';
+        if (!groupedBySection[sectionId]) groupedBySection[sectionId] = [];
+        groupedBySection[sectionId].push(lesson);
     });
     
+    // Сортуємо заняття в кожному розділі за order
     for (const sectionId in groupedBySection) {
-      groupedBySection[sectionId].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        groupedBySection[sectionId].sort((a, b) => (a.order || 0) - (b.order || 0));
     }
     
     const sectionsList = [];
     for (const sectionId in groupedBySection) {
-      const lessons = groupedBySection[sectionId];
-      const latestLesson = lessons[0];
-      const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
-      const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db, "sections", sectionId)) : null;
-      const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
-      sectionsList.push({
-        id: sectionId,
-        name: sectionMap[sectionId] || 'Без розділу',
-        lessons: lessons,
-        latestDate: latestDate,
-        createdAt: createdAtSection
-      });
+        const lessons = groupedBySection[sectionId];
+        const latestLesson = lessons[0];
+        const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
+        const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db, "sections", sectionId)) : null;
+        const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
+        sectionsList.push({
+            id: sectionId,
+            name: sectionMap[sectionId] || 'Без розділу',
+            lessons: lessons,
+            latestDate: latestDate,
+            createdAt: createdAtSection
+        });
     }
     
     sectionsList.sort((a, b) => {
-      if (a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate;
-      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
-      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
-      return bTime - aTime;
+        if (a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate;
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
     });
     
     let html = '';
     for (const section of sectionsList) {
-      const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
-      const isWithoutSection = section.name === 'Без розділу';
-      
-      if (!isWithoutSection) {
-        html += `<div id="section-${sectionIdSafe}" class="section-wrapper">
-                    <div class="section-header-wrapper">
-                        <div class="section-header-title" onclick="window.toggleSection('${sectionIdSafe}')">
-                            <span class="section-toggle-btn">▼</span> 📁 ${escapeHtml(section.name)} <span style="font-size: 11px; color: #6b7280; margin-left: 8px;">(${section.lessons.length} занять)</span>
-                        </div>
-                        <div class="section-header-actions">
-                            <button class="section-delete-btn" onclick="event.stopPropagation(); window.deleteSection('${section.id}', '${escapeHtml(section.name).replace(/'/g, "\\'")}')" title="Видалити розділ">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="data-list">`;
-      } else {
-        html += `<div id="section-${sectionIdSafe}" class="section-wrapper"><div class="data-list">`;
-      }
-      
-      for (const l of section.lessons) {
-        const dateParts = l.date.split('-');
-        const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+        const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
+        const isWithoutSection = section.name === 'Без розділу';
         
-        let typeShort = '';
-        switch (l.type) {
-          case 'Лекція': typeShort = 'Лек'; break;
-          case 'Практичне заняття': typeShort = 'Прак'; break;
-          case 'Лабораторне заняття': typeShort = 'Лаб'; break;
-          case 'Семінарське заняття': typeShort = 'Сем'; break;
-          case 'Самостійне вивчення': typeShort = 'С.в.'; break;
-          case 'Залік з модуля': typeShort = 'Залік'; break;
-          case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
-          default: typeShort = l.type;
+        if (!isWithoutSection) {
+            html += `<div id="section-${sectionIdSafe}" class="section-wrapper">
+                        <div class="section-header-wrapper">
+                            <div class="section-header-title" onclick="window.toggleSection('${sectionIdSafe}')">
+                                <span class="section-toggle-btn">▼</span> 📁 ${escapeHtml(section.name)} <span style="font-size: 11px; color: #6b7280; margin-left: 8px;">(${section.lessons.length} занять)</span>
+                            </div>
+                            <div class="section-header-actions">
+                                <button class="section-delete-btn" onclick="event.stopPropagation(); window.deleteSection('${section.id}', '${escapeHtml(section.name).replace(/'/g, "\\'")}')" title="Видалити розділ">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="data-list">`;
+        } else {
+            html += `<div id="section-${sectionIdSafe}" class="section-wrapper"><div class="data-list">`;
         }
         
-        const subjectInfo = subMap[l.subjectId];
-        const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
-        
-        html += `<div class="data-card">
-                    <div class="data-info">
-                        <div class="data-icon">📅</div>
-                        <div>
-                            <div class="data-title">${escapeHtml(l.topic) || "Без теми"}</div>
-                            <div class="data-sub">${escapeHtml(subjectDisplay)} | ${typeShort} | ${formattedDate}</div>
+        for (const l of section.lessons) {
+            const dateParts = l.date.split('-');
+            const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+            
+            let typeShort = '';
+            switch (l.type) {
+                case 'Лекція': typeShort = 'Лек'; break;
+                case 'Практичне заняття': typeShort = 'Прак'; break;
+                case 'Лабораторне заняття': typeShort = 'Лаб'; break;
+                case 'Семінарське заняття': typeShort = 'Сем'; break;
+                case 'Самостійне вивчення': typeShort = 'С.в.'; break;
+                case 'Залік з модуля': typeShort = 'Залік'; break;
+                case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
+                default: typeShort = l.type;
+            }
+            
+            const subjectInfo = subMap[l.subjectId];
+            const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
+            
+            // Додаємо клас lesson-item для drag-and-drop
+            html += `<div class="data-card lesson-item" data-lesson-id="${l.id}" data-section-id="${section.id}">
+                        <div class="data-info">
+                            <div class="data-icon">📅</div>
+                            <div>
+                                <div class="data-title">${escapeHtml(l.topic) || "Без теми"}</div>
+                                <div class="data-sub">${escapeHtml(subjectDisplay)} | ${typeShort} | ${formattedDate}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="data-actions">
-                        <button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button>
-                        <button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button>
-                    </div>
-                </div>`;
-      }
-      html += `</div></div>`;
+                        <div class="data-actions">
+                            <button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button>
+                            <button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button>
+                        </div>
+                    </div>`;
+        }
+        html += `</div></div>`;
     }
     
     container.innerHTML = html;
-    // Відновлюємо стан згортання розділів із localStorage
+    
+    // Відновлюємо стан згортання розділів
     for (const section of sectionsList) {
-      const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
-      const storageKey = `section_state_${sectionIdSafe}`;
-      if (localStorage.getItem(storageKey) === 'collapsed') {
-        const sectionElement = document.getElementById(`section-${sectionIdSafe}`);
-        if (sectionElement) {
-          sectionElement.classList.add('section-collapsed');
-          const toggleBtn = sectionElement.querySelector('.section-toggle-btn');
-          if (toggleBtn) toggleBtn.textContent = '▶';
+        const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
+        const storageKey = `section_state_${sectionIdSafe}`;
+        if (localStorage.getItem(storageKey) === 'collapsed') {
+            const sectionElement = document.getElementById(`section-${sectionIdSafe}`);
+            if (sectionElement) {
+                sectionElement.classList.add('section-collapsed');
+                const toggleBtn = sectionElement.querySelector('.section-toggle-btn');
+                if (toggleBtn) toggleBtn.textContent = '▶';
+            }
         }
-      }
     }
+    
     if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
-  }
+}
 
   // ========== ФУНКЦІЇ ДЛЯ ГРУП ==========
   async function loadGroups() {
@@ -1953,6 +2212,9 @@ function populateSelects() {
         
         // Завантажуємо всі дані
         await loadAllData();
+
+        // Ініціалізуємо drag-and-drop
+        initDragAndDrop();
         
         // Відновлюємо останній вибір фільтрів
         restoreLastSelection();
