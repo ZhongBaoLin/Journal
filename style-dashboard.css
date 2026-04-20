@@ -968,63 +968,84 @@
     }
 
 /* Drag and Drop Styles */
+/* Drag and Drop Styles */
 .lesson-dragging {
-    opacity: 0.5;
+    position: fixed !important;
+    z-index: 10000 !important;
+    width: 300px;
+    opacity: 0.9;
     cursor: grabbing !important;
-}
-
-.lesson-drag-over {
-    border: 2px solid var(--accent) !important;
-    background: var(--accent-light) !important;
-    transform: scale(1.01);
-    transition: all 0.2s ease;
+    pointer-events: none;
+    transform: scale(0.95);
+    transition: none;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
 }
 
 .lesson-drag-start {
-    animation: pulse-border 0.3s ease;
     cursor: grab;
 }
 
-@keyframes pulse-border {
-    0% {
-        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
-        border-width: 1px;
-    }
-    50% {
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
-        border-width: 2px;
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
-        border-width: 1px;
-    }
+.lesson-drag-over-top {
+    border-top: 3px solid var(--accent) !important;
+    background: var(--accent-light) !important;
+    margin-top: 4px;
+    transition: all 0.1s ease;
 }
 
-.drag-indicator {
-    position: fixed;
-    pointer-events: none;
-    z-index: 10000;
-    background: var(--accent);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    opacity: 0.9;
+.lesson-drag-over-bottom {
+    border-bottom: 3px solid var(--accent) !important;
+    background: var(--accent-light) !important;
+    margin-bottom: 4px;
+    transition: all 0.1s ease;
 }
 
 .section-drop-zone {
     border: 2px dashed var(--accent) !important;
     background: var(--accent-light) !important;
     margin: 8px 0;
-    transition: all 0.2s ease;
+    padding: 16px !important;
+    min-height: 60px;
+}
+
+.drag-indicator {
+    position: fixed;
+    pointer-events: none;
+    z-index: 10001;
+    background: var(--accent);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .lesson-item {
     cursor: grab;
-    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .lesson-item:active {
     cursor: grabbing;
+}
+
+/* Заборона виділення тексту під час drag */
+body.dragging-active {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
+.drag-placeholder {
+    background: var(--accent-light);
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    margin: 8px 0;
+    height: 80px;
+    transition: all 0.2s ease;
 }
