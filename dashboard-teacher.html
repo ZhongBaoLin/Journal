@@ -488,64 +488,6 @@
     return div.innerHTML;
   }
 
-    // Функція для перевірки, чи є хоч одна підсумкова оцінка
-function checkAndToggleFinalColumnSticky() {
-    const finalCells = document.querySelectorAll('.journal-table .final-grade-cell');
-    const headerCell = document.querySelector('.journal-table th:last-child');
-    const allRows = document.querySelectorAll('.journal-table tbody tr');
-    
-    let hasAnyGrade = false;
-    
-    // Перевіряємо, чи є хоч одна непорожня оцінка
-    finalCells.forEach(cell => {
-        const grade = cell.getAttribute('data-current-grade');
-        if (grade && grade !== '' && grade !== '—') {
-            hasAnyGrade = true;
-        }
-    });
-    
-    if (hasAnyGrade) {
-        // Якщо є оцінки - додаємо sticky
-        allRows.forEach(row => {
-            const finalCell = row.querySelector('td:last-child');
-            if (finalCell && finalCell.classList.contains('final-grade-cell')) {
-                finalCell.classList.remove('empty-final');
-                finalCell.style.position = 'sticky';
-                finalCell.style.right = '0';
-                finalCell.style.backgroundColor = 'white';
-                finalCell.style.boxShadow = '-2px 0 5px rgba(0,0,0,0.1)';
-                finalCell.style.zIndex = '5';
-            }
-        });
-        if (headerCell) {
-            headerCell.classList.remove('empty-final');
-            headerCell.style.position = 'sticky';
-            headerCell.style.right = '0';
-            headerCell.style.backgroundColor = '#f9fafb';
-            headerCell.style.zIndex = '10';
-        }
-    } else {
-        // Якщо немає оцінок - прибираємо sticky
-        allRows.forEach(row => {
-            const finalCell = row.querySelector('td:last-child');
-            if (finalCell && finalCell.classList.contains('final-grade-cell')) {
-                finalCell.classList.add('empty-final');
-                finalCell.style.position = '';
-                finalCell.style.right = '';
-                finalCell.style.backgroundColor = '';
-                finalCell.style.boxShadow = '';
-                finalCell.style.zIndex = '';
-            }
-        });
-        if (headerCell) {
-            headerCell.classList.add('empty-final');
-            headerCell.style.position = '';
-            headerCell.style.right = '';
-            headerCell.style.backgroundColor = '';
-            headerCell.style.zIndex = '';
-        }
-    }
-}
 
   // ========== ФУНКЦІЇ ДЛЯ РОБОТИ З ОЦІНКАМИ ==========
   async function saveGradeDirect(lessonId, studentId, newGrade, scale) {
