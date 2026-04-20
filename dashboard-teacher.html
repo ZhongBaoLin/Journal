@@ -607,34 +607,32 @@ function updateFinalGradeCellDisplay(cell, grade, scale) {
     cell.setAttribute('data-current-grade', grade || '');
     cell.onclick = function() { startEditFinalGrade(cell); };
 }
-async function updateStudentStats(studentId) {
+  async function updateStudentStats(studentId) {
     if (!currentGroupId || !currentSubjectId) return;
     
     const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("subjectId", "==", currentSubjectId), where("teacherId", "==", currentTeacherId)));
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
-    lessons.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        if (dateA !== dateB) return dateA - dateB;
-        return (a.id || '').localeCompare(b.id || '');
-    });
+   lessons.sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    
+    if (dateA !== dateB) {
+        return dateA - dateB;
+    }
+    // Якщо дати однакові, сортуємо за ID (щоб новіші документи були пізніше)
+    return (a.id || '').localeCompare(b.id || '');
+});
     
     let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
     for (const lesson of lessons) {
-        const gradeSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id), where("studentId", "==", studentId)));
-        if (!gradeSnap.empty) {
-            const grade = gradeSnap.docs[0].data().grade;
-            if (grade === 'н') nCount++;
-            else if (grade === 'св') svCount++;
-            else { 
-                const num = parseFloat(grade); 
-                if (!isNaN(num)) { 
-                    totalPoints += num; 
-                    gradeCount++; 
-                } 
-            }
-        }
+      const gradeSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id), where("studentId", "==", studentId)));
+      if (!gradeSnap.empty) {
+        const grade = gradeSnap.docs[0].data().grade;
+        if (grade === 'н') nCount++;
+        else if (grade === 'св') svCount++;
+        else { const num = parseFloat(grade); if (!isNaN(num)) { totalPoints += num; gradeCount++; } }
+      }
     }
     
     const avg = gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-';
@@ -642,35 +640,24 @@ async function updateStudentStats(studentId) {
     
     const row = document.querySelector(`.journal-table td[data-student-id="${studentId}"]`)?.closest('tr');
     if (row) {
-        const avgCell = row.querySelector('td:nth-last-child(4)');
-        if (avgCell) {
-            avgCell.className = 'stat-cell';
-            avgCell.style.fontWeight = '700';
-            if (avgNum === 5) avgCell.classList.add('grade-5');
-            else if (avgNum === 4) avgCell.classList.add('grade-4');
-            else if (avgNum === 3) avgCell.classList.add('grade-3');
-            else if (avgNum === 2) avgCell.classList.add('grade-2');
-            else if (avgNum === 1) avgCell.classList.add('grade-1');
-            avgCell.textContent = avg;
-        }
-        const nCell = row.querySelector('td:nth-last-child(3)');
-        if (nCell) { 
-            nCell.className = 'stat-cell-red-text';
-            nCell.style.fontWeight = '700';
-            nCell.style.background = '#fee2e2';
-            nCell.style.color = '#dc2626';
-            nCell.textContent = nCount; 
-        }
-        const svCell = row.querySelector('td:nth-last-child(2)');
-        if (svCell) { 
-            svCell.className = 'stat-cell-red-text';
-            svCell.style.fontWeight = '700';
-            svCell.style.background = '#fed7aa';
-            svCell.style.color = '#c2410c';
-            svCell.textContent = svCount; 
-        }
+      const avgCell = row.querySelector('td:nth-last-child(4)');
+      if (avgCell) {
+        let avgClass = '';
+        if (avgNum === 5) avgClass = 'grade-5';
+        else if (avgNum === 4) avgClass = 'grade-4';
+        else if (avgNum === 3) avgClass = 'grade-3';
+        else if (avgNum === 2) avgClass = 'grade-2';
+        else if (avgNum === 1) avgClass = 'grade-1';
+        avgCell.className = `stat-cell ${avgClass}`;
+        avgCell.style.fontWeight = '700';
+        avgCell.textContent = avg;
+      }
+      const nCell = row.querySelector('td:nth-last-child(3)');
+      if (nCell) { nCell.className = 'stat-cell-red-text'; nCell.textContent = nCount; }
+      const svCell = row.querySelector('td:nth-last-child(2)');
+      if (svCell) { svCell.className = 'stat-cell-red-text'; svCell.textContent = svCount; }
     }
-}
+  }
 
   async function updateFinalGradeForStudent(studentId, subjectId, scale) {
     if (!studentId || !subjectId) return;
@@ -871,7 +858,10 @@ async function renderJournal() {
     lessons.sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        if (dateA !== dateB) return dateA - dateB;
+        
+        if (dateA !== dateB) {
+            return dateA - dateB;
+        }
         return (a.id || '').localeCompare(b.id || '');
     });
     
@@ -920,24 +910,11 @@ async function renderJournal() {
         };
     });
     
-    // Функція для отримання класу кольору оцінки
-    function getGradeClass(grade) {
-        if (grade === 'н') return 'grade-n';
-        if (grade === 'св') return 'grade-sv';
-        const num = parseFloat(grade);
-        if (num === 5) return 'grade-5';
-        if (num === 4) return 'grade-4';
-        if (num === 3) return 'grade-3';
-        if (num === 2) return 'grade-2';
-        if (num === 1) return 'grade-1';
-        return '';
-    }
-    
     let html = '<table class="journal-table"><thead><tr>';
     html += '<th>№</th>';
     html += '<th>Студент</th>';
     
-    for (const lesson of lessons) {
+    lessons.forEach(lesson => {
         const dateParts = lesson.date.split('-');
         const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
         let typeShort = '';
@@ -953,14 +930,14 @@ async function renderJournal() {
         }
         const isSpecial = (lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання');
         const specialClass = isSpecial ? 'lesson-special' : '';
-        html += `<th class="date-cell ${specialClass}" data-lesson-type="${lesson.type}" data-lesson-topic="${escapeHtml(lesson.topic || '')}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
-    }
+        html += `<th class="date-cell ${specialClass}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
+    });
     
     const finalColHeader = subjectControl === 'екзамен' ? 'Екзамен' : 'Підсумкова';
-    html += `<th>Сер.</th>`;
-    html += `<th>Н</th>`;
-    html += `<th>СВ</th>`;
-    html += `<th>${finalColHeader}</th>`;
+    html += `<th class="stat-cell">Сер.</th>`;
+    html += `<th class="stat-header-red">Н</th>`;
+    html += `<th class="stat-header-red">СВ</th>`;
+    html += `<th class="stat-cell">${finalColHeader}</th>`;
     html += `</tr></thead><tbody>`;
     
     let studentCounter = 1;
@@ -969,32 +946,56 @@ async function renderJournal() {
         const finalGrade = finalGrades[student.id] || '';
         
         html += `<tr>`;
-        html += `<td style="text-align:center;">${studentCounter}</td>`;
+        html += `<td style="text-align:center; width:40px;">${studentCounter}</td>`;
         html += `<td style="text-align:left"><strong>${escapeHtml(student.name)}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
         
-        // Оцінки за заняття
         for (const lesson of lessons) {
             const grade = allGrades[lesson.id]?.[student.id] || '';
-            const displayGrade = grade || '—';
-            const gradeClass = getGradeClass(grade);
+            let gradeClass = '';
+            let displayGrade = grade || '—';
+            if (grade === 'н') {
+                gradeClass = 'grade-n';
+                displayGrade = 'н';
+            } else if (grade === 'св') {
+                gradeClass = 'grade-sv';
+                displayGrade = 'св';
+            } else {
+                const num = parseFloat(grade);
+                if (num === 5) gradeClass = 'grade-5';
+                else if (num === 4) gradeClass = 'grade-4';
+                else if (num === 3) gradeClass = 'grade-3';
+                else if (num === 2) gradeClass = 'grade-2';
+                else if (num === 1) gradeClass = 'grade-1';
+                displayGrade = grade || '—';
+            }
             html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade || ''}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade}</td>`;
         }
         
-        // Середня оцінка (з кольором)
-        const avgValue = stats.avg;
-        const avgClass = getGradeClass(avgValue);
-        html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${avgValue}</td>`;
+        const avgNum = parseFloat(stats.avg);
+        let avgClass = '';
+        let avgDisplay = stats.avg;
+        if (avgNum === 5) avgClass = 'grade-5';
+        else if (avgNum === 4) avgClass = 'grade-4';
+        else if (avgNum === 3) avgClass = 'grade-3';
+        else if (avgNum === 2) avgClass = 'grade-2';
+        else if (avgNum === 1) avgClass = 'grade-1';
         
-        // Н та СВ (червоні)
-        html += `<td class="stat-cell-red-text" style="font-weight:700; background:#fee2e2; color:#dc2626;">${stats.n}</td>`;
-        html += `<td class="stat-cell-red-text" style="font-weight:700; background:#fed7aa; color:#c2410c;">${stats.sv}</td>`;
+        html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${avgDisplay}</td>`;
+        html += `<td class="stat-cell-red-text" style="font-weight:700;">${stats.n}</td>`;
+        html += `<td class="stat-cell-red-text" style="font-weight:700;">${stats.sv}</td>`;
         
-        // Підсумкова оцінка (з кольором)
         if (subjectControl === 'екзамен') {
-            html += `<td class="stat-cell" style="font-weight:700; color:#7c3aed; background:#f3e8ff;">Екзамен</td>`;
+            html += `<td class="stat-cell" style="font-weight:700; color:#7c3aed;">Екзамен</td>`;
         } else {
-            const finalClass = getGradeClass(finalGrade);
-            html += `<td class="final-grade-cell ${finalClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade || ''}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)" style="font-weight:700;">${finalGrade || '—'}</td>`;
+            let finalGradeClass = '';
+            const finalNum = parseFloat(finalGrade);
+            if (finalNum === 5) finalGradeClass = 'grade-5';
+            else if (finalNum === 4) finalGradeClass = 'grade-4';
+            else if (finalNum === 3) finalGradeClass = 'grade-3';
+            else if (finalNum === 2) finalGradeClass = 'grade-2';
+            else if (finalNum === 1) finalGradeClass = 'grade-1';
+            
+            html += `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade || ''}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)" style="font-weight:700;">${finalGrade || '—'}</td>`;
         }
         
         html += `</tr>`;
@@ -1004,7 +1005,6 @@ async function renderJournal() {
     html += '</tbody></table>';
     document.getElementById("journalTableContainer").innerHTML = html;
     
-    // Додаємо підказки
     document.querySelectorAll('.date-cell').forEach(cell => {
         cell.addEventListener('mouseenter', showTooltip);
         cell.addEventListener('mouseleave', hideTooltip);
