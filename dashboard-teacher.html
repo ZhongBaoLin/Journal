@@ -514,32 +514,28 @@
     cell.onclick = function() { startEditFinalGrade(cell); };
   }
 
-  async function updateStudentStats(studentId) {
+async function updateStudentStats(studentId) {
     if (!currentGroupId || !currentSubjectId) return;
     
     const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("subjectId", "==", currentSubjectId), where("teacherId", "==", currentTeacherId)));
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
-   lessons.sort((a, b) => {
-    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    
-    if (dateA !== dateB) {
-        return dateA - dateB;
-    }
-    // Якщо дати однакові, сортуємо за ID (щоб новіші документи були пізніше)
-    return (a.id || '').localeCompare(b.id || '');
-});
+    lessons.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        if (dateA !== dateB) return dateA - dateB;
+        return (a.id || '').localeCompare(b.id || '');
+    });
     
     let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
     for (const lesson of lessons) {
-      const gradeSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id), where("studentId", "==", studentId)));
-      if (!gradeSnap.empty) {
-        const grade = gradeSnap.docs[0].data().grade;
-        if (grade === 'н') nCount++;
-        else if (grade === 'св') svCount++;
-        else { const num = parseFloat(grade); if (!isNaN(num)) { totalPoints += num; gradeCount++; } }
-      }
+        const gradeSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id), where("studentId", "==", studentId)));
+        if (!gradeSnap.empty) {
+            const grade = gradeSnap.docs[0].data().grade;
+            if (grade === 'н') nCount++;
+            else if (grade === 'св') svCount++;
+            else { const num = parseFloat(grade); if (!isNaN(num)) { totalPoints += num; gradeCount++; } }
+        }
     }
     
     const avg = gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-';
@@ -547,36 +543,52 @@
     
     const row = document.querySelector(`.journal-table td[data-student-id="${studentId}"]`)?.closest('tr');
     if (row) {
-      const avgCell = row.querySelector('td:nth-last-child(4)');
-      if (avgCell) {
-        let avgClass = '';
-        if (avgNum === 5) avgClass = 'grade-5';
-        else if (avgNum === 4) avgClass = 'grade-4';
-        else if (avgNum === 3) avgClass = 'grade-3';
-        else if (avgNum === 2) avgClass = 'grade-2';
-        else if (avgNum === 1) avgClass = 'grade-1';
-        avgCell.className = `stat-cell ${avgClass}`;
-        avgCell.style.fontWeight = '700';
-        avgCell.textContent = avg;
-      }
-      const nCell = row.querySelector('td:nth-last-child(3)');
-      if (nCell) { nCell.className = 'stat-cell-red-text'; nCell.textContent = nCount; }
-      const svCell = row.querySelector('td:nth-last-child(2)');
-      if (svCell) { svCell.className = 'stat-cell-red-text'; svCell.textContent = svCount; }
+        const avgCell = row.querySelector('td:nth-last-child(4)');
+        if (avgCell) {
+            // Оновлене підсвічування для середньої оцінки
+            let avgClass = '';
+            if (!isNaN(avgNum)) {
+                if (avgNum === 5) avgClass = 'grade-5';
+                else if (avgNum === 4) avgClass = 'grade-4';
+                else if (avgNum === 3) avgClass = 'grade-3';
+                else if (avgNum === 2) avgClass = 'grade-2';
+                else if (avgNum === 1) avgClass = 'grade-1';
+            }
+            avgCell.className = `stat-cell ${avgClass}`;
+            avgCell.style.fontWeight = '700';
+            avgCell.textContent = avg;
+        }
+        const nCell = row.querySelector('td:nth-last-child(3)');
+        if (nCell) { nCell.className = 'stat-cell-red-text'; nCell.textContent = nCount; }
+        const svCell = row.querySelector('td:nth-last-child(2)');
+        if (svCell) { svCell.className = 'stat-cell-red-text'; svCell.textContent = svCount; }
     }
-  }
+}
 
-  async function updateFinalGradeForStudent(studentId, subjectId, scale) {
+async function updateFinalGradeForStudent(studentId, subjectId, scale) {
     if (!studentId || !subjectId) return;
     const finalSnap = await getDocs(query(collection(db, "finalGrades"), where("studentId", "==", studentId), where("subjectId", "==", subjectId)));
     const finalGrade = !finalSnap.empty ? finalSnap.docs[0].data().grade : '';
     const row = document.querySelector(`.journal-table td[data-student-id="${studentId}"]`)?.closest('tr');
     if (row) {
-      const finalCell = row.querySelector('.final-grade-cell');
-      if (finalCell) updateFinalGradeCellDisplay(finalCell, finalGrade, scale);
+        const finalCell = row.querySelector('.final-grade-cell');
+        if (finalCell) {
+            // Оновлене підсвічування для підсумкової оцінки
+            let finalGradeClass = '';
+            const finalNum = parseFloat(finalGrade);
+            if (!isNaN(finalNum)) {
+                if (finalNum === 5) finalGradeClass = 'grade-5';
+                else if (finalNum === 4) finalGradeClass = 'grade-4';
+                else if (finalNum === 3) finalGradeClass = 'grade-3';
+                else if (finalNum === 2) finalGradeClass = 'grade-2';
+                else if (finalNum === 1) finalGradeClass = 'grade-1';
+            }
+            finalCell.className = `final-grade-cell ${finalGradeClass}`;
+            finalCell.textContent = finalGrade || '—';
+            finalCell.setAttribute('data-current-grade', finalGrade || '');
+        }
     }
-  }
-
+}
   // ========== ФУНКЦІЇ РЕДАГУВАННЯ КОМІРОК ==========
   function saveAndCloseInput(input, cell) {
     if (!input || !cell || currentEditingCell !== cell) return;
@@ -762,37 +774,12 @@ async function renderJournal() {
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
     
-    // ========== ДІАГНОСТИКА В КОНСОЛІ ==========
-    console.log('=== ЖУРНАЛ: ОТРИМАНІ ЗАНЯТТЯ ===');
-    console.log('Всього занять:', lessons.length);
-    console.log('Заняття ДО сортування:', lessons.map(l => ({ 
-        id: l.id, 
-        createdAt: l.createdAt, 
-        type: l.type,
-        number: l.number,
-        topic: l.topic?.substring(0, 30)
-    })));
-    
-    // Сортування занять за датою створення (від найстарішого до найновішого)
     lessons.sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        
-        if (dateA !== dateB) {
-            return dateA - dateB;
-        }
-        // Якщо дати однакові, сортуємо за ID
+        if (dateA !== dateB) return dateA - dateB;
         return (a.id || '').localeCompare(b.id || '');
     });
-    
-    console.log('Заняття ПІСЛЯ сортування (від старіших до новіших):', lessons.map(l => ({ 
-        id: l.id, 
-        createdAt: l.createdAt, 
-        type: l.type,
-        number: l.number
-    })));
-    console.log('===================================');
-    // ===============================================
     
     if (lessons.length === 0) {
         document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
@@ -867,13 +854,28 @@ async function renderJournal() {
     for (const student of students) {
         const stats = studentStats[student.id];
         const finalGrade = finalGrades[student.id] || '';
+        
+        // ---- ПІДСВІЧУВАННЯ ДЛЯ СЕРЕДНЬОЇ ОЦІНКИ ----
+        let avgClass = '';
+        const avgNum = parseFloat(stats.avg);
+        if (!isNaN(avgNum)) {
+            if (avgNum === 5) avgClass = 'grade-5';
+            else if (avgNum === 4) avgClass = 'grade-4';
+            else if (avgNum === 3) avgClass = 'grade-3';
+            else if (avgNum === 2) avgClass = 'grade-2';
+            else if (avgNum === 1) avgClass = 'grade-1';
+        }
+        
+        // ---- ПІДСВІЧУВАННЯ ДЛЯ ПІДСУМКОВОЇ ОЦІНКИ ----
         let finalGradeClass = '';
         const finalNum = parseFloat(finalGrade);
-        if (finalNum === 5) finalGradeClass = 'grade-5';
-        else if (finalNum === 4) finalGradeClass = 'grade-4';
-        else if (finalNum === 3) finalGradeClass = 'grade-3';
-        else if (finalNum === 2) finalGradeClass = 'grade-2';
-        else if (finalNum === 1) finalGradeClass = 'grade-1';
+        if (!isNaN(finalNum)) {
+            if (finalNum === 5) finalGradeClass = 'grade-5';
+            else if (finalNum === 4) finalGradeClass = 'grade-4';
+            else if (finalNum === 3) finalGradeClass = 'grade-3';
+            else if (finalNum === 2) finalGradeClass = 'grade-2';
+            else if (finalNum === 1) finalGradeClass = 'grade-1';
+        }
         
         html += `<tr><td style="text-align:center; width:40px;">${studentCounter}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
         
@@ -895,25 +897,18 @@ async function renderJournal() {
             html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade || '—'}</td>`;
         }
         
-        const avgNum = parseFloat(stats.avg);
-        let avgClass = '';
-        if (avgNum === 5) avgClass = 'grade-5';
-        else if (avgNum === 4) avgClass = 'grade-4';
-        else if (avgNum === 3) avgClass = 'grade-3';
-        else if (avgNum === 2) avgClass = 'grade-2';
-        else if (avgNum === 1) avgClass = 'grade-1';
-        
-        let finalCellHtml = '';
-        if (subjectControl === 'екзамен') {
-          finalCellHtml = `<td class="stat-cell" style="font-weight:700;color:#7c3aed;">Екзамен</td>`;
-        } else {
-          finalCellHtml = `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
-        }
+        // Колонка "Сер." з кольоровим фоном
         html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${stats.avg}</td>
                  <td class="stat-cell-red-text">${stats.n}</td>
-                 <td class="stat-cell-red-text">${stats.sv}</td>
-                 ${finalCellHtml}
-                </tr>`;
+                 <td class="stat-cell-red-text">${stats.sv}</td>`;
+        
+        // Колонка "Підсумкова" / "Екзамен" з підсвічуванням
+        if (subjectControl === 'екзамен') {
+            html += `<td class="stat-cell" style="font-weight:700;color:#7c3aed;">Екзамен</td>`;
+        } else {
+            html += `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
+        }
+        html += `</tr>`;
         studentCounter++;
     }
     
