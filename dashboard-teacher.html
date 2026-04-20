@@ -546,14 +546,15 @@ async function updateStudentStats(studentId) {
         const avgCell = row.querySelector('td:nth-last-child(4)');
         if (avgCell) {
             // Оновлене підсвічування для середньої оцінки
-            let avgClass = '';
-            if (!isNaN(avgNum)) {
-                if (avgNum === 5) avgClass = 'grade-5';
-                else if (avgNum === 4) avgClass = 'grade-4';
-                else if (avgNum === 3) avgClass = 'grade-3';
-                else if (avgNum === 2) avgClass = 'grade-2';
-                else if (avgNum === 1) avgClass = 'grade-1';
-            }
+              let avgClass = '';
+              const avgNum = parseFloat(stats.avg);
+              if (!isNaN(avgNum)) {
+                  if (avgNum === 5) avgClass = 'grade-5';
+                  else if (avgNum >= 4 && avgNum < 5) avgClass = 'grade-4';
+                  else if (avgNum >= 3 && avgNum < 4) avgClass = 'grade-3';
+                  else if (avgNum >= 2 && avgNum < 3) avgClass = 'grade-2';
+                  else if (avgNum >= 1 && avgNum < 2) avgClass = 'grade-1';
+              }
             avgCell.className = `stat-cell ${avgClass}`;
             avgCell.style.fontWeight = '700';
             avgCell.textContent = avg;
@@ -856,15 +857,14 @@ async function renderJournal() {
         const finalGrade = finalGrades[student.id] || '';
         
         // ---- ПІДСВІЧУВАННЯ ДЛЯ СЕРЕДНЬОЇ ОЦІНКИ ----
-        let avgClass = '';
-        const avgNum = parseFloat(stats.avg);
-        if (!isNaN(avgNum)) {
-            if (avgNum === 5) avgClass = 'grade-5';
-            else if (avgNum === 4) avgClass = 'grade-4';
-            else if (avgNum === 3) avgClass = 'grade-3';
-            else if (avgNum === 2) avgClass = 'grade-2';
-            else if (avgNum === 1) avgClass = 'grade-1';
-        }
+          let avgClass = '';
+          if (!isNaN(avgNum)) {
+              if (avgNum === 5) avgClass = 'grade-5';
+              else if (avgNum >= 4 && avgNum < 5) avgClass = 'grade-4';
+              else if (avgNum >= 3 && avgNum < 4) avgClass = 'grade-3';
+              else if (avgNum >= 2 && avgNum < 3) avgClass = 'grade-2';
+              else if (avgNum >= 1 && avgNum < 2) avgClass = 'grade-1';
+          }
         
         // ---- ПІДСВІЧУВАННЯ ДЛЯ ПІДСУМКОВОЇ ОЦІНКИ ----
         let finalGradeClass = '';
