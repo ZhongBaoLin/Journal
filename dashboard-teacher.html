@@ -1566,36 +1566,56 @@ window.selectSection = function(value, label, event) {
     };
   };
 
-  function resetGroupForm() {
+function resetGroupForm() {
     document.getElementById("groupName").value = "";
     document.getElementById("groupYear").value = "2025/2026";
     currentEditId = null;
     const btn = document.getElementById("saveGroupBtn");
     btn.innerText = "Зберегти";
     btn.onclick = async () => {
-      const name = document.getElementById("groupName").value;
-      const academicYear = document.getElementById("groupYear").value;
-      if (name) {
-        await addDoc(collection(db, "groups"), { name, academicYear });
-        resetGroupForm();
-        loadGroups();
-        updateStats();
-      }
+        const name = document.getElementById("groupName").value;
+        const academicYear = document.getElementById("groupYear").value;
+        if (name) {
+            await addGroupAndUpdateSelects(name, academicYear); // ВИКОРИСТОВУЄМО НОВУ ФУНКЦІЮ
+        }
     };
     document.getElementById("form-add-group").style.display = "none";
-  }
+}
 
-  document.getElementById("saveGroupBtn").onclick = async () => {
+// ЗАМІНІТЬ ІСНУЮЧИЙ ОБРОБНИК saveGroupBtn НА ЦЕЙ:
+document.getElementById("saveGroupBtn").onclick = async () => {
     if (currentEditId) return;
     const name = document.getElementById("groupName").value;
     const academicYear = document.getElementById("groupYear").value;
     if (name) {
-      await addDoc(collection(db, "groups"), { name, academicYear });
-      resetGroupForm();
-      loadGroups();
-      updateStats();
+        await addGroupAndUpdateSelects(name, academicYear); // ВИКОРИСТОВУЄМО НОВУ ФУНКЦІЮ
     }
-  };
+};
+
+  // НОВА ФУНКЦІЯ ДЛЯ ДОДАВАННЯ ГРУПИ ТА ОНОВЛЕННЯ ВСІХ SELECTІВ
+async function addGroupAndUpdateSelects(groupName, academicYear) {
+    // Додаємо групу в базу даних
+    await addDoc(collection(db, "groups"), { name: groupName, academicYear });
+    
+    // ОНОВЛЮЄМО ВСІ СПИСКИ ГРУП В ІНТЕРФЕЙСІ
+    
+    // 1. Оновлюємо список груп у формі студента
+    await loadGroupsToSelect(document.getElementById("studentGroup"));
+    
+    // 2. Оновлюємо список груп у формі предмета
+    await loadGroupsToSelect(document.getElementById("subjectGroup"));
+    
+    // 3. Оновлюємо фільтри журналу (роки та групи)
+    await populateJournalFilters();
+    
+    // 4. Оновлюємо список груп у вкладці "Групи"
+    await loadGroups();
+    
+    // 5. Оновлюємо статистику
+    await updateStats();
+    
+    console.log(`Групу "${groupName}" додано та оновлено всі списки`);
+}
 
   // ========== ФУНКЦІЇ ДЛЯ СТУДЕНТІВ ==========
   async function loadStudents() {
@@ -1741,31 +1761,67 @@ window.selectSection = function(value, label, event) {
     populateSelects();
   }
 
-  window.editSubject = async (id) => {
+window.editSubject = async (id) => {
     const snap = await getDoc(doc(db, "subjects", id));
     if (snap.exists() && snap.data().teacherId === currentTeacherId) {
-      currentEditId = id;
-      const d = snap.data();
-      document.getElementById("subjectName").value = d.name;
-      document.getElementById("subjectScale").value = d.scale;
-      document.getElementById("subjectControl").value = d.control || "залік";
-      document.getElementById("subjectType").value = d.type;
-      document.getElementById("subjectGroup").value = d.groupId || '';
-      document.getElementById("subjectYear").value = d.academicYear || '2025/2026';
-      document.getElementById("subjectCredits").value = d.credits || 0;
-      document.getElementById("subjectHours").value = d.hours || 0;
-      document.getElementById("subjectModules").value = d.modules || 0;
-      document.getElementById("subjectLectures").value = d.lectures || 0;
-      document.getElementById("subjectPracticals").value = d.practicals || 0;
-      document.getElementById("subjectLabs").value = d.labs || 0;
-      document.getElementById("subjectSeminars").value = d.seminars || 0;
-      document.getElementById("subjectSelfStudy").value = d.selfStudy || 0;
-      window.toggleForm('form-add-subject');
-      const btn = document.getElementById("saveSubjectBtn");
-      btn.innerText = "Оновити";
-      btn.onclick = () => updateSubject(id);
+        currentEditId = id;
+        const d = snap.data();
+        
+        // ОНОВЛЮЄМО СПИСОК ГРУП ПЕРЕД ЗАПОВНЕННЯМ ФОРМИ
+        await loadGroupsToSelect(document.getElementById("subjectGroup"));
+        
+        document.getElementById("subjectName").value = d.name;
+        document.getElementById("subjectScale").value = d.scale;
+        document.getElementById("subjectControl").value = d.control || "залік";
+        document.getElementById("subjectType").value = d.type;
+        document.getElementById("subjectGroup").value = d.groupId || '';
+        document.getElementById("subjectYear").value = d.academicYear || '2025/2026';
+        document.getElementById("subjectCredits").value = d.credits || 0;
+        document.getElementById("subjectHours").value = d.hours || 0;
+        document.getElementById("subjectModules").value = d.modules || 0;
+        document.getElementById("subjectLectures").value = d.lectures || 0;
+        document.getElementById("subjectPracticals").value = d.practicals || 0;
+        document.getElementById("subjectLabs").value = d.labs || 0;
+        document.getElementById("subjectSeminars").value = d.seminars || 0;
+        document.getElementById("subjectSelfStudy").value = d.selfStudy || 0;
+        
+        window.toggleForm('form-add-subject');
+        const btn = document.getElementById("saveSubjectBtn");
+        btn.innerText = "Оновити";
+        btn.onclick = () => updateSubject(id);
     }
-  };
+};
+
+// ДОДАТИ НОВУ ФУНКЦІЮ ДЛЯ ЗАВАНТАЖЕННЯ ГРУП У SELECT
+async function loadGroupsToSelect(selectElement) {
+    if (!selectElement) return;
+    
+    const snap = await getDocs(collection(db, "groups"));
+    let options = '<option value="">Оберіть групу</option>';
+    
+    // Сортуємо групи за роком та назвою
+    const groupsArray = [];
+    snap.forEach(doc => {
+        groupsArray.push({
+            id: doc.id,
+            name: doc.data().name,
+            academicYear: doc.data().academicYear || 'Не вказано'
+        });
+    });
+    
+    // Сортуємо спочатку за роком (новіші перші), потім за назвою
+    groupsArray.sort((a, b) => {
+        const yearCompare = b.academicYear.localeCompare(a.academicYear);
+        if (yearCompare !== 0) return yearCompare;
+        return a.name.localeCompare(b.name);
+    });
+    
+    groupsArray.forEach(group => {
+        options += `<option value="${group.id}">${group.name} (${group.academicYear})</option>`;
+    });
+    
+    selectElement.innerHTML = options;
+}
 
   async function updateSubject(id) {
     const groupsSnap = await getDocs(collection(db, "groups"));
@@ -1828,12 +1884,12 @@ window.selectSection = function(value, label, event) {
     }
   };
 
-  function resetSubjectForm() {
+function resetSubjectForm() {
     document.getElementById("subjectName").value = "";
     document.getElementById("subjectScale").value = "12";
     document.getElementById("subjectControl").value = "залік";
     document.getElementById("subjectType").value = "Обов'язкова";
-    document.getElementById("subjectGroup").value = "";
+    // НЕ скидаємо subjectGroup, щоб зберегти список
     document.getElementById("subjectYear").value = "2025/2026";
     document.getElementById("subjectCredits").value = "";
     document.getElementById("subjectHours").value = "";
@@ -1846,8 +1902,7 @@ window.selectSection = function(value, label, event) {
     currentEditId = null;
     document.getElementById("saveSubjectBtn").innerText = "Зберегти";
     document.getElementById("form-add-subject").style.display = "none";
-  }
-
+}
   // ========== ДОДАТКОВІ ФУНКЦІЇ ==========
   window.showGroupStats = async (groupId, groupName) => {
     const modal = document.getElementById("groupModal");
@@ -2012,48 +2067,41 @@ window.selectSection = function(value, label, event) {
     }
   }
 
-  function populateSelects() {
-    getDocs(collection(db, "groups")).then(snap => {
-      let opts = '<option value="">Оберіть групу</option>';
-      snap.forEach(d => opts += `<option value="${d.id}">${d.data().name}</option>`);
-      document.getElementById("studentGroup").innerHTML = opts;
-      const lastGroup = sessionStorage.getItem(STORAGE_KEYS.lastStudentGroup);
-      if (lastGroup && document.querySelector(`#studentGroup option[value="${lastGroup}"]`)) {
-        document.getElementById("studentGroup").value = lastGroup;
-      }
-    });
+function populateSelects() {
+    // Завантажуємо групи для форми студента
+    loadGroupsToSelect(document.getElementById("studentGroup"));
     
+    // Завантажуємо групи для форми предмета
+    loadGroupsToSelect(document.getElementById("subjectGroup"));
+    
+    // Завантажуємо предмети для фільтрів
     getDocs(query(collection(db, "subjects"), where("teacherId", "==", currentTeacherId))).then(async snap => {
-      let opts = '<option value="">Оберіть предмет</option>';
-      let filterOpts = '<option value="all">Всі предмети</option>';
-      for (const docSnap of snap.docs) {
-        const s = docSnap.data();
-        let groupName = '', academicYear = '';
-        if (s.groupId) {
-          const groupDoc = await getDoc(doc(db, "groups", s.groupId));
-          if (groupDoc.exists()) {
-            groupName = groupDoc.data().name;
-            academicYear = groupDoc.data().academicYear || '';
-          }
+        let opts = '<option value="">Оберіть предмет</option>';
+        let filterOpts = '<option value="all">Всі предмети</option>';
+        for (const docSnap of snap.docs) {
+            const s = docSnap.data();
+            let groupName = '', academicYear = '';
+            if (s.groupId) {
+                const groupDoc = await getDoc(doc(db, "groups", s.groupId));
+                if (groupDoc.exists()) {
+                    groupName = groupDoc.data().name;
+                    academicYear = groupDoc.data().academicYear || '';
+                }
+            }
+            if (!groupName) {
+                groupName = s.groupName || 'Групу не обрано';
+                academicYear = s.academicYear || '';
+            }
+            const displayText = `${s.name} (${groupName} | ${academicYear || 'рік не вказано'})`;
+            opts += `<option value="${docSnap.id}">${displayText}</option>`;
+            filterOpts += `<option value="${docSnap.id}">${displayText}</option>`;
         }
-        if (!groupName) {
-          groupName = s.groupName || 'Групу не обрано';
-          academicYear = s.academicYear || '';
-        }
-        const displayText = `${s.name} (${groupName} | ${academicYear || 'рік не вказано'})`;
-        opts += `<option value="${docSnap.id}">${displayText}</option>`;
-        filterOpts += `<option value="${docSnap.id}">${displayText}</option>`;
-      }
-      document.getElementById("lessonSubject").innerHTML = opts;
-      document.getElementById("lessonFilterSubject").innerHTML = filterOpts;
+        document.getElementById("lessonSubject").innerHTML = opts;
+        document.getElementById("lessonFilterSubject").innerHTML = filterOpts;
     });
     
-    const lessonSubject = document.getElementById("lessonSubject");
-    if (lessonSubject) {
-      lessonSubject.addEventListener("change", async (e) => { await updateSectionSelect(e.target.value); });
-    }
     populateJournalFilters();
-  }
+}
 
   // ========== ГЛОБАЛЬНІ ФУНКЦІЇ WINDOW ==========
   window.logout = async () => {
