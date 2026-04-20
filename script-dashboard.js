@@ -2,14 +2,6 @@
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // Відстеження позиції миші
-  document.addEventListener('mousemove', (e) => {
-      window.lastMouseX = e.clientX;
-      window.lastMouseY = e.clientY;
-  });
-  
-  window.lastMouseX = 0;
-  window.lastMouseY = 0;
   // ========== FIREBASE КОНФІГУРАЦІЯ ==========
   const firebaseConfig = {
     apiKey: "AIzaSyCRMac4RetcPL2mvNXTJdUMcS9JZ-ZALiI",
@@ -42,15 +34,6 @@
     lastLessonFilter: 'lesson_filter_subject',
     activeTab: 'active_tab'
   };
-
-  window.lastMouseX = 0;
-    window.lastMouseY = 0;
-    
-    // Додаємо відстеження миші глобально
-    document.addEventListener('mousemove', (e) => {
-        window.lastMouseX = e.clientX;
-        window.lastMouseY = e.clientY;
-    });
 
   // ========== НЕГАЙНЕ ВІДНОВЛЕННЯ ВКЛАДКИ ДО ЗАВАНТАЖЕННЯ ДАНИХ ==========
   // Виконується синхронно, щоб уникнути миготіння при оновленні сторінки
@@ -892,444 +875,6 @@ document.getElementById("saveLessonBtn").onclick = window._globalSaveLessonHandl
     document.getElementById("form-add-lesson").style.display = "none";
   }
 
-// ========== DRAG AND DROP ДЛЯ ЗАНЯТЬ ==========
-let draggedLesson = null;
-let dragStartTime = 0;
-let dragTimeout = null;
-let isDragging = false;
-let dragIndicator = null;
-let dragClone = null;
-let startMouseX = 0;
-let startMouseY = 0;
-let currentDropTarget = null;
-let currentDropPosition = null;
-let placeholderElement = null;
-let isDragActive = false;
-let dragInterval = null;
-let originalOrder = [];
-
-// Функція для початку drag (при довгому натисканні)
-function initDragAndDrop() {
-    const container = document.getElementById('lessonsList');
-    if (!container) return;
-    
-    // Delegation для всіх lesson-card
-    container.addEventListener('mousedown', (e) => {
-        const lessonCard = e.target.closest('.data-card');
-        if (!lessonCard) return;
-        
-        // Запобігаємо drag на кнопках
-        if (e.target.closest('.icon-btn') || e.target.closest('.delete-btn') || e.target.closest('.edit-btn')) {
-            return;
-        }
-        
-        e.preventDefault();
-        
-        dragStartTime = Date.now();
-        draggedLesson = lessonCard;
-        startMouseX = e.clientX;
-        startMouseY = e.clientY;
-        
-        // Таймер для довгого натискання (500ms)
-        dragTimeout = setTimeout(() => {
-            if (draggedLesson && !isDragging) {
-                startDrag(lessonCard, e);
-            }
-        }, 500);
-    });
-    
-    container.addEventListener('mouseup', () => {
-        clearTimeout(dragTimeout);
-        if (isDragging) {
-            // Не завершуємо одразу, даємо час на обробку
-            setTimeout(() => {
-                if (isDragging) {
-                    endDrag();
-                }
-            }, 50);
-        }
-        draggedLesson = null;
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging && dragClone) {
-            e.preventDefault();
-            handleDragMove(e);
-        }
-    });
-    
-    document.addEventListener('mouseup', () => {
-        if (isDragging) {
-            setTimeout(() => {
-                if (isDragging) {
-                    endDrag();
-                }
-            }, 50);
-        }
-        clearTimeout(dragTimeout);
-        draggedLesson = null;
-    });
-}
-
-function startDrag(lessonCard, event) {
-    if (!lessonCard || isDragging) return;
-    
-    isDragging = true;
-    isDragActive = true;
-    
-    // Забороняємо виділення тексту
-    document.body.classList.add('dragging-active');
-    document.body.style.cursor = 'grabbing';
-    
-    // Отримуємо розміри та позицію оригінального блоку
-    const rect = lessonCard.getBoundingClientRect();
-    
-    // Зберігаємо оригінальний порядок
-    const allLessons = Array.from(document.querySelectorAll('#lessonsList .data-card'));
-    originalOrder = allLessons.map(card => card.getAttribute('data-lesson-id'));
-    
-    // Створюємо клон для перетягування
-    dragClone = lessonCard.cloneNode(true);
-    dragClone.classList.add('lesson-dragging');
-    dragClone.style.position = 'fixed';
-    dragClone.style.left = rect.left + 'px';
-    dragClone.style.top = rect.top + 'px';
-    dragClone.style.width = rect.width + 'px';
-    dragClone.style.opacity = '0.9';
-    dragClone.style.pointerEvents = 'none';
-    dragClone.style.zIndex = '10000';
-    dragClone.style.transform = 'scale(0.95)';
-    dragClone.style.transition = 'none';
-    dragClone.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.2)';
-    
-    // Приховуємо оригінал
-    lessonCard.style.opacity = '0';
-    lessonCard.style.visibility = 'hidden';
-    lessonCard.style.pointerEvents = 'none';
-    
-    document.body.appendChild(dragClone);
-    
-    // Створюємо індикатор
-    dragIndicator = document.createElement('div');
-    dragIndicator.className = 'drag-indicator';
-    dragIndicator.textContent = 'Перетягніть для зміни позиції';
-    document.body.appendChild(dragIndicator);
-    
-    // Вібрація
-    if (navigator.vibrate) {
-        navigator.vibrate(50);
-    }
-    
-    updateDragIndicator(event.clientX, event.clientY);
-}
-
-function handleDragMove(e) {
-    if (!isDragging || !dragClone) return;
-    
-    e.preventDefault();
-    
-    // Переміщуємо клон за курсором
-    const dx = e.clientX - startMouseX;
-    const dy = e.clientY - startMouseY;
-    
-    dragClone.style.transform = `translate(${dx}px, ${dy}px) scale(0.95)`;
-    
-    updateDragIndicator(e.clientX, e.clientY);
-    
-    // Знаходимо елемент під курсором
-    const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
-    const targetLesson = elementUnderCursor?.closest('.data-card');
-    const targetSection = elementUnderCursor?.closest('.section-wrapper');
-    
-    // Оновлюємо позицію для вставки
-    updateDropTarget(targetLesson, targetSection, e);
-}
-
-function updateDropTarget(targetLesson, targetSection, event) {
-    // Видаляємо попередні підсвічування
-    clearDropHighlights();
-    
-    if (targetLesson && targetLesson !== draggedLesson && !targetLesson.classList.contains('lesson-dragging') && targetLesson.style.visibility !== 'hidden') {
-        // Визначаємо позицію (верхня чи нижня половина)
-        const targetRect = targetLesson.getBoundingClientRect();
-        const mouseY = event.clientY;
-        const targetMiddle = targetRect.top + targetRect.height / 2;
-        
-        // Перевіряємо чи не наведено на той самий блок
-        const targetId = targetLesson.getAttribute('data-lesson-id');
-        const draggedId = draggedLesson?.getAttribute('data-lesson-id');
-        
-        if (targetId === draggedId) return;
-        
-        if (mouseY < targetMiddle) {
-            currentDropTarget = targetLesson;
-            currentDropPosition = 'top';
-            targetLesson.classList.add('lesson-drag-over-top');
-            showPlaceholder(targetLesson, 'top');
-        } else {
-            currentDropTarget = targetLesson;
-            currentDropPosition = 'bottom';
-            targetLesson.classList.add('lesson-drag-over-bottom');
-            showPlaceholder(targetLesson, 'bottom');
-        }
-    } else if (targetSection && !targetLesson) {
-        // Перевіряємо чи це не поточний розділ заняття
-        const currentSection = draggedLesson?.closest('.section-wrapper');
-        if (currentSection !== targetSection) {
-            currentDropTarget = targetSection;
-            currentDropPosition = 'section';
-            targetSection.classList.add('section-drop-zone');
-            showPlaceholderForSection(targetSection);
-        }
-    }
-}
-
-function showPlaceholder(targetLesson, position) {
-    // Видаляємо старий плейсхолдер
-    if (placeholderElement) {
-        placeholderElement.remove();
-        placeholderElement = null;
-    }
-    
-    // Створюємо плейсхолдер
-    placeholderElement = document.createElement('div');
-    placeholderElement.className = 'drag-placeholder';
-    placeholderElement.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--accent);">⬅️ Відпустіть для вставки тут</div>';
-    
-    const parent = targetLesson.parentNode;
-    
-    if (position === 'top') {
-        parent.insertBefore(placeholderElement, targetLesson);
-    } else if (position === 'bottom') {
-        if (targetLesson.nextSibling) {
-            parent.insertBefore(placeholderElement, targetLesson.nextSibling);
-        } else {
-            parent.appendChild(placeholderElement);
-        }
-    }
-    
-    // Прокручуємо до плейсхолдера
-    placeholderElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function showPlaceholderForSection(targetSection) {
-    if (placeholderElement) {
-        placeholderElement.remove();
-        placeholderElement = null;
-    }
-    
-    const dataList = targetSection.querySelector('.data-list');
-    if (dataList) {
-        placeholderElement = document.createElement('div');
-        placeholderElement.className = 'drag-placeholder';
-        placeholderElement.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--accent);">📁 Відпустіть для переміщення в цей розділ</div>';
-        
-        if (dataList.children.length > 0) {
-            dataList.insertBefore(placeholderElement, dataList.children[0]);
-        } else {
-            dataList.appendChild(placeholderElement);
-        }
-        
-        placeholderElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-}
-
-function clearDropHighlights() {
-    document.querySelectorAll('.lesson-drag-over-top, .lesson-drag-over-bottom, .section-drop-zone').forEach(el => {
-        el.classList.remove('lesson-drag-over-top', 'lesson-drag-over-bottom', 'section-drop-zone');
-    });
-    
-    if (placeholderElement) {
-        placeholderElement.remove();
-        placeholderElement = null;
-    }
-}
-
-async function endDrag() {
-    if (!isDragging) {
-        cleanupDrag();
-        return;
-    }
-    
-    // Виконуємо переміщення якщо є ціль
-    if (currentDropTarget && draggedLesson) {
-        await performDrop();
-    }
-    
-    cleanupDrag();
-    
-    // Невелика затримка перед оновленням
-    setTimeout(async () => {
-        // Оновлюємо відображення
-        await loadMyLessons();
-        
-        // Оновлюємо журнал якщо він активний
-        if (document.getElementById("tab-journal").classList.contains("active")) {
-            await renderJournal();
-        }
-    }, 100);
-}
-
-async function performDrop() {
-    if (!draggedLesson || !currentDropTarget) return false;
-    
-    // Отримуємо ID заняття
-    const draggedId = draggedLesson.getAttribute('data-lesson-id');
-    if (!draggedId) return false;
-    
-    try {
-        if (currentDropPosition === 'top' || currentDropPosition === 'bottom') {
-            // Отримуємо ID цільового заняття
-            const targetId = currentDropTarget.getAttribute('data-lesson-id');
-            if (!targetId) return false;
-            
-            // Отримуємо всі заняття
-            const lessonsSnap = await getDocs(query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId)));
-            const lessons = [];
-            lessonsSnap.forEach(doc => {
-                lessons.push({ id: doc.id, ...doc.data(), order: doc.data().order || 0 });
-            });
-            
-            // Сортуємо за поточним порядком
-            lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
-            
-            // Знаходимо індекси
-            const draggedIndex = lessons.findIndex(l => l.id === draggedId);
-            const targetIndex = lessons.findIndex(l => l.id === targetId);
-            
-            if (draggedIndex === -1 || targetIndex === -1) return false;
-            
-            // Видаляємо перетягуваний елемент
-            const draggedItem = lessons.splice(draggedIndex, 1)[0];
-            
-            // Розраховуємо нову позицію
-            let newIndex = targetIndex;
-            if (currentDropPosition === 'bottom' && draggedIndex < targetIndex) {
-                newIndex = targetIndex - 1;
-            } else if (currentDropPosition === 'bottom') {
-                newIndex = targetIndex;
-            } else if (currentDropPosition === 'top' && draggedIndex > targetIndex) {
-                newIndex = targetIndex;
-            } else if (currentDropPosition === 'top') {
-                newIndex = targetIndex;
-            }
-            
-            // Вставляємо на нову позицію
-            lessons.splice(newIndex, 0, draggedItem);
-            
-            // Оновлюємо order для всіх занять
-            for (let i = 0; i < lessons.length; i++) {
-                await updateDoc(doc(db, "lessons", lessons[i].id), { order: i });
-            }
-            
-            return true;
-        } else if (currentDropPosition === 'section') {
-            // Переміщення в розділ
-            let sectionId = currentDropTarget.id?.replace('section-', '');
-            if (sectionId) {
-                // Отримуємо поточний розділ
-                const lessonDoc = await getDoc(doc(db, "lessons", draggedId));
-                const currentSectionId = lessonDoc.data().sectionId;
-                
-                // Оновлюємо розділ
-                await updateDoc(doc(db, "lessons", draggedId), { 
-                    sectionId: sectionId === 'without_section' ? null : sectionId 
-                });
-                
-                // Отримуємо всі заняття в цільовому розділі
-                const sectionLessonsSnap = await getDocs(query(collection(db, "lessons"), 
-                    where("sectionId", "==", (sectionId === 'without_section' ? null : sectionId)),
-                    where("teacherId", "==", currentTeacherId)
-                ));
-                
-                const sectionLessons = [];
-                sectionLessonsSnap.forEach(doc => {
-                    sectionLessons.push({ id: doc.id, ...doc.data() });
-                });
-                
-                // Сортуємо та оновлюємо order
-                sectionLessons.sort((a, b) => (a.order || 0) - (b.order || 0));
-                for (let i = 0; i < sectionLessons.length; i++) {
-                    await updateDoc(doc(db, "lessons", sectionLessons[i].id), { order: i });
-                }
-                
-                // Якщо був старий розділ, оновлюємо порядок і там
-                if (currentSectionId) {
-                    const oldSectionLessonsSnap = await getDocs(query(collection(db, "lessons"), 
-                        where("sectionId", "==", currentSectionId),
-                        where("teacherId", "==", currentTeacherId)
-                    ));
-                    const oldSectionLessons = [];
-                    oldSectionLessonsSnap.forEach(doc => {
-                        oldSectionLessons.push({ id: doc.id, ...doc.data() });
-                    });
-                    oldSectionLessons.sort((a, b) => (a.order || 0) - (b.order || 0));
-                    for (let i = 0; i < oldSectionLessons.length; i++) {
-                        await updateDoc(doc(db, "lessons", oldSectionLessons[i].id), { order: i });
-                    }
-                }
-                
-                return true;
-            }
-        }
-    } catch (error) {
-        console.error('Помилка при переміщенні:', error);
-    }
-    
-    return false;
-}
-
-function cleanupDrag() {
-    // Видаляємо клон
-    if (dragClone) {
-        dragClone.remove();
-        dragClone = null;
-    }
-    
-    // Відновлюємо оригінал
-    if (draggedLesson) {
-        draggedLesson.style.opacity = '';
-        draggedLesson.style.visibility = '';
-        draggedLesson.style.pointerEvents = '';
-    }
-    
-    // Видаляємо індикатор
-    if (dragIndicator) {
-        dragIndicator.remove();
-        dragIndicator = null;
-    }
-    
-    // Знімаємо блокування виділення
-    document.body.classList.remove('dragging-active');
-    document.body.style.cursor = '';
-    
-    // Очищаємо підсвічування
-    clearDropHighlights();
-    
-    // Скидаємо змінні
-    isDragging = false;
-    isDragActive = false;
-    draggedLesson = null;
-    currentDropTarget = null;
-    currentDropPosition = null;
-    originalOrder = [];
-    
-    if (dragInterval) {
-        clearInterval(dragInterval);
-        dragInterval = null;
-    }
-}
-
-function updateDragIndicator(x, y) {
-    if (dragIndicator) {
-        dragIndicator.style.left = (x + 20) + 'px';
-        dragIndicator.style.top = (y - 40) + 'px';
-    }
-}
-
-// Експортуємо функції
-window.initDragAndDrop = initDragAndDrop;
-
   // ========== ФУНКЦІЇ ДЛЯ РОЗДІЛІВ ==========
   async function loadSectionsForSubject(subjectId) {
     if (!subjectId) return [];
@@ -1569,25 +1114,25 @@ window.selectSection = function(value, label, event) {
   };
 
   // ========== ОСНОВНА ФУНКЦІЯ ЗАВАНТАЖЕННЯ ЗАНЯТЬ ==========
-async function loadMyLessons() {
+  async function loadMyLessons() {
     let lessonsQuery = query(collection(db, "lessons"), where("teacherId", "==", currentTeacherId));
     const filterSubject = document.getElementById("lessonFilterSubject").value;
     if (filterSubject !== "all") {
-        lessonsQuery = query(lessonsQuery, where("subjectId", "==", filterSubject));
+      lessonsQuery = query(lessonsQuery, where("subjectId", "==", filterSubject));
     }
     const snap = await getDocs(lessonsQuery);
     
     const subjectsSnap = await getDocs(query(collection(db, "subjects"), where("teacherId", "==", currentTeacherId)));
     const subMap = {};
     for (const docSnap of subjectsSnap.docs) {
-        const s = docSnap.data();
-        const groupsSnap = await getDocs(query(collection(db, "groups"), where("id", "==", s.groupId)));
-        let groupName = '', academicYear = '';
-        if (!groupsSnap.empty) {
-            groupName = groupsSnap.docs[0].data().name;
-            academicYear = groupsSnap.docs[0].data().academicYear || '';
-        }
-        subMap[docSnap.id] = { name: s.name, group: groupName, year: academicYear || s.academicYear };
+      const s = docSnap.data();
+      const groupsSnap = await getDocs(query(collection(db, "groups"), where("id", "==", s.groupId)));
+      let groupName = '', academicYear = '';
+      if (!groupsSnap.empty) {
+        groupName = groupsSnap.docs[0].data().name;
+        academicYear = groupsSnap.docs[0].data().academicYear || '';
+      }
+      subMap[docSnap.id] = { name: s.name, group: groupName, year: academicYear || s.academicYear };
     }
     
     const sectionsSnap = await getDocs(query(collection(db, "sections"), where("teacherId", "==", currentTeacherId)));
@@ -1596,134 +1141,126 @@ async function loadMyLessons() {
     
     const container = document.getElementById("lessonsList");
     if (snap.empty) {
-        container.innerHTML = '<div class="empty-state">Занять не знайдено</div>';
-        if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
-        return;
+      container.innerHTML = '<div class="empty-state">Занять не знайдено</div>';
+      if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
+      return;
     }
     
     const lessonsArray = [];
     snap.forEach(docSnap => {
-        lessonsArray.push({
-            id: docSnap.id,
-            ...docSnap.data(),
-            createdAt: docSnap.data().createdAt || new Date(0).toISOString(),
-            order: docSnap.data().order || 0
-        });
+      lessonsArray.push({
+        id: docSnap.id,
+        ...docSnap.data(),
+        createdAt: docSnap.data().createdAt || new Date(0).toISOString()
+      });
     });
-    
-    // Сортуємо за order
-    lessonsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
     
     const groupedBySection = {};
     lessonsArray.forEach(lesson => {
-        const sectionId = lesson.sectionId || 'without_section';
-        if (!groupedBySection[sectionId]) groupedBySection[sectionId] = [];
-        groupedBySection[sectionId].push(lesson);
+      const sectionId = lesson.sectionId || 'without_section';
+      if (!groupedBySection[sectionId]) groupedBySection[sectionId] = [];
+      groupedBySection[sectionId].push(lesson);
     });
     
-    // Сортуємо заняття в кожному розділі за order
     for (const sectionId in groupedBySection) {
-        groupedBySection[sectionId].sort((a, b) => (a.order || 0) - (b.order || 0));
+      groupedBySection[sectionId].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
     
     const sectionsList = [];
     for (const sectionId in groupedBySection) {
-        const lessons = groupedBySection[sectionId];
-        const latestLesson = lessons[0];
-        const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
-        const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db, "sections", sectionId)) : null;
-        const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
-        sectionsList.push({
-            id: sectionId,
-            name: sectionMap[sectionId] || 'Без розділу',
-            lessons: lessons,
-            latestDate: latestDate,
-            createdAt: createdAtSection
-        });
+      const lessons = groupedBySection[sectionId];
+      const latestLesson = lessons[0];
+      const latestDate = latestLesson?.createdAt ? new Date(latestLesson.createdAt) : new Date(0);
+      const sectionDoc = sectionId !== 'without_section' ? await getDoc(doc(db, "sections", sectionId)) : null;
+      const createdAtSection = sectionDoc?.data()?.createdAt ? new Date(sectionDoc.data().createdAt) : null;
+      sectionsList.push({
+        id: sectionId,
+        name: sectionMap[sectionId] || 'Без розділу',
+        lessons: lessons,
+        latestDate: latestDate,
+        createdAt: createdAtSection
+      });
     }
     
     sectionsList.sort((a, b) => {
-        if (a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate;
-        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
-        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
-        return bTime - aTime;
+      if (a.latestDate.getTime() !== b.latestDate.getTime()) return b.latestDate - a.latestDate;
+      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+      return bTime - aTime;
     });
     
     let html = '';
     for (const section of sectionsList) {
-        const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
-        const isWithoutSection = section.name === 'Без розділу';
-        
-        if (!isWithoutSection) {
-            html += `<div id="section-${sectionIdSafe}" class="section-wrapper">
-                        <div class="section-header-wrapper">
-                            <div class="section-header-title" onclick="window.toggleSection('${sectionIdSafe}')">
-                                <span class="section-toggle-btn">▼</span> 📁 ${escapeHtml(section.name)} <span style="font-size: 11px; color: #6b7280; margin-left: 8px;">(${section.lessons.length} занять)</span>
-                            </div>
-                            <div class="section-header-actions">
-                                <button class="section-delete-btn" onclick="event.stopPropagation(); window.deleteSection('${section.id}', '${escapeHtml(section.name).replace(/'/g, "\\'")}')" title="Видалити розділ">🗑️</button>
-                            </div>
+      const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
+      const isWithoutSection = section.name === 'Без розділу';
+      
+      if (!isWithoutSection) {
+        html += `<div id="section-${sectionIdSafe}" class="section-wrapper">
+                    <div class="section-header-wrapper">
+                        <div class="section-header-title" onclick="window.toggleSection('${sectionIdSafe}')">
+                            <span class="section-toggle-btn">▼</span> 📁 ${escapeHtml(section.name)} <span style="font-size: 11px; color: #6b7280; margin-left: 8px;">(${section.lessons.length} занять)</span>
                         </div>
-                        <div class="data-list">`;
-        } else {
-            html += `<div id="section-${sectionIdSafe}" class="section-wrapper"><div class="data-list">`;
+                        <div class="section-header-actions">
+                            <button class="section-delete-btn" onclick="event.stopPropagation(); window.deleteSection('${section.id}', '${escapeHtml(section.name).replace(/'/g, "\\'")}')" title="Видалити розділ">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="data-list">`;
+      } else {
+        html += `<div id="section-${sectionIdSafe}" class="section-wrapper"><div class="data-list">`;
+      }
+      
+      for (const l of section.lessons) {
+        const dateParts = l.date.split('-');
+        const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+        
+        let typeShort = '';
+        switch (l.type) {
+          case 'Лекція': typeShort = 'Лек'; break;
+          case 'Практичне заняття': typeShort = 'Прак'; break;
+          case 'Лабораторне заняття': typeShort = 'Лаб'; break;
+          case 'Семінарське заняття': typeShort = 'Сем'; break;
+          case 'Самостійне вивчення': typeShort = 'С.в.'; break;
+          case 'Залік з модуля': typeShort = 'Залік'; break;
+          case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
+          default: typeShort = l.type;
         }
         
-        for (const l of section.lessons) {
-            const dateParts = l.date.split('-');
-            const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-            
-            let typeShort = '';
-            switch (l.type) {
-                case 'Лекція': typeShort = 'Лек'; break;
-                case 'Практичне заняття': typeShort = 'Прак'; break;
-                case 'Лабораторне заняття': typeShort = 'Лаб'; break;
-                case 'Семінарське заняття': typeShort = 'Сем'; break;
-                case 'Самостійне вивчення': typeShort = 'С.в.'; break;
-                case 'Залік з модуля': typeShort = 'Залік'; break;
-                case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
-                default: typeShort = l.type;
-            }
-            
-            const subjectInfo = subMap[l.subjectId];
-            const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
-            
-            // Додаємо клас lesson-item для drag-and-drop
-            html += `<div class="data-card lesson-item" data-lesson-id="${l.id}" data-section-id="${section.id}" draggable="false">
-                        <div class="data-info">
-                            <div class="data-icon">📅</div>
-                            <div>
-                                <div class="data-title">${escapeHtml(l.topic) || "Без теми"}</div>
-                                <div class="data-sub">${escapeHtml(subjectDisplay)} | ${typeShort} | ${formattedDate}</div>
-                            </div>
+        const subjectInfo = subMap[l.subjectId];
+        const subjectDisplay = subjectInfo ? `${subjectInfo.name} (${subjectInfo.group} | ${subjectInfo.year})` : l.subjectId;
+        
+        html += `<div class="data-card">
+                    <div class="data-info">
+                        <div class="data-icon">📅</div>
+                        <div>
+                            <div class="data-title">${escapeHtml(l.topic) || "Без теми"}</div>
+                            <div class="data-sub">${escapeHtml(subjectDisplay)} | ${typeShort} | ${formattedDate}</div>
                         </div>
-                        <div class="data-actions">
-                            <button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button>
-                            <button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button>
-                        </div>
-                    </div>`;
-        }
-        html += `</div></div>`;
+                    </div>
+                    <div class="data-actions">
+                        <button class="icon-btn edit-btn" onclick="window.editLesson('${l.id}')">✏️</button>
+                        <button class="icon-btn delete-btn" onclick="window.deleteItem('lessons','${l.id}')">🗑️</button>
+                    </div>
+                </div>`;
+      }
+      html += `</div></div>`;
     }
     
     container.innerHTML = html;
-    
-    // Відновлюємо стан згортання розділів
+    // Відновлюємо стан згортання розділів із localStorage
     for (const section of sectionsList) {
-        const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
-        const storageKey = `section_state_${sectionIdSafe}`;
-        if (localStorage.getItem(storageKey) === 'collapsed') {
-            const sectionElement = document.getElementById(`section-${sectionIdSafe}`);
-            if (sectionElement) {
-                sectionElement.classList.add('section-collapsed');
-                const toggleBtn = sectionElement.querySelector('.section-toggle-btn');
-                if (toggleBtn) toggleBtn.textContent = '▶';
-            }
+      const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
+      const storageKey = `section_state_${sectionIdSafe}`;
+      if (localStorage.getItem(storageKey) === 'collapsed') {
+        const sectionElement = document.getElementById(`section-${sectionIdSafe}`);
+        if (sectionElement) {
+          sectionElement.classList.add('section-collapsed');
+          const toggleBtn = sectionElement.querySelector('.section-toggle-btn');
+          if (toggleBtn) toggleBtn.textContent = '▶';
         }
+      }
     }
-    
     if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
-}
+  }
 
   // ========== ФУНКЦІЇ ДЛЯ ГРУП ==========
   async function loadGroups() {
@@ -2416,9 +1953,6 @@ function populateSelects() {
         
         // Завантажуємо всі дані
         await loadAllData();
-
-        // Ініціалізуємо drag-and-drop
-        initDragAndDrop();
         
         // Відновлюємо останній вибір фільтрів
         restoreLastSelection();
