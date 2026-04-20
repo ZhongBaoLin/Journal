@@ -140,6 +140,19 @@
     .section-dropdown-item .section-item-name { flex: 1; }
     .section-dropdown-item .section-item-delete { color: #ef4444; background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1; }
     .section-dropdown-item .section-item-delete:hover { background: #fee2e2; }
+    .section-dropdown-item {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.section-dropdown-item .section-item-name {
+    pointer-events: none;
+}
+
+.section-item-delete {
+    pointer-events: auto;
+    cursor: pointer;
+}
   </style>
 </head>
 <body>
@@ -1154,35 +1167,71 @@ document.getElementById("saveLessonBtn").onclick = window._globalSaveLessonHandl
     return sections;
   }
 
-  async function updateSectionSelect(subjectId) {
+async function updateSectionSelect(subjectId) {
     const sectionHidden = document.getElementById("lessonSection");
     const dropdown = document.getElementById("sectionDropdown");
     const display = document.getElementById("sectionSelectDisplay");
     if (!sectionHidden || !dropdown || !display) return;
+    
     if (!subjectId) {
-      dropdown.innerHTML = '';
-      sectionHidden.value = '';
-      display.textContent = 'Оберіть спочатку предмет';
-      return;
+        dropdown.innerHTML = '';
+        sectionHidden.value = '';
+        display.textContent = 'Оберіть спочатку предмет';
+        return;
     }
+    
     const sections = await loadSectionsForSubject(subjectId);
     let html = '';
+    
     // Option: no section
-    html += `<div class="section-dropdown-item" onclick="window.selectSection('','Без розділу')"><span class="section-item-name">Без розділу</span></div>`;
+    html += `<div class="section-dropdown-item" data-section-value="" data-section-label="Без розділу" onclick="window.selectSection('', 'Без розділу', event)">
+        <span class="section-item-name">Без розділу</span>
+    </div>`;
+    
     sections.forEach(s => {
-      html += `<div class="section-dropdown-item" onclick="window.selectSection('${s.id}','${escapeHtml(s.name).replace(/'/g,"\'")}')">
-        <span class="section-item-name">${escapeHtml(s.name)}</span>
-        <button class="section-item-delete" onclick="event.stopPropagation(); window.deleteSectionFromDropdown('${s.id}','${escapeHtml(s.name).replace(/'/g,"\'")}', '${subjectId}')" title="Видалити розділ">&times;</button>
-      </div>`;
+        // Екрануємо назву для безпечного використання в onclick
+        const escapedName = s.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        html += `<div class="section-dropdown-item" data-section-value="${s.id}" data-section-label="${escapedName}" onclick="window.selectSection('${s.id}', '${escapedName}', event)">
+            <span class="section-item-name">${escapeHtml(s.name)}</span>
+            <button class="section-item-delete" onclick="event.stopPropagation(); window.deleteSectionFromDropdown('${s.id}','${escapedName}', '${subjectId}')" title="Видалити розділ">&times;</button>
+        </div>`;
     });
+    
     // Option: create new
-    html += `<div class="section-dropdown-item" onclick="window.selectSection('new','+ Створити новий розділ')" style="color:var(--accent);font-weight:600;"><span class="section-item-name">+ Створити новий розділ</span></div>`;
+    html += `<div class="section-dropdown-item" data-section-value="new" data-section-label="+ Створити новий розділ" onclick="window.selectSection('new', '+ Створити новий розділ', event)" style="color:var(--accent);font-weight:600;">
+        <span class="section-item-name">+ Створити новий розділ</span>
+    </div>`;
+    
     dropdown.innerHTML = html;
     sectionHidden.value = '';
     display.textContent = 'Оберіть розділ';
     document.getElementById("newSectionGroup").style.display = "none";
     document.getElementById("newSectionName").value = "";
-  }
+}
+
+// Оновлена функція selectSection з event параметром
+window.selectSection = function(value, label, event) {
+  console.log('selectSection called with:', {value, label, event});
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const sectionHidden = document.getElementById("lessonSection");
+    const display = document.getElementById("sectionSelectDisplay");
+    const dropdown = document.getElementById("sectionDropdown");
+    
+    if (sectionHidden) sectionHidden.value = value;
+    if (display) display.textContent = label;
+    if (dropdown) dropdown.classList.remove("open");
+    
+    if (value === "new") {
+        document.getElementById("newSectionGroup").style.display = "block";
+    } else {
+        document.getElementById("newSectionGroup").style.display = "none";
+        document.getElementById("newSectionName").value = "";
+    }
+  
+};
 
   window.toggleSectionDropdown = function() {
     const dropdown = document.getElementById("sectionDropdown");
