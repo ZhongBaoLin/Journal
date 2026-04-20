@@ -557,7 +557,9 @@ async function renderJournal() {
         html += `<th class="date-cell ${specialClass}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
     });
     
-    const finalColHeader = subjectControl === 'екзамен' ? 'Екзамен' : 'Підсумкова';
+    // Якщо предмет має екзамен - додаємо колонку Екзамен замість Підсумкової
+    const isExam = (subjectControl === 'екзамен');
+    const finalColHeader = isExam ? 'Екзамен' : 'Підсумкова';
     html += `<th class="stat-cell">Сер.</th><th class="stat-header-red">Н</th><th class="stat-header-red">СВ</th><th class="stat-cell">${finalColHeader}</th></tr></thead><tbody>`;
     
     let studentCounter = 1;
@@ -565,7 +567,7 @@ async function renderJournal() {
         const stats = studentStats[student.id];
         const finalGrade = finalGrades[student.id] || '';
         
-        // ---- ПІДСВІЧУВАННЯ ДЛЯ СЕРЕДНЬОЇ ОЦІНКИ ----
+        // Підсвічування для середньої оцінки
         let avgClass = '';
         const avgNum = parseFloat(stats.avg);
         if (!isNaN(avgNum)) {
@@ -577,7 +579,7 @@ async function renderJournal() {
             else if (avgRounded <= 1) avgClass = 'grade-1';
         }
         
-        // ---- ПІДСВІЧУВАННЯ ДЛЯ ПІДСУМКОВОЇ ОЦІНКИ ----
+        // Підсвічування для підсумкової оцінки
         let finalGradeClass = '';
         const finalNum = parseFloat(finalGrade);
         if (!isNaN(finalNum)) {
@@ -614,36 +616,24 @@ async function renderJournal() {
                  <td class="stat-cell-red-text">${stats.n}</td>
                  <td class="stat-cell-red-text">${stats.sv}</td>`;
         
-        // Колонка "Підсумкова" / "Екзамен" з підсвічуванням
-        if (subjectControl === 'екзамен') {
-            html += `<td class="stat-cell" style="font-weight:700;color:#7c3aed;">Екзамен</td>`;
+        // Якщо екзамен - показуємо текст "Екзамен" замість комірки для введення
+        if (isExam) {
+            html += `<td class="stat-cell" style="font-weight:700;color:#7c3aed; text-align:center;">Екзамен</td>`;
         } else {
-            // Змінено клас з "stat-cell" на "final-grade-cell"
-            let finalGradeClass = '';
-            const finalNum = parseFloat(finalGrade);
-            if (!isNaN(finalNum)) {
-                const finalRounded = Math.round(finalNum);
-                if (finalRounded >= 5) finalGradeClass = 'grade-5';
-                else if (finalRounded === 4) finalGradeClass = 'grade-4';
-                else if (finalRounded === 3) finalGradeClass = 'grade-3';
-                else if (finalRounded === 2) finalGradeClass = 'grade-2';
-                else if (finalRounded <= 1) finalGradeClass = 'grade-1';
-            }
-            
             html += `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
         }
-        html += `</tr>`;  // ← ЗАКРИВАЄМО РЯДОК ТУТ
+        html += `</tr>`;
         studentCounter++;
-    }  // ← ЗАКРИВАЄМО ЦИКЛ FOR
+    }
     
-    html += '</tbody></table>';  // ← ЗАКРИВАЄМО ТАБЛИЦЮ
+    html += '</tbody></table>';
     document.getElementById("journalTableContainer").innerHTML = html;
     
     document.querySelectorAll('.date-cell').forEach(cell => {
         cell.addEventListener('mouseenter', showTooltip);
         cell.addEventListener('mouseleave', hideTooltip);
     });
-}  // ← ЗАКРИВАЄМО ФУНКЦІЮ renderJournal
+}
 
   // ========== ФУНКЦІЇ ПІДКАЗОК ==========
   function showTooltip(e) {
