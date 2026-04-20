@@ -907,14 +907,23 @@ async function renderJournal() {
                  <td class="stat-cell-red-text">${stats.sv}</td>`;
         
         // Колонка "Підсумкова" / "Екзамен" з підсвічуванням
-        if (subjectControl === 'екзамен') {
-            html += `<td class="stat-cell" style="font-weight:700;color:#7c3aed;">Екзамен</td>`;
-        } else {
-            html += `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
-        }
-        html += `</tr>`;
-        studentCounter++;
+if (subjectControl === 'екзамен') {
+    html += `<td class="stat-cell" style="font-weight:700;color:#7c3aed;">Екзамен</td>`;
+} else {
+    // Змінено клас з "stat-cell" на "final-grade-cell"
+    let finalGradeClass = '';
+    const finalNum = parseFloat(finalGrade);
+    if (!isNaN(finalNum)) {
+        const finalRounded = Math.round(finalNum);
+        if (finalRounded >= 5) finalGradeClass = 'grade-5';
+        else if (finalRounded === 4) finalGradeClass = 'grade-4';
+        else if (finalRounded === 3) finalGradeClass = 'grade-3';
+        else if (finalRounded === 2) finalGradeClass = 'grade-2';
+        else if (finalRounded <= 1) finalGradeClass = 'grade-1';
     }
+    
+    html += `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
+}
     
     html += '</tbody></table>';
     document.getElementById("journalTableContainer").innerHTML = html;
