@@ -108,9 +108,11 @@
     max-height: 70vh; 
 }
 
+/* ВАЖЛИВО: відключаємо border-collapse */
 .journal-table { 
     width: 100%; 
-    border-collapse: collapse; 
+    border-collapse: separate;  /* Змінюємо collapse на separate */
+    border-spacing: 0;          /* Прибираємо проміжки між комірками */
     min-width: 600px; 
 }
 
@@ -122,8 +124,14 @@
     border-bottom: 1px solid var(--border); 
     border-right: 1px solid var(--border); 
     border-top: 1px solid var(--border); 
-    border-left: 1px solid var(--border); /* Додаємо ліву межу для всіх комірок */
-    font-size: 13px; 
+    font-size: 13px;
+    background-color: var(--card-bg); /* Важливо: явний фон */
+}
+
+/* Додаємо ліву межу тільки для комірок, які не є першими в рядку */
+.journal-table th:not(:first-child),
+.journal-table td:not(:first-child) {
+    border-left: 1px solid var(--border);
 }
 
 /* Заголовки */
@@ -136,48 +144,54 @@
     z-index: 5; 
 }
 
-/* Перша колонка (фіксована, найвищий z-index) */
+/* Перша колонка (фіксована) */
 .journal-table th:first-child, 
 .journal-table td:first-child { 
     position: sticky; 
     left: 0; 
     background: var(--card-bg); 
-    z-index: 7; /* Вище ніж у другої колонки */
+    z-index: 7;
     text-align: center; 
-    border-right: 2px solid var(--border); 
+    border-right: 2px solid var(--border);
     white-space: nowrap; 
     width: 50px;
-    border-left: none; /* Прибираємо ліву межу, бо вона крайня */
+    border-left: none;
 }
 
-/* Заголовок першої колонки — свій фон */
+/* Заголовок першої колонки */
 .journal-table th:first-child { 
     background: #f3f4f6; 
-    z-index: 8; /* Найвищий */
+    z-index: 8;
 }
 
-/* Друга колонка (фіксована, зсунута на ширину першої) */
+/* Друга колонка (фіксована) */
 .journal-table th:nth-child(2), 
 .journal-table td:nth-child(2) { 
     position: sticky; 
     left: 50px; 
     background: var(--card-bg); 
-    z-index: 6; 
+    z-index: 6;
     text-align: left; 
-    border-right: 2px solid var(--border); 
+    border-right: 2px solid var(--border);
     white-space: nowrap;
-    border-left: 1px solid var(--border); /* Явна ліва межа для перекриття */
+    border-left: 1px solid var(--border); /* Чітка межа зліва */
 }
 
-/* Заголовок другої колонки — свій фон */
+/* Заголовок другої колонки */
 .journal-table th:nth-child(2) { 
     background: #f3f4f6; 
     z-index: 6;
 }
 
-/* Решта комірок — звичайні */
-.journal-table td:nth-child(n+3) {
-    border-left: 1px solid var(--border);
+/* Усунення можливих артефактів на стику */
+.journal-table td:first-child,
+.journal-table th:first-child {
+    box-shadow: 2px 0 0 0 var(--border); /* Тінь замість правої межі */
+}
+
+.journal-table td:nth-child(2),
+.journal-table th:nth-child(2) {
+    margin-left: -1px; /* Невелике зміщення для щільного прилягання */
 }
     .grade-cell { cursor: pointer; transition: background 0.2s; min-width: 60px; }
     .grade-cell:hover { background: var(--accent-light) !important; }
