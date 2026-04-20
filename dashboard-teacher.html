@@ -153,6 +153,105 @@
     pointer-events: auto;
     cursor: pointer;
 }
+
+    /* Стилі для фіксованого стовпця підсумкових оцінок */
+.journal-table th:last-child,
+.journal-table td:last-child {
+    position: sticky;
+    right: 0;
+    background-color: white;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    z-index: 5;
+}
+
+/* Для затемнення фону при фіксації */
+.journal-table th:last-child::after,
+.journal-table td:last-child::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -2px;
+    height: 100%;
+    width: 2px;
+    background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+}
+
+/* Стилі для клітинок підсумкових оцінок (кольорове підсвічування) */
+.final-grade-cell {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 6;
+}
+
+.final-grade-cell.grade-5 {
+    background-color: #d1fae5 !important;
+    color: #065f46;
+    font-weight: 700;
+}
+
+.final-grade-cell.grade-4 {
+    background-color: #dbeafe !important;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.final-grade-cell.grade-3 {
+    background-color: #fed7aa !important;
+    color: #9a3412;
+    font-weight: 600;
+}
+
+.final-grade-cell.grade-2 {
+    background-color: #fecaca !important;
+    color: #991b1b;
+    font-weight: 600;
+}
+
+.final-grade-cell.grade-1 {
+    background-color: #fee2e2 !important;
+    color: #7f1d1d;
+    font-weight: 600;
+}
+
+/* Стилі для порожніх клітинок (без фіксації) */
+.journal-table td:last-child.empty-final {
+    position: static;
+    box-shadow: none;
+    background-color: transparent;
+}
+
+.journal-table th:last-child.empty-final,
+.journal-table td:last-child.empty-final {
+    position: static;
+    box-shadow: none;
+}
+
+/* Для заголовка стовпця */
+.journal-table th:last-child {
+    background-color: #f9fafb;
+    font-weight: 700;
+    z-index: 10;
+}
+
+    /* Ефект при наведенні на підсумкову оцінку */
+.final-grade-cell:hover {
+    filter: brightness(0.95);
+    transform: scale(1.02);
+}
+
+/* Для порожніх клітинок */
+.final-grade-cell.empty-final {
+    background-color: transparent !important;
+    color: #9ca3af;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.final-grade-cell.empty-final:hover {
+    background-color: #f3f4f6 !important;
+    transform: scale(1.02);
+}
   </style>
 </head>
 <body>
@@ -446,24 +545,29 @@
     else await updateDoc(doc(db, "grades", existing.docs[0].id), gradeData);
   }
 
-  async function saveFinalGradeDirect(studentId, subjectId, newGrade, scale) {
+async function saveFinalGradeDirect(studentId, subjectId, newGrade, scale) {
     if (newGrade === '') {
-      const q = query(collection(db, "finalGrades"), where("studentId", "==", studentId), where("subjectId", "==", subjectId));
-      const existing = await getDocs(q);
-      if (!existing.empty) await deleteDoc(doc(db, "finalGrades", existing.docs[0].id));
-      return;
+        const q = query(collection(db, "finalGrades"), where("studentId", "==", studentId), where("subjectId", "==", subjectId));
+        const existing = await getDocs(q);
+        if (!existing.empty) await deleteDoc(doc(db, "finalGrades", existing.docs[0].id));
+        // Після видалення оцінки перевіряємо фіксацію
+        setTimeout(() => checkAndToggleFinalColumnSticky(), 100);
+        return;
     }
     const validatedGrade = validateGrade(newGrade, scale);
     if (validatedGrade === null) {
-      alert(`Невірна оцінка! Дозволені: 1-${scale}`);
-      return;
+        alert(`Невірна оцінка! Дозволені: 1-${scale}`);
+        return;
     }
     const q = query(collection(db, "finalGrades"), where("studentId", "==", studentId), where("subjectId", "==", subjectId));
     const existing = await getDocs(q);
     const gradeData = { studentId, subjectId, grade: validatedGrade, updatedAt: new Date().toISOString() };
     if (existing.empty) await addDoc(collection(db, "finalGrades"), gradeData);
     else await updateDoc(doc(db, "finalGrades", existing.docs[0].id), gradeData);
-  }
+    
+    // Після збереження оцінки перевіряємо фіксацію
+    setTimeout(() => checkAndToggleFinalColumnSticky(), 100);
+}
 
   // ========== ФУНКЦІЇ ОНОВЛЕННЯ ВІДОБРАЖЕННЯ ==========
   function updateGradeCellDisplay(cell, grade, scale) {
@@ -493,7 +597,7 @@
     updateStudentStats(cell.dataset.studentId);
   }
 
-  function updateFinalGradeCellDisplay(cell, grade, scale) {
+function updateFinalGradeCellDisplay(cell, grade, scale) {
     if (!cell) return;
     cell.dataset.currentGrade = grade || '';
     let displayGrade = grade || '—';
@@ -504,6 +608,7 @@
     else if (num === 3) gradeClass = 'grade-3';
     else if (num === 2) gradeClass = 'grade-2';
     else if (num === 1) gradeClass = 'grade-1';
+    
     const studentId = cell.dataset.studentId, subjectId = cell.dataset.subjectId;
     cell.className = `final-grade-cell ${gradeClass}`;
     cell.textContent = displayGrade;
@@ -512,7 +617,17 @@
     if (scale) cell.setAttribute('data-scale', scale);
     cell.setAttribute('data-current-grade', grade || '');
     cell.onclick = function() { startEditFinalGrade(cell); };
-  }
+    
+    // Перевіряємо наявність порожньої оцінки
+    if (!grade || grade === '') {
+        cell.classList.add('empty-final');
+    } else {
+        cell.classList.remove('empty-final');
+    }
+    
+    // Оновлюємо фіксацію стовпця
+    checkAndToggleFinalColumnSticky();
+}
 
   async function updateStudentStats(studentId) {
     if (!currentGroupId || !currentSubjectId) return;
@@ -762,17 +877,6 @@ async function renderJournal() {
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
     
-    // ========== ДІАГНОСТИКА В КОНСОЛІ ==========
-    console.log('=== ЖУРНАЛ: ОТРИМАНІ ЗАНЯТТЯ ===');
-    console.log('Всього занять:', lessons.length);
-    console.log('Заняття ДО сортування:', lessons.map(l => ({ 
-        id: l.id, 
-        createdAt: l.createdAt, 
-        type: l.type,
-        number: l.number,
-        topic: l.topic?.substring(0, 30)
-    })));
-    
     // Сортування занять за датою створення (від найстарішого до найновішого)
     lessons.sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -781,17 +885,206 @@ async function renderJournal() {
         if (dateA !== dateB) {
             return dateA - dateB;
         }
-        // Якщо дати однакові, сортуємо за ID
         return (a.id || '').localeCompare(b.id || '');
     });
     
-    console.log('Заняття ПІСЛЯ сортування (від старіших до новіших):', lessons.map(l => ({ 
-        id: l.id, 
-        createdAt: l.createdAt, 
-        type: l.type,
-        number: l.number
-    })));
-    console.log('===================================');
+    if (lessons.length === 0) {
+        document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
+        return;
+    }
+    
+    const allGrades = {};
+    for (const lesson of lessons) {
+        const gradesSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id)));
+        gradesSnap.forEach(g => {
+            const gradeData = g.data();
+            if (!allGrades[lesson.id]) allGrades[lesson.id] = {};
+            allGrades[lesson.id][gradeData.studentId] = gradeData.grade;
+        });
+    }
+    
+    const finalGrades = {};
+    const finalGradesSnap = await getDocs(query(collection(db, "finalGrades"), where("subjectId", "==", subjectId)));
+    finalGradesSnap.forEach(g => {
+        finalGrades[g.data().studentId] = g.data().grade;
+    });
+    
+    const studentStats = {};
+    students.forEach(student => {
+        let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
+        lessons.forEach(lesson => {
+            const grade = allGrades[lesson.id]?.[student.id];
+            if (grade) {
+                if (grade === 'н') nCount++;
+                else if (grade === 'св') svCount++;
+                else {
+                    const num = parseFloat(grade);
+                    if (!isNaN(num)) {
+                        totalPoints += num;
+                        gradeCount++;
+                    }
+                }
+            }
+        });
+        studentStats[student.id] = {
+            avg: gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-',
+            n: nCount,
+            sv: svCount
+        };
+    });
+    
+    let html = '<table class="journal-table"><thead><tr><th>№</th><th>Студент</th>';
+    
+    lessons.forEach(lesson => {
+        const dateParts = lesson.date.split('-');
+        const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
+        let typeShort = '';
+        switch (lesson.type) {
+            case 'Лекція': typeShort = 'Лек.'; break;
+            case 'Практичне заняття': typeShort = 'Прак.'; break;
+            case 'Лабораторне заняття': typeShort = 'Лаб.'; break;
+            case 'Семінарське заняття': typeShort = 'Сем.'; break;
+            case 'Самостійне вивчення': typeShort = 'С.в.'; break;
+            case 'Залік з модуля': typeShort = 'Залік'; break;
+            case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
+            default: typeShort = lesson.type;
+        }
+        const isSpecial = (lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання');
+        const specialClass = isSpecial ? 'lesson-special' : '';
+        html += `<th class="date-cell ${specialClass}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
+    });
+    
+    const finalColHeader = subjectControl === 'екзамен' ? 'Екзамен' : 'Підсумкова';
+    html += `<th class="stat-cell">Сер.</th><th class="stat-header-red">Н</th><th class="stat-header-red">СВ</th><th class="stat-cell final-header">${finalColHeader}</th></tr></thead><tbody>`;
+    
+    let studentCounter = 1;
+    for (const student of students) {
+        const stats = studentStats[student.id];
+        const finalGrade = finalGrades[student.id] || '';
+        let finalGradeClass = '';
+        const finalNum = parseFloat(finalGrade);
+        if (finalNum === 5) finalGradeClass = 'grade-5';
+        else if (finalNum === 4) finalGradeClass = 'grade-4';
+        else if (finalNum === 3) finalGradeClass = 'grade-3';
+        else if (finalNum === 2) finalGradeClass = 'grade-2';
+        else if (finalNum === 1) finalGradeClass = 'grade-1';
+        
+        html += `<tr><td style="text-align:center; width:40px;">${studentCounter}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
+        
+        for (const lesson of lessons) {
+            const grade = allGrades[lesson.id]?.[student.id] || '';
+            let gradeClass = '';
+            let displayGrade = grade;
+            if (grade === 'н') gradeClass = 'grade-n';
+            else if (grade === 'св') gradeClass = 'grade-sv';
+            else {
+                const num = parseFloat(grade);
+                if (num === 5) gradeClass = 'grade-5';
+                else if (num === 4) gradeClass = 'grade-4';
+                else if (num === 3) gradeClass = 'grade-3';
+                else if (num === 2) gradeClass = 'grade-2';
+                else if (num === 1) gradeClass = 'grade-1';
+                displayGrade = grade;
+            }
+            html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade || '—'}</td>`;
+        }
+        
+        const avgNum = parseFloat(stats.avg);
+        let avgClass = '';
+        if (avgNum === 5) avgClass = 'grade-5';
+        else if (avgNum === 4) avgClass = 'grade-4';
+        else if (avgNum === 3) avgClass = 'grade-3';
+        else if (avgNum === 2) avgClass = 'grade-2';
+        else if (avgNum === 1) avgClass = 'grade-1';
+        
+        let finalCellHtml = '';
+        if (subjectControl === 'екзамен') {
+            finalCellHtml = `<td class="stat-cell exam-cell" style="font-weight:700;color:#7c3aed;">Екзамен</td>`;
+        } else {
+            const isEmptyOrNoGrade = !finalGrade || finalGrade === '';
+            const emptyClass = isEmptyOrNoGrade ? 'empty-final' : '';
+            finalCellHtml = `<td class="final-grade-cell ${finalGradeClass} ${emptyClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
+        }
+        
+        html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${stats.avg}</td>
+                 <td class="stat-cell-red-text">${stats.n}</td>
+                 <td class="stat-cell-red-text">${stats.sv}</td>
+                 ${finalCellHtml}
+                 </tr>`;
+        studentCounter++;
+    }
+    
+    html += '</tbody></table>';
+    document.getElementById("journalTableContainer").innerHTML = html;
+    
+    // Додаємо обробники для підказок
+    document.querySelectorAll('.date-cell').forEach(cell => {
+        cell.addEventListener('mouseenter', showTooltip);
+        cell.addEventListener('mouseleave', hideTooltip);
+    });
+    
+    // Перевіряємо та встановлюємо фіксацію стовпця підсумкових оцінок
+    checkAndToggleFinalColumnSticky();
+}
+
+  // Функція для перевірки, чи є хоч одна підсумкова оцінка
+function checkAndToggleFinalColumnSticky() {
+    const finalCells = document.querySelectorAll('.journal-table .final-grade-cell');
+    const headerCell = document.querySelector('.journal-table th:last-child');
+    const allRows = document.querySelectorAll('.journal-table tbody tr');
+    
+    let hasAnyGrade = false;
+    
+    // Перевіряємо, чи є хоч одна непорожня оцінка
+    finalCells.forEach(cell => {
+        const grade = cell.getAttribute('data-current-grade');
+        if (grade && grade !== '' && grade !== '—') {
+            hasAnyGrade = true;
+        }
+    });
+    
+    if (hasAnyGrade) {
+        // Якщо є оцінки - додаємо sticky
+        allRows.forEach(row => {
+            const finalCell = row.querySelector('td:last-child');
+            if (finalCell && finalCell.classList.contains('final-grade-cell')) {
+                finalCell.classList.remove('empty-final');
+                finalCell.style.position = 'sticky';
+                finalCell.style.right = '0';
+                finalCell.style.backgroundColor = 'white';
+                finalCell.style.boxShadow = '-2px 0 5px rgba(0,0,0,0.1)';
+                finalCell.style.zIndex = '5';
+            }
+        });
+        if (headerCell) {
+            headerCell.classList.remove('empty-final');
+            headerCell.style.position = 'sticky';
+            headerCell.style.right = '0';
+            headerCell.style.backgroundColor = '#f9fafb';
+            headerCell.style.zIndex = '10';
+        }
+    } else {
+        // Якщо немає оцінок - прибираємо sticky
+        allRows.forEach(row => {
+            const finalCell = row.querySelector('td:last-child');
+            if (finalCell && finalCell.classList.contains('final-grade-cell')) {
+                finalCell.classList.add('empty-final');
+                finalCell.style.position = '';
+                finalCell.style.right = '';
+                finalCell.style.backgroundColor = '';
+                finalCell.style.boxShadow = '';
+                finalCell.style.zIndex = '';
+            }
+        });
+        if (headerCell) {
+            headerCell.classList.add('empty-final');
+            headerCell.style.position = '';
+            headerCell.style.right = '';
+            headerCell.style.backgroundColor = '';
+            headerCell.style.zIndex = '';
+        }
+    }
+}
     // ===============================================
     
     if (lessons.length === 0) {
@@ -2066,6 +2359,8 @@ function resetSubjectForm() {
       document.getElementById("journalYearSelect").dispatchEvent(event);
     }
   }
+
+  
 
 function populateSelects() {
     // Завантажуємо групи для форми студента
