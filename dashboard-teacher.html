@@ -79,7 +79,7 @@
     .journal-table { width: 100%; border-collapse: collapse; min-width: 600px; }
     .journal-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); border-top: 1px solid var(--border); font-size: 13px; }
     .journal-table th, .journal-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 13px; }
-    .journal-table th:first-child, .journal-table td:first-child { position: sticky; left: 0; background: var(--card-bg); z-index: 2; text-align: center; border-right: 2px solid var(--border); white-space: nowrap; width: 50px; }
+    .journal-table th:first-child, .journal-table td:first-child { position: sticky; left: 0; background: var(--card-bg); z-index: 2; text-align: center; border-right: 0; white-space: nowrap; width: 50px; min-width: 50px; max-width: 50px; }
     .journal-table th:nth-child(2), .journal-table td:nth-child(2) { position: sticky; left: 50px; background: var(--card-bg); z-index: 2; text-align: left; border-right: 2px solid var(--border); white-space: nowrap; }
     .journal-table th:first-child { background: #f3f4f6; z-index: 6; }
     .journal-table th:nth-child(2) { background: #f3f4f6; z-index: 6; }
@@ -546,15 +546,15 @@ async function updateStudentStats(studentId) {
         const avgCell = row.querySelector('td:nth-last-child(4)');
         if (avgCell) {
             // Оновлене підсвічування для середньої оцінки
-              let avgClass = '';
-              const avgNum = parseFloat(stats.avg);
-              if (!isNaN(avgNum)) {
-                  if (avgNum === 5) avgClass = 'grade-5';
-                  else if (avgNum >= 4 && avgNum < 5) avgClass = 'grade-4';
-                  else if (avgNum >= 3 && avgNum < 4) avgClass = 'grade-3';
-                  else if (avgNum >= 2 && avgNum < 3) avgClass = 'grade-2';
-                  else if (avgNum >= 1 && avgNum < 2) avgClass = 'grade-1';
-              }
+            let avgClass = '';
+            if (!isNaN(avgNum)) {
+                const avgRounded = Math.round(avgNum);
+                if (avgRounded >= 5) avgClass = 'grade-5';
+                else if (avgRounded === 4) avgClass = 'grade-4';
+                else if (avgRounded === 3) avgClass = 'grade-3';
+                else if (avgRounded === 2) avgClass = 'grade-2';
+                else if (avgRounded <= 1) avgClass = 'grade-1';
+            }
             avgCell.className = `stat-cell ${avgClass}`;
             avgCell.style.fontWeight = '700';
             avgCell.textContent = avg;
@@ -578,11 +578,12 @@ async function updateFinalGradeForStudent(studentId, subjectId, scale) {
             let finalGradeClass = '';
             const finalNum = parseFloat(finalGrade);
             if (!isNaN(finalNum)) {
-                if (finalNum === 5) finalGradeClass = 'grade-5';
-                else if (finalNum === 4) finalGradeClass = 'grade-4';
-                else if (finalNum === 3) finalGradeClass = 'grade-3';
-                else if (finalNum === 2) finalGradeClass = 'grade-2';
-                else if (finalNum === 1) finalGradeClass = 'grade-1';
+                const finalRounded = Math.round(finalNum);
+                if (finalRounded >= 5) finalGradeClass = 'grade-5';
+                else if (finalRounded === 4) finalGradeClass = 'grade-4';
+                else if (finalRounded === 3) finalGradeClass = 'grade-3';
+                else if (finalRounded === 2) finalGradeClass = 'grade-2';
+                else if (finalRounded <= 1) finalGradeClass = 'grade-1';
             }
             finalCell.className = `final-grade-cell ${finalGradeClass}`;
             finalCell.textContent = finalGrade || '—';
@@ -857,24 +858,27 @@ async function renderJournal() {
         const finalGrade = finalGrades[student.id] || '';
         
         // ---- ПІДСВІЧУВАННЯ ДЛЯ СЕРЕДНЬОЇ ОЦІНКИ ----
-          let avgClass = '';
-          if (!isNaN(avgNum)) {
-              if (avgNum === 5) avgClass = 'grade-5';
-              else if (avgNum >= 4 && avgNum < 5) avgClass = 'grade-4';
-              else if (avgNum >= 3 && avgNum < 4) avgClass = 'grade-3';
-              else if (avgNum >= 2 && avgNum < 3) avgClass = 'grade-2';
-              else if (avgNum >= 1 && avgNum < 2) avgClass = 'grade-1';
-          }
+        let avgClass = '';
+        const avgNum = parseFloat(stats.avg);
+        if (!isNaN(avgNum)) {
+            const avgRounded = Math.round(avgNum);
+            if (avgRounded >= 5) avgClass = 'grade-5';
+            else if (avgRounded === 4) avgClass = 'grade-4';
+            else if (avgRounded === 3) avgClass = 'grade-3';
+            else if (avgRounded === 2) avgClass = 'grade-2';
+            else if (avgRounded <= 1) avgClass = 'grade-1';
+        }
         
         // ---- ПІДСВІЧУВАННЯ ДЛЯ ПІДСУМКОВОЇ ОЦІНКИ ----
         let finalGradeClass = '';
         const finalNum = parseFloat(finalGrade);
         if (!isNaN(finalNum)) {
-            if (finalNum === 5) finalGradeClass = 'grade-5';
-            else if (finalNum === 4) finalGradeClass = 'grade-4';
-            else if (finalNum === 3) finalGradeClass = 'grade-3';
-            else if (finalNum === 2) finalGradeClass = 'grade-2';
-            else if (finalNum === 1) finalGradeClass = 'grade-1';
+            const finalRounded = Math.round(finalNum);
+            if (finalRounded >= 5) finalGradeClass = 'grade-5';
+            else if (finalRounded === 4) finalGradeClass = 'grade-4';
+            else if (finalRounded === 3) finalGradeClass = 'grade-3';
+            else if (finalRounded === 2) finalGradeClass = 'grade-2';
+            else if (finalRounded <= 1) finalGradeClass = 'grade-1';
         }
         
         html += `<tr><td style="text-align:center; width:40px;">${studentCounter}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
@@ -1358,6 +1362,14 @@ window.selectSection = function(value, label, event) {
       if (toggleBtn) {
         toggleBtn.textContent = sectionElement.classList.contains('section-collapsed') ? '▶' : '▼';
       }
+      // Зберігаємо стан у localStorage
+      const isCollapsed = sectionElement.classList.contains('section-collapsed');
+      const storageKey = `section_state_${sectionId}`;
+      if (isCollapsed) {
+        localStorage.setItem(storageKey, 'collapsed');
+      } else {
+        localStorage.removeItem(storageKey);
+      }
     }
   };
 
@@ -1514,6 +1526,19 @@ window.selectSection = function(value, label, event) {
     }
     
     container.innerHTML = html;
+    // Відновлюємо стан згортання розділів із localStorage
+    for (const section of sectionsList) {
+      const sectionIdSafe = section.id.replace(/[^a-zA-Z0-9]/g, '_');
+      const storageKey = `section_state_${sectionIdSafe}`;
+      if (localStorage.getItem(storageKey) === 'collapsed') {
+        const sectionElement = document.getElementById(`section-${sectionIdSafe}`);
+        if (sectionElement) {
+          sectionElement.classList.add('section-collapsed');
+          const toggleBtn = sectionElement.querySelector('.section-toggle-btn');
+          if (toggleBtn) toggleBtn.textContent = '▶';
+        }
+      }
+    }
     if (typeof window.updateDeleteAllButton === 'function') await window.updateDeleteAllButton();
   }
 
