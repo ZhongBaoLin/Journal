@@ -1,148 +1,269 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Електронний журнал — Викладач</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style-dashboard.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Електронний журнал — Викладач</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style-dashboard.css">
 </head>
+
 <body>
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
 
-<header class="header">
-  <div class="brand">
-    <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg></div>
-    <div class="brand-name">Електронний журнал успішності<span>ВСП "Технолого-економічний фаховий коледж БНАУ"</span></div>
-  </div>
-  <div class="user-profile">
-    <div class="user-info">
-      <div class="user-name" id="userName">Завантаження...</div>
-      <div class="user-role" id="userRole">Викладач</div>
-      <button class="logout-btn" onclick="window.logout()">Вийти</button>
-    </div>
-    <img src="" alt="Аватар" class="user-avatar" id="userAvatar">
-  </div>
-</header>
-
-<main class="container">
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-icon bg-students">👥</div><div><div class="stat-lbl">Студентів</div><div class="stat-val" id="statStudents">0</div></div></div>
-    <div class="stat-card"><div class="stat-icon bg-groups">📁</div><div><div class="stat-lbl">Груп</div><div class="stat-val" id="statGroups">0</div></div></div>
-    <div class="stat-card"><div class="stat-icon bg-subjects">📘</div><div><div class="stat-lbl">Моїх предметів/дисциплін</div><div class="stat-val" id="statSubjects">0</div></div></div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab-btn active" onclick="window.switchTab('tab-journal')">Журнал</button>
-    <button class="tab-btn" onclick="window.switchTab('tab-lessons')">Заняття</button>
-    <button class="tab-btn" onclick="window.switchTab('tab-groups')">Групи</button>
-    <button class="tab-btn" onclick="window.switchTab('tab-students')">Студенти</button>
-    <button class="tab-btn" onclick="window.switchTab('tab-subjects')">Мої предмети/дисципліни</button>
-  </div>
-
-  <div id="tab-journal" class="tab-content active">
-    <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Журнал оцінок</h2></div>
-      <div class="journal-controls">
-        <div class="form-group"><label class="form-label">НАВЧАЛЬНИЙ РІК</label><select id="journalYearSelect" class="form-input"><option>Оберіть рік</option></select></div>
-        <div class="form-group"><label class="form-label">ГРУПА</label><select id="journalGroupSelect" class="form-input"><option>Оберіть групу</option></select></div>
-        <div class="form-group"><label class="form-label">ПРЕДМЕТ/ДИСЦИПЛІНА</label><select id="journalSubjectSelect" class="form-input"><option>Оберіть предмет</option></select></div>
-      </div>
-      <div class="journal-info">💡 <strong>Як користуватися:</strong><br>Виберіть навчальний рік, групу та предмет. Оцінки зберігаються миттєво.<br><strong>н</strong> — пропуск, <strong>св</strong> — відсутність світла.<br>Наведіть на дату в таблиці, щоб побачити тему заняття.</div>
-      <div class="journal-table-wrapper" id="journalTableContainer"><div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div></div>
-    </div>
-  </div>
-
-  <div id="tab-lessons" class="tab-content">
-    <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Заняття</h2><button class="btn-primary" onclick="window.openAddLessonForm()">+ Додати заняття</button></div>
-      <div class="filter-bar">
-        <div class="form-group">
-          <label class="form-label">Фільтр за предметом/дисципліною</label>
-          <select id="lessonFilterSubject" class="form-input">
-            <option value="all">Всі предмети</option>
-          </select>
+    <header class="header">
+        <div class="brand">
+            <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    <line x1="9" y1="9" x2="15" y2="9" />
+                    <line x1="9" y1="13" x2="13" y2="13" /></svg></div>
+            <div class="brand-name">Електронний журнал успішності<span>ВСП "Технолого-економічний фаховий коледж БНАУ"</span></div>
         </div>
-        <button id="deleteAllLessonsBtn" class="delete-all-btn" style="display: none;">🗑️ Видалити всі заняття</button>
-      </div>
-      <div id="form-add-lesson" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-lesson')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
-        <div class="form-grid"><div class="form-group"><label class="form-label">Предмет/Дисципліна</label><select id="lessonSubject" class="form-input"></select></div>
-        <div class="form-group"><label class="form-label">Розділ</label>
-          <div class="section-select-wrapper" id="sectionSelectWrapper">
-            <div class="custom-section-select" id="sectionSelectDisplay" onclick="window.toggleSectionDropdown()">Оберіть розділ</div>
-            <div class="section-dropdown" id="sectionDropdown"></div>
-            <input type="hidden" id="lessonSection" value="">
-          </div>
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="user-name" id="userName">Завантаження...</div>
+                <div class="user-role" id="userRole">Викладач</div>
+                <button class="logout-btn" onclick="window.logout()">Вийти</button>
+            </div>
+            <img src="" alt="Аватар" class="user-avatar" id="userAvatar">
         </div>
-        <div class="form-group"><label class="form-label">Вид заняття</label><select id="lessonType" class="form-input"><option>Лекція</option><option>Практичне заняття</option><option>Лабораторне заняття</option><option>Семінарське заняття</option><option>Самостійне вивчення</option><option>Залік з модуля</option><option>Тематичне оцінювання</option></select></div>
-        <div class="form-group"><label class="form-label">Дата</label><input type="date" id="lessonDate" class="form-input"></div></div>
-        <div class="form-group" id="newSectionGroup" style="display: none; margin-bottom: 16px;"><label class="form-label">Назва нового розділу</label><input type="text" id="newSectionName" class="form-input" placeholder="Введіть назву розділу"></div>
-        <div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
-        <button class="btn-primary" id="saveLessonBtn">Зберегти</button>
-      </div>
-      <div id="lessonsList" class="data-list" style="min-height: 200px;">
-    <div class="empty-state">Занять не знайдено</div>
-</div>
+    </header>
+
+    <main class="container">
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon bg-students">👥</div>
+                <div>
+                    <div class="stat-lbl">Студентів</div>
+                    <div class="stat-val" id="statStudents">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-groups">📁</div>
+                <div>
+                    <div class="stat-lbl">Груп</div>
+                    <div class="stat-val" id="statGroups">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-subjects">📘</div>
+                <div>
+                    <div class="stat-lbl">Моїх предметів/дисциплін</div>
+                    <div class="stat-val" id="statSubjects">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="window.switchTab('tab-journal')">Журнал</button>
+            <button class="tab-btn" onclick="window.switchTab('tab-lessons')">Заняття</button>
+            <button class="tab-btn" onclick="window.switchTab('tab-groups')">Групи</button>
+            <button class="tab-btn" onclick="window.switchTab('tab-students')">Студенти</button>
+            <button class="tab-btn" onclick="window.switchTab('tab-subjects')">Мої предмети/дисципліни</button>
+        </div>
+
+        <div id="tab-journal" class="tab-content active">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Журнал оцінок</h2>
+                </div>
+                <div class="journal-controls">
+                    <div class="form-group"><label class="form-label">НАВЧАЛЬНИЙ РІК</label><select id="journalYearSelect" class="form-input">
+                            <option>Оберіть рік</option>
+                        </select></div>
+                    <div class="form-group"><label class="form-label">ГРУПА</label><select id="journalGroupSelect" class="form-input">
+                            <option>Оберіть групу</option>
+                        </select></div>
+                    <div class="form-group"><label class="form-label">ПРЕДМЕТ/ДИСЦИПЛІНА</label><select id="journalSubjectSelect" class="form-input">
+                            <option>Оберіть предмет</option>
+                        </select></div>
+                </div>
+                <div class="journal-info">💡 <strong>Як користуватися:</strong><br>Виберіть навчальний рік, групу та предмет. Оцінки зберігаються миттєво.<br><strong>н</strong> — пропуск, <strong>св</strong> — відсутність світла.<br>Наведіть на дату в таблиці, щоб побачити тему заняття.</div>
+                <div class="journal-table-wrapper" id="journalTableContainer">
+                    <div class="empty-state">Оберіть навчальний рік, групу та предмет/дисципліну</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-lessons" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Заняття</h2><button class="btn-primary" onclick="window.openAddLessonForm()">+ Додати заняття</button>
+                </div>
+                <div class="filter-bar">
+                    <div class="form-group">
+                        <label class="form-label">Фільтр за предметом/дисципліною</label>
+                        <select id="lessonFilterSubject" class="form-input">
+                            <option value="all">Всі предмети</option>
+                        </select>
+                    </div>
+                    <button id="deleteAllLessonsBtn" class="delete-all-btn" style="display: none;">🗑️ Видалити всі заняття</button>
+                </div>
+                <div id="form-add-lesson" class="form-section">
+                    <div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-lesson')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">Предмет/Дисципліна</label><select id="lessonSubject" class="form-input"></select></div>
+                        <div class="form-group"><label class="form-label">Розділ</label>
+                            <div class="section-select-wrapper" id="sectionSelectWrapper">
+                                <div class="custom-section-select" id="sectionSelectDisplay" onclick="window.toggleSectionDropdown()">Оберіть розділ</div>
+                                <div class="section-dropdown" id="sectionDropdown"></div>
+                                <input type="hidden" id="lessonSection" value="">
+                            </div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Вид заняття</label><select id="lessonType" class="form-input">
+                                <option>Лекція</option>
+                                <option>Практичне заняття</option>
+                                <option>Лабораторне заняття</option>
+                                <option>Семінарське заняття</option>
+                                <option>Самостійне вивчення</option>
+                                <option>Залік з модуля</option>
+                                <option>Тематичне оцінювання</option>
+                            </select></div>
+                        <div class="form-group"><label class="form-label">Дата</label><input type="date" id="lessonDate" class="form-input"></div>
+                    </div>
+                    <div class="form-group" id="newSectionGroup" style="display: none; margin-bottom: 16px;"><label class="form-label">Назва нового розділу</label><input type="text" id="newSectionName" class="form-input" placeholder="Введіть назву розділу"></div>
+                    <div class="form-group" style="margin-bottom: 16px;"><label class="form-label">Тема заняття</label><input type="text" id="lessonTopic" class="form-input" placeholder="Введіть тему..."></div>
+                    <button class="btn-primary" id="saveLessonBtn">Зберегти</button>
+                </div>
+                <div id="lessonsList" class="data-list" style="min-height: 200px;">
+                    <div class="empty-state">Занять не знайдено</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-groups" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Групи</h2><button class="btn-primary" onclick="window.toggleForm('form-add-group')">+ Додати групу</button>
+                </div>
+                <div id="form-add-group" class="form-section">
+                    <div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-group')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">Назва групи</label><input type="text" id="groupName" class="form-input" placeholder="Наприклад: ПЗ-21"></div>
+                        <div class="form-group"><label class="form-label">Навчальний рік</label><select id="groupYear" class="form-input">
+                                <option value="2025/2026">2025/2026</option>
+                                <option value="2024/2025">2024/2025</option>
+                                <option value="2023/2024">2023/2024</option>
+                                <option value="2022/2023">2022/2023</option>
+                            </select></div>
+                    </div>
+                    <button class="btn-primary" id="saveGroupBtn">Зберегти</button>
+                </div>
+                <div id="groupsList" class="data-list">
+                    <div class="empty-state">Груп не знайдено</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-students" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Студенти</h2>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;"><select id="studentYearFilter" class="form-input">
+                            <option value="all">Всі роки</option>
+                        </select><select id="studentGroupFilter" class="form-input">
+                            <option value="all">Всі групи</option>
+                        </select><button class="btn-primary" onclick="window.toggleForm('form-add-student')">+ Додати студента</button></div>
+                </div>
+                <div id="form-add-student" class="form-section">
+                    <div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-student')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">ПІБ</label><input type="text" id="studentName" class="form-input" placeholder="Прізвище Ім'я По батькові"></div>
+                        <div class="form-group"><label class="form-label">Група</label><select id="studentGroup" class="form-input"></select></div>
+                        <div class="form-group"><label class="form-label">Навчальний рік</label><select id="studentYear" class="form-input">
+                                <option value="2025/2026">2025/2026</option>
+                                <option value="2024/2025">2024/2025</option>
+                                <option value="2023/2024">2023/2024</option>
+                                <option value="2022/2023">2022/2023</option>
+                            </select></div>
+                        <div class="form-group"><label class="form-label">Номер телефону</label><input type="tel" id="studentPhone" class="form-input" placeholder="+380..."></div>
+                        <div class="form-group"><label class="form-label">Роль у групі</label><select id="studentRole" class="form-input">
+                                <option value="student">Студент</option>
+                                <option value="prefect">Староста</option>
+                            </select></div>
+                    </div>
+                    <button class="btn-primary" id="saveStudentBtn">Зберегти</button>
+                </div>
+                <div id="studentsList" class="data-list">
+                    <div class="empty-state">Студентів не знайдено</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-subjects" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Мої предмети/дисципліни</h2><button class="btn-primary" onclick="window.toggleForm('form-add-subject')">+ Додати предмет</button>
+                </div>
+                <div id="form-add-subject" class="form-section">
+                    <div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-subject')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">Назва</label><input type="text" id="subjectName" class="form-input" placeholder="Назва предмета"></div>
+                        <div class="form-group"><label class="form-label">Система оцінювання</label><select id="subjectScale" class="form-input">
+                                <option value="12">12-бальна</option>
+                                <option value="5">5-бальна</option>
+                            </select></div>
+                        <div class="form-group"><label class="form-label">Вид контролю</label><select id="subjectControl" class="form-input">
+                                <option value="залік">Залік</option>
+                                <option value="екзамен">Екзамен</option>
+                            </select></div>
+                        <div class="form-group"><label class="form-label">Вид</label><select id="subjectType" class="form-input">
+                                <option>Обов'язкова</option>
+                                <option>Вибіркова</option>
+                            </select></div>
+                        <div class="form-group"><label class="form-label">Група</label><select id="subjectGroup" class="form-input"></select></div>
+                        <div class="form-group"><label class="form-label">Навчальний рік</label><select id="subjectYear" class="form-input">
+                                <option value="2025/2026">2025/2026</option>
+                                <option value="2024/2025">2024/2025</option>
+                                <option value="2023/2024">2023/2024</option>
+                                <option value="2022/2023">2022/2023</option>
+                            </select></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">Кредити ЄКТС</label><input type="number" id="subjectCredits" class="form-input" min="0"></div>
+                        <div class="form-group"><label class="form-label">Загально годин</label><input type="number" id="subjectHours" class="form-input" min="0"></div>
+                        <div class="form-group"><label class="form-label">Кількість модулів</label><input type="number" id="subjectModules" class="form-input" min="0"></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">Лекційні (год)</label><input type="number" id="subjectLectures" class="form-input" min="0" value="0"></div>
+                        <div class="form-group"><label class="form-label">Практичні (год)</label><input type="number" id="subjectPracticals" class="form-input" min="0" value="0"></div>
+                        <div class="form-group"><label class="form-label">Лабораторні (год)</label><input type="number" id="subjectLabs" class="form-input" min="0" value="0"></div>
+                        <div class="form-group"><label class="form-label">Семінарські (год)</label><input type="number" id="subjectSeminars" class="form-input" min="0" value="0"></div>
+                        <div class="form-group"><label class="form-label">Самостійна робота (год)</label><input type="number" id="subjectSelfStudy" class="form-input" min="0" value="0"></div>
+                    </div>
+                    <button class="btn-primary" id="saveSubjectBtn" style="margin-top: 16px;">Зберегти</button>
+                </div>
+                <div id="subjectsList" class="data-list">
+                    <div class="empty-state">Предметів/дисциплін не знайдено. Додайте ваш перший предмет!</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="groupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Статистика групи</h3><button class="modal-close" onclick="window.closeModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <div class="loading-spinner"></div> Завантаження...
+            </div>
+        </div>
     </div>
-  </div>
-
-  <div id="tab-groups" class="tab-content">
-    <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Групи</h2><button class="btn-primary" onclick="window.toggleForm('form-add-group')">+ Додати групу</button></div>
-      <div id="form-add-group" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-group')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
-        <div class="form-grid"><div class="form-group"><label class="form-label">Назва групи</label><input type="text" id="groupName" class="form-input" placeholder="Наприклад: ПЗ-21"></div>
-        <div class="form-group"><label class="form-label">Навчальний рік</label><select id="groupYear" class="form-input"><option value="2025/2026">2025/2026</option><option value="2024/2025">2024/2025</option><option value="2023/2024">2023/2024</option><option value="2022/2023">2022/2023</option></select></div></div>
-        <button class="btn-primary" id="saveGroupBtn">Зберегти</button>
-      </div>
-      <div id="groupsList" class="data-list"><div class="empty-state">Груп не знайдено</div></div>
+    <div id="subjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="subjectModalTitle">Інформація про предмет/дисципліну</h3><button class="modal-close" onclick="window.closeSubjectModal()">&times;</button>
+            </div>
+            <div id="subjectModalBody"></div>
+        </div>
     </div>
-  </div>
 
-  <div id="tab-students" class="tab-content">
-    <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Студенти</h2><div style="display: flex; gap: 12px; flex-wrap: wrap;"><select id="studentYearFilter" class="form-input"><option value="all">Всі роки</option></select><select id="studentGroupFilter" class="form-input"><option value="all">Всі групи</option></select><button class="btn-primary" onclick="window.toggleForm('form-add-student')">+ Додати студента</button></div></div>
-      <div id="form-add-student" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-student')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
-        <div class="form-grid"><div class="form-group"><label class="form-label">ПІБ</label><input type="text" id="studentName" class="form-input" placeholder="Прізвище Ім'я По батькові"></div>
-        <div class="form-group"><label class="form-label">Група</label><select id="studentGroup" class="form-input"></select></div>
-        <div class="form-group"><label class="form-label">Навчальний рік</label><select id="studentYear" class="form-input"><option value="2025/2026">2025/2026</option><option value="2024/2025">2024/2025</option><option value="2023/2024">2023/2024</option><option value="2022/2023">2022/2023</option></select></div>
-        <div class="form-group"><label class="form-label">Номер телефону</label><input type="tel" id="studentPhone" class="form-input" placeholder="+380..."></div>
-        <div class="form-group"><label class="form-label">Роль у групі</label><select id="studentRole" class="form-input"><option value="student">Студент</option><option value="prefect">Староста</option></select></div></div>
-        <button class="btn-primary" id="saveStudentBtn">Зберегти</button>
-      </div>
-      <div id="studentsList" class="data-list"><div class="empty-state">Студентів не знайдено</div></div>
-    </div>
-  </div>
-
-  <div id="tab-subjects" class="tab-content">
-    <div class="panel">
-      <div class="panel-header"><h2 class="panel-title">Мої предмети/дисципліни</h2><button class="btn-primary" onclick="window.toggleForm('form-add-subject')">+ Додати предмет</button></div>
-      <div id="form-add-subject" class="form-section"><div style="display: flex; justify-content: flex-end;"><button class="icon-btn" onclick="window.toggleForm('form-add-subject')" style="color: #ef4444; font-size: 20px;">&times;</button></div>
-        <div class="form-grid"><div class="form-group"><label class="form-label">Назва</label><input type="text" id="subjectName" class="form-input" placeholder="Назва предмета"></div>
-        <div class="form-group"><label class="form-label">Система оцінювання</label><select id="subjectScale" class="form-input"><option value="12">12-бальна</option><option value="5">5-бальна</option></select></div>
-        <div class="form-group"><label class="form-label">Вид контролю</label><select id="subjectControl" class="form-input"><option value="залік">Залік</option><option value="екзамен">Екзамен</option></select></div>
-        <div class="form-group"><label class="form-label">Вид</label><select id="subjectType" class="form-input"><option>Обов'язкова</option><option>Вибіркова</option></select></div>
-        <div class="form-group"><label class="form-label">Група</label><select id="subjectGroup" class="form-input"></select></div>
-        <div class="form-group"><label class="form-label">Навчальний рік</label><select id="subjectYear" class="form-input"><option value="2025/2026">2025/2026</option><option value="2024/2025">2024/2025</option><option value="2023/2024">2023/2024</option><option value="2022/2023">2022/2023</option></select></div></div>
-        <div class="form-grid"><div class="form-group"><label class="form-label">Кредити ЄКТС</label><input type="number" id="subjectCredits" class="form-input" min="0"></div>
-        <div class="form-group"><label class="form-label">Загально годин</label><input type="number" id="subjectHours" class="form-input" min="0"></div>
-        <div class="form-group"><label class="form-label">Кількість модулів</label><input type="number" id="subjectModules" class="form-input" min="0"></div></div>
-        <div class="form-grid"><div class="form-group"><label class="form-label">Лекційні (год)</label><input type="number" id="subjectLectures" class="form-input" min="0" value="0"></div>
-        <div class="form-group"><label class="form-label">Практичні (год)</label><input type="number" id="subjectPracticals" class="form-input" min="0" value="0"></div>
-        <div class="form-group"><label class="form-label">Лабораторні (год)</label><input type="number" id="subjectLabs" class="form-input" min="0" value="0"></div>
-        <div class="form-group"><label class="form-label">Семінарські (год)</label><input type="number" id="subjectSeminars" class="form-input" min="0" value="0"></div>
-        <div class="form-group"><label class="form-label">Самостійна робота (год)</label><input type="number" id="subjectSelfStudy" class="form-input" min="0" value="0"></div></div>
-        <button class="btn-primary" id="saveSubjectBtn" style="margin-top: 16px;">Зберегти</button>
-      </div>
-      <div id="subjectsList" class="data-list"><div class="empty-state">Предметів/дисциплін не знайдено. Додайте ваш перший предмет!</div></div>
-    </div>
-  </div>
-</main>
-
-<div id="groupModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title" id="modalTitle">Статистика групи</h3><button class="modal-close" onclick="window.closeModal()">&times;</button></div><div id="modalBody"><div class="loading-spinner"></div> Завантаження...</div></div></div>
-<div id="subjectModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title" id="subjectModalTitle">Інформація про предмет/дисципліну</h3><button class="modal-close" onclick="window.closeSubjectModal()">&times;</button></div><div id="subjectModalBody"></div></div></div>
-
-<script type="module" src="script-dashboard.js"></script>
+    <script type="module" src="script-dashboard.js"></script>
 </body>
+
 </html>
