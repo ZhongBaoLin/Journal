@@ -79,10 +79,39 @@
     .journal-table { width: 100%; border-collapse: collapse; min-width: 600px; }
     .journal-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); border-top: 1px solid var(--border); font-size: 13px; }
     .journal-table th, .journal-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 13px; }
-    .journal-table th:first-child, .journal-table td:first-child { position: sticky; left: 0; background: var(--card-bg); z-index: 2; text-align: center; border-right: 2px solid var(--border); white-space: nowrap; width: 50px; }
-    .journal-table th:nth-child(2), .journal-table td:nth-child(2) { position: sticky; left: 50px; background: var(--card-bg); z-index: 2; text-align: left; border-right: 2px solid var(--border); white-space: nowrap; }
-    .journal-table th:first-child { background: #f3f4f6; z-index: 3; }
-    .journal-table th:nth-child(2) { background: #f3f4f6; z-index: 3; }
+    .journal-table th:first-child, .journal-table td:first-child { 
+        position: sticky; 
+        left: 0; 
+        background: var(--card-bg); 
+        z-index: 5; 
+        text-align: center; 
+        border-right: 2px solid var(--border); 
+        white-space: nowrap; 
+        width: 50px; 
+        min-width: 50px;
+    }
+    .journal-table th:nth-child(2), .journal-table td:nth-child(2) { 
+        position: sticky; 
+        left: 50px; 
+        background: var(--card-bg); 
+        z-index: 5; 
+        text-align: left; 
+        border-right: 2px solid var(--border); 
+        white-space: nowrap; 
+        min-width: 200px;
+    }
+    .journal-table th:first-child { 
+        background: #f3f4f6; 
+        z-index: 6; 
+    }
+    .journal-table th:nth-child(2) { 
+        background: #f3f4f6; 
+        z-index: 6; 
+    }
+    /* Додати новий стиль для фіксованої першої колонки */
+    .journal-table td:first-child, .journal-table th:first-child {
+        box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);
+    }
     .journal-table th { background: #f3f4f6; font-weight: 600; color: var(--muted); position: sticky; top: 0; z-index: 10; }
     .grade-cell { cursor: pointer; transition: background 0.2s; min-width: 60px; }
     .grade-cell:hover { background: var(--accent-light) !important; }
@@ -153,6 +182,36 @@
     pointer-events: auto;
     cursor: pointer;
 }
+
+        .journal-table-wrapper {
+        overflow-x: auto;
+        overflow-y: auto;
+        position: relative;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        max-height: 70vh;
+        scroll-behavior: smooth;
+    }
+    
+    /* Додаткові стилі для кращого вигляду закріплених колонок */
+    .journal-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+    
+    .journal-table td, .journal-table th {
+        padding: 10px 12px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+        font-size: 13px;
+    }
+    
+    .journal-table td:first-child, .journal-table th:first-child {
+        border-left: none;
+    }
   </style>
 </head>
 <body>
@@ -466,7 +525,7 @@
   }
 
   // ========== ФУНКЦІЇ ОНОВЛЕННЯ ВІДОБРАЖЕННЯ ==========
-  function updateGradeCellDisplay(cell, grade, scale) {
+function updateGradeCellDisplay(cell, grade, scale) {
     if (!cell) return;
     cell.dataset.currentGrade = grade || '';
     let displayGrade = grade || '—';
@@ -474,13 +533,13 @@
     if (grade === 'н') { gradeClass = 'grade-n'; displayGrade = 'н'; }
     else if (grade === 'св') { gradeClass = 'grade-sv'; displayGrade = 'св'; }
     else {
-      const num = parseFloat(grade);
-      if (num === 5) gradeClass = 'grade-5';
-      else if (num === 4) gradeClass = 'grade-4';
-      else if (num === 3) gradeClass = 'grade-3';
-      else if (num === 2) gradeClass = 'grade-2';
-      else if (num === 1) gradeClass = 'grade-1';
-      displayGrade = grade || '—';
+        const num = parseFloat(grade);
+        if (num === 5) gradeClass = 'grade-5';
+        else if (num === 4) gradeClass = 'grade-4';
+        else if (num === 3) gradeClass = 'grade-3';
+        else if (num === 2) gradeClass = 'grade-2';
+        else if (num === 1) gradeClass = 'grade-1';
+        displayGrade = grade || '—';
     }
     const lessonId = cell.dataset.lessonId, studentId = cell.dataset.studentId, currentScale = cell.dataset.scale;
     cell.className = `grade-cell ${gradeClass}`;
@@ -491,9 +550,9 @@
     if (currentScale) cell.setAttribute('data-scale', currentScale);
     cell.onclick = function() { startEditGrade(cell); };
     updateStudentStats(cell.dataset.studentId);
-  }
+}
 
-  function updateFinalGradeCellDisplay(cell, grade, scale) {
+function updateFinalGradeCellDisplay(cell, grade, scale) {
     if (!cell) return;
     cell.dataset.currentGrade = grade || '';
     let displayGrade = grade || '—';
@@ -512,8 +571,7 @@
     if (scale) cell.setAttribute('data-scale', scale);
     cell.setAttribute('data-current-grade', grade || '');
     cell.onclick = function() { startEditFinalGrade(cell); };
-  }
-
+}
   async function updateStudentStats(studentId) {
     if (!currentGroupId || !currentSubjectId) return;
     
@@ -762,18 +820,6 @@ async function renderJournal() {
     const lessons = [];
     lessonsSnap.forEach(l => lessons.push({ id: l.id, ...l.data() }));
     
-    // ========== ДІАГНОСТИКА В КОНСОЛІ ==========
-    console.log('=== ЖУРНАЛ: ОТРИМАНІ ЗАНЯТТЯ ===');
-    console.log('Всього занять:', lessons.length);
-    console.log('Заняття ДО сортування:', lessons.map(l => ({ 
-        id: l.id, 
-        createdAt: l.createdAt, 
-        type: l.type,
-        number: l.number,
-        topic: l.topic?.substring(0, 30)
-    })));
-    
-    // Сортування занять за датою створення (від найстарішого до найновішого)
     lessons.sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -781,18 +827,8 @@ async function renderJournal() {
         if (dateA !== dateB) {
             return dateA - dateB;
         }
-        // Якщо дати однакові, сортуємо за ID
         return (a.id || '').localeCompare(b.id || '');
     });
-    
-    console.log('Заняття ПІСЛЯ сортування (від старіших до новіших):', lessons.map(l => ({ 
-        id: l.id, 
-        createdAt: l.createdAt, 
-        type: l.type,
-        number: l.number
-    })));
-    console.log('===================================');
-    // ===============================================
     
     if (lessons.length === 0) {
         document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
@@ -839,7 +875,9 @@ async function renderJournal() {
         };
     });
     
-    let html = '<table class="journal-table"><thead><tr><th>№</th><th>Студент</th>';
+    let html = '<table class="journal-table"><thead><tr>';
+    html += '<th>№</th>';
+    html += '<th>Студент</th>';
     
     lessons.forEach(lesson => {
         const dateParts = lesson.date.split('-');
@@ -861,59 +899,71 @@ async function renderJournal() {
     });
     
     const finalColHeader = subjectControl === 'екзамен' ? 'Екзамен' : 'Підсумкова';
-    html += `<th class="stat-cell">Сер.</th><th class="stat-header-red">Н</th><th class="stat-header-red">СВ</th><th class="stat-cell">${finalColHeader}</th></tr></thead><tbody>`;
+    html += `<th class="stat-cell">Сер.</th>`;
+    html += `<th class="stat-header-red">Н</th>`;
+    html += `<th class="stat-header-red">СВ</th>`;
+    html += `<th class="stat-cell">${finalColHeader}</th>`;
+    html += `</tr></thead><tbody>`;
     
     let studentCounter = 1;
     for (const student of students) {
         const stats = studentStats[student.id];
         const finalGrade = finalGrades[student.id] || '';
-        let finalGradeClass = '';
-        const finalNum = parseFloat(finalGrade);
-        if (finalNum === 5) finalGradeClass = 'grade-5';
-        else if (finalNum === 4) finalGradeClass = 'grade-4';
-        else if (finalNum === 3) finalGradeClass = 'grade-3';
-        else if (finalNum === 2) finalGradeClass = 'grade-2';
-        else if (finalNum === 1) finalGradeClass = 'grade-1';
         
-        html += `<tr><td style="text-align:center; width:40px;">${studentCounter}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
+        html += `<tr>`;
+        html += `<td style="text-align:center; width:40px;">${studentCounter}</td>`;
+        html += `<td style="text-align:left"><strong>${escapeHtml(student.name)}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
         
         for (const lesson of lessons) {
             const grade = allGrades[lesson.id]?.[student.id] || '';
             let gradeClass = '';
-            let displayGrade = grade;
-            if (grade === 'н') gradeClass = 'grade-n';
-            else if (grade === 'св') gradeClass = 'grade-sv';
-            else {
+            let displayGrade = grade || '—';
+            if (grade === 'н') {
+                gradeClass = 'grade-n';
+                displayGrade = 'н';
+            } else if (grade === 'св') {
+                gradeClass = 'grade-sv';
+                displayGrade = 'св';
+            } else {
                 const num = parseFloat(grade);
                 if (num === 5) gradeClass = 'grade-5';
                 else if (num === 4) gradeClass = 'grade-4';
                 else if (num === 3) gradeClass = 'grade-3';
                 else if (num === 2) gradeClass = 'grade-2';
                 else if (num === 1) gradeClass = 'grade-1';
-                displayGrade = grade;
+                displayGrade = grade || '—';
             }
-            html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade || '—'}</td>`;
+            html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade || ''}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade}</td>`;
         }
         
         const avgNum = parseFloat(stats.avg);
         let avgClass = '';
+        let avgDisplay = stats.avg;
         if (avgNum === 5) avgClass = 'grade-5';
         else if (avgNum === 4) avgClass = 'grade-4';
         else if (avgNum === 3) avgClass = 'grade-3';
         else if (avgNum === 2) avgClass = 'grade-2';
         else if (avgNum === 1) avgClass = 'grade-1';
         
-        let finalCellHtml = '';
+        html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${avgDisplay}</td>`;
+        html += `<td class="stat-cell-red-text" style="font-weight:700;">${stats.n}</td>`;
+        html += `<td class="stat-cell-red-text" style="font-weight:700;">${stats.sv}</td>`;
+        
         if (subjectControl === 'екзамен') {
-          finalCellHtml = `<td class="stat-cell" style="font-weight:700;color:#7c3aed;">Екзамен</td>`;
+            html += `<td class="stat-cell" style="font-weight:700; color:#7c3aed;">Екзамен</td>`;
         } else {
-          finalCellHtml = `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
+            let finalGradeClass = '';
+            const finalNum = parseFloat(finalGrade);
+            if (finalNum === 5) finalGradeClass = 'grade-5';
+            else if (finalNum === 4) finalGradeClass = 'grade-4';
+            else if (finalNum === 3) finalGradeClass = 'grade-3';
+            else if (finalNum === 2) finalGradeClass = 'grade-2';
+            else if (finalNum === 1) finalGradeClass = 'grade-1';
+            
+            html += `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade || ''}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)" style="font-weight:700;">${finalGrade || '—'}</td>`;
         }
-        html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${stats.avg}</td>
-                 <td class="stat-cell-red-text">${stats.n}</td>
-                 <td class="stat-cell-red-text">${stats.sv}</td>
-                 ${finalCellHtml}
-                </tr>`;
+        
+        html += `</tr>`;
         studentCounter++;
     }
     
@@ -925,7 +975,6 @@ async function renderJournal() {
         cell.addEventListener('mouseleave', hideTooltip);
     });
 }
-
   // ========== ФУНКЦІЇ ПІДКАЗОК ==========
   function showTooltip(e) {
     if (currentTooltip) { currentTooltip.remove(); currentTooltip = null; }
