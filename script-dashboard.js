@@ -1685,22 +1685,87 @@ function resetSubjectForm() {
 
   window.closeModal = () => { document.getElementById("groupModal").classList.remove("active"); };
 
-  window.showSubjectInfo = async (subjectId) => {
+window.showSubjectInfo = async (subjectId) => {
     const snap = await getDoc(doc(db, "subjects", subjectId));
     if (snap.exists()) {
-      const s = snap.data();
-      const hoursParts = [];
-      if (s.lectures && s.lectures > 0) hoursParts.push(`Лекції: ${s.lectures}`);
-      if (s.practicals && s.practicals > 0) hoursParts.push(`Практичні: ${s.practicals}`);
-      if (s.labs && s.labs > 0) hoursParts.push(`Лабораторні: ${s.labs}`);
-      if (s.seminars && s.seminars > 0) hoursParts.push(`Семінарські: ${s.seminars}`);
-      if (s.selfStudy && s.selfStudy > 0) hoursParts.push(`Самостійна робота: ${s.selfStudy}`);
-      const hoursString = hoursParts.length > 0 ? hoursParts.join(' | ') : 'Не вказано';
-      document.getElementById("subjectModalTitle").innerHTML = s.name;
-      document.getElementById("subjectModalBody").innerHTML = `<div class="stat-item"><div class="stat-label">Система оцінювання</div><div class="stat-value">${s.scale}-бальна</div></div><div class="stat-item"><div class="stat-label">Вид контролю</div><div class="stat-value">${s.control === 'екзамен' ? 'Екзамен' : 'Залік'}</div></div><div class="stat-item"><div class="stat-label">Вид</div><div class="stat-value">${s.type}</div></div><div class="stat-item"><div class="stat-label">Група</div><div class="stat-value">${s.groupName || s.groupId}</div></div><div class="stat-item"><div class="stat-label">Навчальний рік</div><div class="stat-value">${s.academicYear || 'Не вказано'}</div></div><div class="stat-item"><div class="stat-label">Кредити ЄКТС</div><div class="stat-value">${s.credits || 0}</div></div><div class="stat-item"><div class="stat-label">Загально годин</div><div class="stat-value">${s.hours || 0}</div></div><div class="stat-item"><div class="stat-label">Кількість модулів</div><div class="stat-value">${s.modules || 0}</div></div><div class="stat-item"><div class="stat-label">Розподіл годин</div><div class="stat-value">${hoursString}</div></div>`;
-      document.getElementById("subjectModal").classList.add("active");
+        const s = snap.data();
+        
+        // Створюємо HTML для розподілу годин у вигляді списку (кожен вид з нового рядка)
+        let hoursHtml = '<div class="hours-breakdown">';
+        let totalHours = 0;
+        
+        if (s.lectures && s.lectures > 0) {
+            hoursHtml += `<div class="hours-breakdown-item"><span class="hours-breakdown-label">📖 Лекції:</span><span class="hours-breakdown-value">${s.lectures} год</span></div>`;
+            totalHours += parseInt(s.lectures);
+        }
+        if (s.practicals && s.practicals > 0) {
+            hoursHtml += `<div class="hours-breakdown-item"><span class="hours-breakdown-label">✏️ Практичні:</span><span class="hours-breakdown-value">${s.practicals} год</span></div>`;
+            totalHours += parseInt(s.practicals);
+        }
+        if (s.labs && s.labs > 0) {
+            hoursHtml += `<div class="hours-breakdown-item"><span class="hours-breakdown-label">🔬 Лабораторні:</span><span class="hours-breakdown-value">${s.labs} год</span></div>`;
+            totalHours += parseInt(s.labs);
+        }
+        if (s.seminars && s.seminars > 0) {
+            hoursHtml += `<div class="hours-breakdown-item"><span class="hours-breakdown-label">💬 Семінарські:</span><span class="hours-breakdown-value">${s.seminars} год</span></div>`;
+            totalHours += parseInt(s.seminars);
+        }
+        if (s.selfStudy && s.selfStudy > 0) {
+            hoursHtml += `<div class="hours-breakdown-item"><span class="hours-breakdown-label">📚 Самостійна робота:</span><span class="hours-breakdown-value">${s.selfStudy} год</span></div>`;
+            totalHours += parseInt(s.selfStudy);
+        }
+        
+        if (totalHours > 0) {
+            hoursHtml += `<div class="hours-total"><span>📊 Загалом:</span><span>${totalHours} год</span></div>`;
+        }
+        hoursHtml += '</div>';
+        
+        if (hoursHtml === '<div class="hours-breakdown"></div>') {
+            hoursHtml = '<div class="stat-value">Не вказано</div>';
+        }
+        
+        document.getElementById("subjectModalTitle").innerHTML = s.name;
+        document.getElementById("subjectModalBody").innerHTML = `
+            <div class="stat-item">
+                <div class="stat-label">Система оцінювання</div>
+                <div class="stat-value">${s.scale}-бальна</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Вид контролю</div>
+                <div class="stat-value">${s.control === 'екзамен' ? '📝 Екзамен' : '✅ Залік'}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Вид</div>
+                <div class="stat-value">${s.type}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Група</div>
+                <div class="stat-value">${s.groupName || s.groupId}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Навчальний рік</div>
+                <div class="stat-value">${s.academicYear || 'Не вказано'}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Кредити ЄКТС</div>
+                <div class="stat-value">${s.credits || 0}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Загально годин</div>
+                <div class="stat-value">${s.hours || 0}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Кількість модулів</div>
+                <div class="stat-value">${s.modules || 0}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Розподіл годин</div>
+                ${hoursHtml}
+            </div>
+        `;
+        document.getElementById("subjectModal").classList.add("active");
     }
-  };
+};
 
   window.closeSubjectModal = () => { document.getElementById("subjectModal").classList.remove("active"); };
 
