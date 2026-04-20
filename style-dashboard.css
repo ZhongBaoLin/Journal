@@ -966,3 +966,45 @@
         pointer-events: auto;
         cursor: pointer;
     }
+
+/* Стилі для розподілу годин у модальному вікні - кожен вид годин з нового рядка */
+.hours-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.hours-breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.hours-breakdown-item:last-child {
+    border-bottom: none;
+}
+
+.hours-breakdown-label {
+    font-weight: 500;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.hours-breakdown-value {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 14px;
+}
+
+.hours-total {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    color: var(--ink);
+}
