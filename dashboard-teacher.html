@@ -905,6 +905,7 @@ function moveToNextGradeCell(currentCell) {
   };
 
   // ========== ФУНКЦІЯ ВІДОБРАЖЕННЯ ЖУРНАЛУ ==========
+// ========== ФУНКЦІЯ ВІДОБРАЖЕННЯ ЖУРНАЛУ ==========
 async function renderJournal() {
     const groupId = document.getElementById("journalGroupSelect").value;
     const subjectId = document.getElementById("journalSubjectSelect").value;
@@ -1014,7 +1015,7 @@ async function renderJournal() {
     });
     
     const finalColHeader = subjectControl === 'екзамен' ? 'Екзамен' : 'Підсумкова';
-    html += `<th class="stat-cell">Сер.</th><th class="stat-header-red">Н</th><th class="stat-header-red">СВ</th><th class="stat-cell final-header">${finalColHeader}</th></tr></thead><tbody>`;
+    html += `<th class="stat-cell">Сер.</th><th class="stat-header-red">Н</th><th class="stat-header-red">СВ</th><th class="stat-cell final-header">${finalColHeader}</th></table></thead><tbody>`;
     
     let studentCounter = 1;
     for (const student of students) {
@@ -1085,140 +1086,6 @@ async function renderJournal() {
     // Перевіряємо та встановлюємо фіксацію стовпця підсумкових оцінок
     checkAndToggleFinalColumnSticky();
 }
-    // ===============================================
-    
-    if (lessons.length === 0) {
-        document.getElementById("journalTableContainer").innerHTML = '<div class="empty-state">Немає занять з цього предмета. Додайте заняття у вкладці "Заняття"</div>';
-        return;
-    }
-    
-    const allGrades = {};
-    for (const lesson of lessons) {
-        const gradesSnap = await getDocs(query(collection(db, "grades"), where("lessonId", "==", lesson.id)));
-        gradesSnap.forEach(g => {
-            const gradeData = g.data();
-            if (!allGrades[lesson.id]) allGrades[lesson.id] = {};
-            allGrades[lesson.id][gradeData.studentId] = gradeData.grade;
-        });
-    }
-    
-    const finalGrades = {};
-    const finalGradesSnap = await getDocs(query(collection(db, "finalGrades"), where("subjectId", "==", subjectId)));
-    finalGradesSnap.forEach(g => {
-        finalGrades[g.data().studentId] = g.data().grade;
-    });
-    
-    const studentStats = {};
-    students.forEach(student => {
-        let totalPoints = 0, gradeCount = 0, nCount = 0, svCount = 0;
-        lessons.forEach(lesson => {
-            const grade = allGrades[lesson.id]?.[student.id];
-            if (grade) {
-                if (grade === 'н') nCount++;
-                else if (grade === 'св') svCount++;
-                else {
-                    const num = parseFloat(grade);
-                    if (!isNaN(num)) {
-                        totalPoints += num;
-                        gradeCount++;
-                    }
-                }
-            }
-        });
-        studentStats[student.id] = {
-            avg: gradeCount > 0 ? (totalPoints / gradeCount).toFixed(1) : '-',
-            n: nCount,
-            sv: svCount
-        };
-    });
-    
-    let html = '<table class="journal-table"><thead><tr><th>№</th><th>Студент</th>';
-    
-    lessons.forEach(lesson => {
-        const dateParts = lesson.date.split('-');
-        const dateStr = `${dateParts[2]}.${dateParts[1]}.${dateParts[0].slice(-2)}`;
-        let typeShort = '';
-        switch (lesson.type) {
-            case 'Лекція': typeShort = 'Лек.'; break;
-            case 'Практичне заняття': typeShort = 'Прак.'; break;
-            case 'Лабораторне заняття': typeShort = 'Лаб.'; break;
-            case 'Семінарське заняття': typeShort = 'Сем.'; break;
-            case 'Самостійне вивчення': typeShort = 'С.в.'; break;
-            case 'Залік з модуля': typeShort = 'Залік'; break;
-            case 'Тематичне оцінювання': typeShort = 'Тем.'; break;
-            default: typeShort = lesson.type;
-        }
-        const isSpecial = (lesson.type === 'Залік з модуля' || lesson.type === 'Тематичне оцінювання');
-        const specialClass = isSpecial ? 'lesson-special' : '';
-        html += `<th class="date-cell ${specialClass}" data-lesson-type="${lesson.type}" data-lesson-topic="${lesson.topic || ''}" data-lesson-date="${lesson.date}">${dateStr}<br><small>${typeShort}</small></th>`;
-    });
-    
-    const finalColHeader = subjectControl === 'екзамен' ? 'Екзамен' : 'Підсумкова';
-    html += `<th class="stat-cell">Сер.</th><th class="stat-header-red">Н</th><th class="stat-header-red">СВ</th><th class="stat-cell">${finalColHeader}</th></tr></thead><tbody>`;
-    
-    let studentCounter = 1;
-    for (const student of students) {
-        const stats = studentStats[student.id];
-        const finalGrade = finalGrades[student.id] || '';
-        let finalGradeClass = '';
-        const finalNum = parseFloat(finalGrade);
-        if (finalNum === 5) finalGradeClass = 'grade-5';
-        else if (finalNum === 4) finalGradeClass = 'grade-4';
-        else if (finalNum === 3) finalGradeClass = 'grade-3';
-        else if (finalNum === 2) finalGradeClass = 'grade-2';
-        else if (finalNum === 1) finalGradeClass = 'grade-1';
-        
-        html += `<tr><td style="text-align:center; width:40px;">${studentCounter}</td><td style="text-align:left"><strong>${student.name}</strong> ${student.role === 'prefect' ? '⭐' : ''}</td>`;
-        
-        for (const lesson of lessons) {
-            const grade = allGrades[lesson.id]?.[student.id] || '';
-            let gradeClass = '';
-            let displayGrade = grade;
-            if (grade === 'н') gradeClass = 'grade-n';
-            else if (grade === 'св') gradeClass = 'grade-sv';
-            else {
-                const num = parseFloat(grade);
-                if (num === 5) gradeClass = 'grade-5';
-                else if (num === 4) gradeClass = 'grade-4';
-                else if (num === 3) gradeClass = 'grade-3';
-                else if (num === 2) gradeClass = 'grade-2';
-                else if (num === 1) gradeClass = 'grade-1';
-                displayGrade = grade;
-            }
-            html += `<td class="grade-cell ${gradeClass}" data-lesson-id="${lesson.id}" data-student-id="${student.id}" data-current-grade="${grade}" data-scale="${subjectScale}" onclick="startEditGrade(this)">${displayGrade || '—'}</td>`;
-        }
-        
-        const avgNum = parseFloat(stats.avg);
-        let avgClass = '';
-        if (avgNum === 5) avgClass = 'grade-5';
-        else if (avgNum === 4) avgClass = 'grade-4';
-        else if (avgNum === 3) avgClass = 'grade-3';
-        else if (avgNum === 2) avgClass = 'grade-2';
-        else if (avgNum === 1) avgClass = 'grade-1';
-        
-        let finalCellHtml = '';
-        if (subjectControl === 'екзамен') {
-          finalCellHtml = `<td class="stat-cell" style="font-weight:700;color:#7c3aed;">Екзамен</td>`;
-        } else {
-          finalCellHtml = `<td class="final-grade-cell ${finalGradeClass}" data-student-id="${student.id}" data-subject-id="${subjectId}" data-current-grade="${finalGrade}" data-scale="${subjectScale}" onclick="startEditFinalGrade(this)">${finalGrade || '—'}</td>`;
-        }
-        html += `<td class="stat-cell ${avgClass}" style="font-weight:700;">${stats.avg}</td>
-                 <td class="stat-cell-red-text">${stats.n}</td>
-                 <td class="stat-cell-red-text">${stats.sv}</td>
-                 ${finalCellHtml}
-                </tr>`;
-        studentCounter++;
-    }
-    
-    html += '</tbody></table>';
-    document.getElementById("journalTableContainer").innerHTML = html;
-    
-    document.querySelectorAll('.date-cell').forEach(cell => {
-        cell.addEventListener('mouseenter', showTooltip);
-        cell.addEventListener('mouseleave', hideTooltip);
-    });
-}
-
   // ========== ФУНКЦІЇ ПІДКАЗОК ==========
   function showTooltip(e) {
     if (currentTooltip) { currentTooltip.remove(); currentTooltip = null; }
@@ -1529,21 +1396,6 @@ window.selectSection = function(value, label, event) {
   window.toggleSectionDropdown = function() {
     const dropdown = document.getElementById("sectionDropdown");
     if (dropdown) dropdown.classList.toggle("open");
-  };
-
-  window.selectSection = function(value, label) {
-    const sectionHidden = document.getElementById("lessonSection");
-    const display = document.getElementById("sectionSelectDisplay");
-    const dropdown = document.getElementById("sectionDropdown");
-    if (sectionHidden) sectionHidden.value = value;
-    if (display) display.textContent = label;
-    if (dropdown) dropdown.classList.remove("open");
-    if (value === "new") {
-      document.getElementById("newSectionGroup").style.display = "block";
-    } else {
-      document.getElementById("newSectionGroup").style.display = "none";
-      document.getElementById("newSectionName").value = "";
-    }
   };
 
   window.deleteSectionFromDropdown = async function(sectionId, sectionName, subjectId) {
