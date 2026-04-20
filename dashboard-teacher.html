@@ -214,44 +214,7 @@
     font-weight: 600;
 }
 
-/* Стилі для порожніх клітинок (без фіксації) */
-.journal-table td:last-child.empty-final {
-    position: static;
-    box-shadow: none;
-    background-color: transparent;
-}
 
-.journal-table th:last-child.empty-final,
-.journal-table td:last-child.empty-final {
-    position: static;
-    box-shadow: none;
-}
-
-/* Для заголовка стовпця */
-.journal-table th:last-child {
-    background-color: #f9fafb;
-    font-weight: 700;
-    z-index: 10;
-}
-
-    /* Ефект при наведенні на підсумкову оцінку */
-.final-grade-cell:hover {
-    filter: brightness(0.95);
-    transform: scale(1.02);
-}
-
-/* Для порожніх клітинок */
-.final-grade-cell.empty-final {
-    background-color: transparent !important;
-    color: #9ca3af;
-    font-weight: normal;
-    cursor: pointer;
-}
-
-.final-grade-cell.empty-final:hover {
-    background-color: #f3f4f6 !important;
-    transform: scale(1.02);
-}
   </style>
 </head>
 <body>
@@ -905,7 +868,6 @@ function moveToNextGradeCell(currentCell) {
   };
 
   // ========== ФУНКЦІЯ ВІДОБРАЖЕННЯ ЖУРНАЛУ ==========
-// ========== ФУНКЦІЯ ВІДОБРАЖЕННЯ ЖУРНАЛУ ==========
 async function renderJournal() {
     const groupId = document.getElementById("journalGroupSelect").value;
     const subjectId = document.getElementById("journalSubjectSelect").value;
