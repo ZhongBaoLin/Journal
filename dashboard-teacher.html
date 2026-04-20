@@ -72,18 +72,149 @@
     .icon-btn.edit-btn { color: #2563eb; }
     .icon-btn.delete-btn { color: #ef4444; }
     .prefect-badge { background: var(--gold); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; font-weight: 700; }
-    .journal-controls { display: flex; gap: 16px; margin-bottom: 24px; background: #fafafa; padding: 16px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }
-    .journal-info { font-size: 13px; color: var(--muted); margin-bottom: 16px; padding: 16px; background: #f8fafc; border-left: 4px solid var(--ink); border-radius: 8px; line-height: 1.6; }
-    .journal-info strong { color: var(--ink); }
-    .journal-table-wrapper { overflow-x: auto; overflow-y: auto; position: relative; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); max-height: 70vh; }
-    .journal-table { width: 100%; border-collapse: collapse; min-width: 600px; }
-    .journal-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); border-top: 1px solid var(--border); font-size: 13px; }
-    .journal-table th, .journal-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 13px; }
-    .journal-table th:first-child, .journal-table td:first-child { position: sticky; left: 0; background: var(--card-bg); z-index: 2; text-align: center; border-right: 2px solid var(--border); white-space: nowrap; width: 50px; }
-    .journal-table th:nth-child(2), .journal-table td:nth-child(2) { position: sticky; left: 50px; background: var(--card-bg); z-index: 2; text-align: left; border-right: 2px solid var(--border); white-space: nowrap; }
-    .journal-table th:first-child { background: #f3f4f6; z-index: 6; }
-    .journal-table th:nth-child(2) { background: #f3f4f6; z-index: 6; }
-    .journal-table th { background: #f3f4f6; font-weight: 600; color: var(--muted); position: sticky; top: 0; z-index: 5; }
+.journal-controls {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    background: #fafafa;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.journal-info {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #f8fafc;
+    border-left: 4px solid var(--ink);
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
+.journal-info strong {
+    color: var(--ink);
+}
+
+.journal-table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    position: relative;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    max-height: 70vh;
+}
+
+.journal-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.journal-table td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.journal-table th,
+.journal-table td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    font-size: 13px;
+}
+
+/* Перша колонка (індекс) */
+.journal-table th:first-child,
+.journal-table td:first-child {
+    position: sticky;
+    left: 0;
+    background: var(--card-bg);
+    z-index: 4;
+    text-align: center;
+    border-right: 2px solid var(--border);
+    white-space: nowrap;
+    width: 50px;
+}
+
+/* Друга колонка (назва/ПІБ) */
+.journal-table th:nth-child(2),
+.journal-table td:nth-child(2) {
+    position: sticky;
+    left: 50px;
+    background: var(--card-bg);
+    z-index: 4;
+    text-align: left;
+    border-right: 2px solid var(--border);
+    white-space: nowrap;
+}
+
+/* Заголовки перших двох колонок – вищий z-index */
+.journal-table th:first-child {
+    background: #f3f4f6;
+    z-index: 6;
+}
+
+.journal-table th:nth-child(2) {
+    background: #f3f4f6;
+    z-index: 6;
+}
+
+/* Усі заголовки стікі зверху */
+.journal-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: var(--muted);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+/* ========== ТІНЬ ДЛЯ ПЕРШИХ ДВОХ КОЛОНОК ========== */
+/* Псевдоелемент для тіні першої колонки */
+.journal-table td:first-child::after,
+.journal-table th:first-child::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -8px;
+    height: 100%;
+    width: 10px;
+    box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Псевдоелемент для тіні другої колонки */
+.journal-table td:nth-child(2)::after,
+.journal-table th:nth-child(2)::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -8px;
+    height: 100%;
+    width: 10px;
+    box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Скидаємо тінь у останньої колонки, якщо вона теж друга — ні */
+/* Додаткове: щоб тінь не накладалася на текст */
+.journal-table td:first-child,
+.journal-table th:first-child,
+.journal-table td:nth-child(2),
+.journal-table th:nth-child(2) {
+    position: relative;
+}
     .grade-cell { cursor: pointer; transition: background 0.2s; min-width: 60px; }
     .grade-cell:hover { background: var(--accent-light) !important; }
     .grade-input { width: 60px; text-align: center; border: none; outline: none; background: transparent; padding: 6px 4px; font-size: 13px; font-family: inherit; }
