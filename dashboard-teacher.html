@@ -593,20 +593,23 @@
     if (currentEditingCell === cell) { currentEditingCell = null; currentActiveInput = null; }
   }
 
-  function moveToNextGradeCell(currentCell) {
+function moveToNextGradeCell(currentCell) {
     const row = currentCell.closest('tr');
     if (!row) return;
     const gradeCells = Array.from(row.querySelectorAll('.grade-cell, .final-grade-cell'));
     const currentIndex = gradeCells.indexOf(currentCell);
     if (currentIndex < gradeCells.length - 1) {
-      const nextCell = gradeCells[currentIndex + 1];
-      if (nextCell.classList.contains('grade-cell')) startEditGrade(nextCell);
-      else startEditFinalGrade(nextCell);
+        const nextCell = gradeCells[currentIndex + 1];
+        if (nextCell.classList.contains('grade-cell')) startEditGrade(nextCell);
+        else startEditFinalGrade(nextCell);
     } else {
-      const nextRow = row.nextElementSibling;
-      if (nextRow) { const firstCell = nextRow.querySelector('.grade-cell'); if (firstCell) startEditGrade(firstCell); }
+        const nextRow = row.nextElementSibling;
+        if (nextRow) { 
+            const firstCell = nextRow.querySelector('.grade-cell'); 
+            if (firstCell) startEditGrade(firstCell); 
+        }
     }
-  }
+} 
 
   window.startEditGrade = function(cell) {
     if (currentEditingCell === cell) return;
