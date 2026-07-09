@@ -1460,3 +1460,19 @@
     color: var(--accent);
     font-family: 'Unbounded', sans-serif;
 }
+
+/* Стиль для колонки Н (світло-червоний фон, яскравий текст) */
+.cell-h-active {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: var(--error) !important; 
+    font-weight: 700 !important;
+    text-align: center;
+}
+
+/* Стиль для колонки СВ (світло-жовтий фон, оранжевий текст) */
+.cell-sv-active {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    color: var(--grade-3) !important; 
+    font-weight: 700 !important;
+    text-align: center;
+}
