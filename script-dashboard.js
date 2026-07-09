@@ -2611,6 +2611,6 @@ function updateWorkloadDisplay(subjects) {
     if (!stats.isComplete) {
         container.innerHTML = `<span class="warning-text">⚠️ Заповніть розподіл годин (лекційні, практичні, лабораторні, семінарські, самостійна робота) в усіх предметах/дисциплінах, щоб система могла обчислити педагогічне навантаження.</span>`;
     } else {
-        container.innerHTML = `Педагогічне навантаження (лекції + практичні): <strong>${stats.total} год.</strong>`;
+        container.innerHTML = `Педагогічне навантаження : <strong>${stats.total} год.</strong>`;
     }
 }
