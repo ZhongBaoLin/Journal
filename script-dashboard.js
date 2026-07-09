@@ -2499,3 +2499,39 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "index.html";
   }
 });
+
+/**
+ * Функція для розрахунку загального педагогічного навантаження
+ * @param {Array} subjects - масив об'єктів ваших предметів
+ * @returns {Object} - { total: number, isComplete: boolean }
+ */
+function calculateTotalWorkload(subjects) {
+    let totalHours = 0;
+    let isComplete = true;
+
+    subjects.forEach(subject => {
+        // Припустимо, у вас є поля lecturesHours та practiceHours
+        const lectures = parseFloat(subject.lecturesHours) || 0;
+        const practice = parseFloat(subject.practiceHours) || 0;
+        
+        // Перевірка, чи заповнені поля (наприклад, вони не мають бути 0, 
+        // якщо предмет активний)
+        if (!subject.lecturesHours || !subject.practiceHours) {
+            isComplete = false;
+        }
+        
+        totalHours += (lectures + practice);
+    });
+
+    return { total: totalHours, isComplete };
+}
+function updateWorkloadDisplay(subjects) {
+    const stats = calculateTotalWorkload(subjects);
+    const container = document.getElementById('workload-result');
+
+    if (!stats.isComplete) {
+        container.innerHTML = `<span class="warning-text">⚠️ Будь ласка, заповніть розподіл годин в усіх предметах для обчислення навантаження.</span>`;
+    } else {
+        container.innerHTML = `Загальне навантаження: <strong>${stats.total} годин</strong>`;
+    }
+}
