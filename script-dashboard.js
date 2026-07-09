@@ -2510,13 +2510,12 @@ function calculateTotalWorkload(subjects) {
     let isComplete = true;
 
     subjects.forEach(subject => {
-        // Припустимо, у вас є поля lecturesHours та practiceHours
-        const lectures = parseFloat(subject.lecturesHours) || 0;
-        const practice = parseFloat(subject.practiceHours) || 0;
+        // Використовуємо коректні назви властивостей з бази даних
+        const lectures = parseFloat(subject.lectures) || 0; 
+        const practice = parseFloat(subject.practicals) || 0;
         
-        // Перевірка, чи заповнені поля (наприклад, вони не мають бути 0, 
-        // якщо предмет активний)
-        if (!subject.lecturesHours || !subject.practiceHours) {
+        // Перевірка: чи заповнені поля (якщо 0, вважаємо неповним)
+        if (!subject.lectures || !subject.practicals) {
             isComplete = false;
         }
         
@@ -2525,6 +2524,7 @@ function calculateTotalWorkload(subjects) {
 
     return { total: totalHours, isComplete };
 }
+
 function updateWorkloadDisplay(subjects) {
     const stats = calculateTotalWorkload(subjects);
     const container = document.getElementById('workload-result');
@@ -2534,4 +2534,21 @@ function updateWorkloadDisplay(subjects) {
     } else {
         container.innerHTML = `Загальне навантаження: <strong>${stats.total} годин</strong>`;
     }
+}
+function renderSubjectsGrouped(subjects) {
+    const container = document.getElementById("subjectsContainer"); // Ваш контейнер
+    container.innerHTML = "";
+
+    // Групування за групою
+    const grouped = subjects.reduce((acc, subj) => {
+        (acc[subj.groupName] = acc[subj.groupName] || []).push(subj);
+        return acc;
+    }, {});
+
+    Object.keys(grouped).forEach(groupName => {
+        container.innerHTML += `<h3>Група: ${groupName}</h3>`;
+        grouped[groupName].forEach(subj => {
+            container.innerHTML += `<div class="subject-item">${subj.name} — Лекцій: ${subj.lectures}, Прак: ${subj.practicals}</div>`;
+        });
+    });
 }
