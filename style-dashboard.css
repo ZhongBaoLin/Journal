@@ -1476,3 +1476,21 @@
     font-weight: 700 !important;
     text-align: center;
 }
+.stats-card {
+    margin-top: 20px;
+    padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+#workload-result {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.warning-text {
+    color: var(--error);
+    font-size: 14px;
+}
