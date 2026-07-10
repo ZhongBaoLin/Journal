@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Електронний журнал — Студент</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style-dashboard.css">
+    <link rel="icon" href="logo.png" type="image/png">
+</head>
+
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <header class="header">
+        <div class="brand">
+            <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    <line x1="9" y1="9" x2="15" y2="9" />
+                    <line x1="9" y1="13" x2="13" y2="13" /></svg></div>
+            <div class="brand-name">Електронний журнал успішності<span>ВСП "Технолого-економічний фаховий коледж БНАУ"</span></div>
+        </div>
+        <div class="header-right">
+            <div class="year-badge" id="groupBadge" style="cursor:default;">
+                <span class="year-badge-label">Група</span>
+                <span class="year-badge-value" id="groupBadgeValue">—</span>
+            </div>
+
+            <div class="user-profile">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Завантаження...</div>
+                    <div class="user-role">Студент</div>
+                </div>
+                <button class="avatar-btn" id="avatarBtn" onclick="window.toggleBurgerMenu(event)">
+                    <img src="" alt="Аватар" class="user-avatar" id="userAvatar">
+                </button>
+
+                <div class="burger-menu" id="burgerMenu">
+                    <div class="burger-header">
+                        <img src="" alt="" class="burger-avatar" id="burgerAvatar">
+                        <div>
+                            <div class="burger-name" id="burgerName">—</div>
+                            <div class="burger-email" id="burgerEmail">—</div>
+                        </div>
+                    </div>
+                    <button class="burger-item" onclick="window.openPersonalInfoModal()">
+                        <span class="burger-item-icon">🧑‍🎓</span> Моя інформація
+                    </button>
+                    <div class="burger-divider"></div>
+                    <button class="burger-item burger-item-danger" onclick="window.logout()">
+                        <span class="burger-item-icon">🚪</span> Вийти
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="window.switchTab('tab-journal')">Журнал</button>
+            <button class="tab-btn" onclick="window.switchTab('tab-progress')">Моя успішність</button>
+        </div>
+
+        <div id="tab-journal" class="tab-content active">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Журнал оцінок</h2>
+                </div>
+                <div class="journal-controls">
+                    <div class="form-group"><label class="form-label">ПРЕДМЕТ/ДИСЦИПЛІНА</label><select id="studentSubjectSelect" class="form-input">
+                            <option>Оберіть предмет</option>
+                        </select></div>
+                </div>
+                <div id="subjectTeacherBanner" class="teacher-banner" style="display:none;"></div>
+                <div class="journal-info">💡 Тут відображаються ваші оцінки з обраного предмета/дисципліни. Редагування недоступне — журнал веде викладач.<br><strong>н</strong> — пропуск, <strong>св</strong> — відсутність світла.<br>Наведіть на дату (або торкніться на телефоні), щоб побачити тему заняття.</div>
+                <div class="journal-table-wrapper" id="journalTableContainer">
+                    <div class="empty-state">Оберіть предмет/дисципліну</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-progress" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Моя успішність</h2>
+                </div>
+                <div id="progressList">
+                    <div class="empty-state">Завантаження...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========== ОНБОРДИНГ: ВИБІР ГРУПИ ========== -->
+    <div id="groupPickModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Вітаємо в системі!</h3>
+            </div>
+            <p class="year-modal-desc">Оберіть свою навчальну групу, щоб продовжити.</p>
+            <div class="form-group" style="margin-bottom:4px;">
+                <label class="form-label">Група</label>
+                <select id="groupPickSelect" class="form-input">
+                    <option value="">Оберіть групу</option>
+                </select>
+            </div>
+            <div id="groupPickError" class="auth-error" style="display:none;"></div>
+            <button class="btn-primary" id="groupPickConfirm" style="width:100%; margin-top:20px; justify-content:center;" onclick="window.confirmGroupPick()">Продовжити</button>
+        </div>
+    </div>
+
+    <!-- ========== ОНБОРДИНГ: ВИБІР СЕБЕ ЗІ СПИСКУ ========== -->
+    <div id="studentPickModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Хто ви у списку групи?</h3>
+            </div>
+            <p class="year-modal-desc">Оберіть своє ПІБ зі списку студентів групи <strong id="studentPickGroupName">—</strong>. Якщо вас немає у списку — зверніться до викладача, щоб він додав вас до групи.</p>
+            <div id="studentPickList" class="data-list" style="margin-bottom:16px;">
+                <div class="empty-state">Завантаження...</div>
+            </div>
+            <div id="studentPickError" class="auth-error" style="display:none;"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-secondary" onclick="window.backToGroupPick()">‹ Змінити групу</button>
+                <button class="btn-secondary" onclick="window.loadUnclaimedStudentsForPick()">↻ Оновити список</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== МОДАЛЬНЕ ВІКНО: МОЯ ІНФОРМАЦІЯ ========== -->
+    <div id="personalInfoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Моя інформація</h3>
+                <button class="modal-close" onclick="window.closePersonalInfoModal()">&times;</button>
+            </div>
+            <div class="avatar-edit-row">
+                <img src="" id="piAvatarPreview" class="avatar-edit-preview" alt="Аватар">
+                <div>
+                    <div class="data-title" id="piName">—</div>
+                    <div class="avatar-edit-hint" id="piEmail">—</div>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label class="form-label">Дата народження</label><input type="date" id="piBirthDate" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Номер телефону</label><input type="tel" id="piPhone" class="form-input" placeholder="+380..."></div>
+                <div class="form-group"><label class="form-label">Рік вступу до коледжу</label><select id="piAdmissionYear" class="form-input"><option value="">Оберіть рік</option></select></div>
+            </div>
+            <div class="pi-experience">Група: <strong id="piGroupName">—</strong></div>
+            <div id="piError" class="auth-error" style="display:none; margin-top:12px;"></div>
+            <button class="btn-primary" id="piSaveBtn" style="width:100%; justify-content:center; margin-top:16px;" onclick="window.savePersonalInfo()">Зберегти зміни</button>
+        </div>
+    </div>
+
+    <script type="module" src="script-student.js"></script>
+</body>
+
+</html>
