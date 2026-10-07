@@ -497,27 +497,18 @@
 
     .journal-table-wrapper {
         overflow-x: auto;
-        overflow-y: auto;
+        overflow-y: hidden;
         position: relative;
         border-radius: 12px;
         border: 1px solid var(--border);
         background: var(--card-bg);
-        max-height: 70vh;
     }
 
     .journal-table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
         min-width: 600px;
-    }
-
-    .journal-table td {
-        padding: 10px 12px;
-        text-align: center;
-        border-bottom: 1px solid var(--border);
-        border-right: 1px solid var(--border);
-        border-top: 1px solid var(--border);
-        font-size: 13px;
     }
 
     .journal-table th,
@@ -527,6 +518,17 @@
         border-bottom: 1px solid var(--border);
         border-right: 1px solid var(--border);
         font-size: 13px;
+        /* фон комірки не заходить під рамку */
+        background-clip: padding-box;
+    }
+
+    .journal-table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .journal-table th:last-child,
+    .journal-table td:last-child {
+        border-right: 0;
     }
 
     .journal-table th:first-child,
@@ -1780,7 +1782,6 @@
     }
 
     .journal-table-wrapper {
-        max-height: 60vh;
         border-radius: 10px;
     }
 
@@ -1955,16 +1956,25 @@
     .date-cell.lesson-module {
         color: var(--accent) !important;
         font-weight: 700;
+    }
+
+    .journal-table th.lesson-module,
+    .journal-table td.module-cell {
         border-left: 2px solid var(--accent);
         border-right: 2px solid var(--accent);
+        background-clip: padding-box;
+    }
+
+    /* комірка перед модулем не додає власної правої рамки — лишається лише акцентна */
+    .journal-table th:has(+ .lesson-module),
+    .journal-table td:has(+ .module-cell) {
+        border-right-width: 0;
     }
 
     .module-cell {
         min-width: 60px;
         font-weight: 700;
         cursor: default;
-        border-left: 2px solid var(--accent);
-        border-right: 2px solid var(--accent);
     }
 
     .att-cell {
@@ -1989,3 +1999,17 @@
         color: #9ca3af;
         font-weight: 600;
     }
+
+
+/* ========== МОДАЛЬНЕ ВІКНО ЗАНЯТТЯ ========== */
+.lesson-modal-content {
+    max-width: 560px;
+    /* випадаючий список розділів не повинен обрізатись */
+    overflow: visible;
+}
+
+@media (max-width: 768px), (max-height: 720px) {
+    .lesson-modal-content {
+        overflow-y: auto;
+    }
+}
